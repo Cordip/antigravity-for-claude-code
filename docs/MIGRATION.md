@@ -181,7 +181,7 @@ the directory holding `hooks.json`, so it is rewritten to `./`.
 | plugin `skills/`, `agents/`, `commands/` | `config/plugins/<n>/` | native importer via staging HOME |
 | plugin `hooks/hooks.json` | `config/plugins/<n>/hooks.json` | translated (table above) |
 | plugin `.mcp.json` | `config/plugins/<n>/mcp_config.json` | importer, then remote entries repaired |
-| `CLAUDE.md` | `AGENTS.md` | symlink |
+| `CLAUDE.md` | `AGENTS.md` | symlink, inside git repositories only |
 | `projects/<home>/memory/` | `config/plugins/claude-code-memory/rules/` | generated, `trigger: always_on` |
 | `projects/<repo>/memory/` | `<repo>/.agents/rules/` | generated + project registration |
 | `.mcp.json`, `projects.*.mcpServers`, desktop config | `config/mcp_config.json` | merged, `url`→`serverUrl` |

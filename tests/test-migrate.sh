@@ -25,11 +25,19 @@ has()  { case "$2" in *"$1"*) return 0 ;; *) return 1 ;; esac; }
 # Mirrors the layout Claude Code 2.1.x actually produces: memory under
 # projects/<encoded-cwd>/memory, plugins nested under plugins/cache/<mp>/<p>/<v>.
 H="$TMP/home"; export HOME="$H"
+# The package-cache exclusion reads these; point them at the synthetic HOME so a
+# real ~/AppData or an exported PUB_CACHE on the developer's machine cannot leak in.
+export LOCALAPPDATA="$H/AppData/Local"
+export GOPATH="$H/go"
+unset PUB_CACHE UV_CACHE_DIR GOMODCACHE
 REPO="$H/work/myrepo"
 mkdir -p "$H/.claude/skills/demo-skill" \
          "$H/.claude/projects/-Users-x/memory" \
-         "$REPO/.git" \
+         "$REPO" \
          "$H/.gemini/config" "$H/.gemini/antigravity-cli"
+# A real repository, not a bare .git directory: --include-repos writes only inside
+# one now, and `git rev-parse` is what decides.
+git init -q "$REPO"
 
 printf -- '---\nname: demo-skill\ndescription: d\nversion: 1.0.0\nallowed-tools: Bash\n---\nbody\n' \
   > "$H/.claude/skills/demo-skill/SKILL.md"
@@ -270,6 +278,7 @@ rm -rf "$H/.claude/plugins/marketplaces" "$H/work/withvar"
 # ~/.claude; ~/Library-notes is not part of ~/Library. A bare startswith() prunes
 # both, and silently — the report never says a root was skipped.
 mkdir -p "$H/.claude-pro/proj" "$H/Library-notes/deep"
+git init -q "$H/Library-notes/deep"     # a repo, so claudemd names the path
 printf '{"mcpServers":{"sibling-prefix-server":{"command":"echo"}}}\n' > "$H/.claude-pro/proj/.mcp.json"
 printf '# notes\n' > "$H/Library-notes/deep/CLAUDE.md"
 python3 - "$H" <<'PY2'
@@ -288,6 +297,50 @@ if has "Library-notes" "$OUT"; then
   ok "~/Library-notes is not pruned by the ~/Library exclusion"
 else bad "Library-notes was pruned"; fi
 rm -rf "$H/.claude-pro" "$H/Library-notes"
+
+# --- vendored package trees are neither scanned nor written into --------------
+# `~` is routinely one of the recorded projects, so the CLAUDE.md scan walks the whole
+# home directory, package caches included. A symlink inside a downloaded package is
+# litter in a tree its manager owns and replaces; and uv's git-v0/checkouts/ holds real
+# clones, so "is this a git repo?" alone would not keep that one out.
+PUBPKG="$H/AppData/Local/Pub/Cache/hosted/pub.dev/somepkg-1.2.3"
+UVPKG="$H/AppData/Local/uv/cache/git-v0/checkouts/cafef00d/deadbeef"
+GOPKG="$H/go/pkg/mod/example.com/somemod@v1.0.0"
+mkdir -p "$PUBPKG" "$UVPKG" "$GOPKG" "$REPO/node_modules/vendored-dep" "$H/notes"
+printf '# vendored\n' > "$PUBPKG/CLAUDE.md"
+printf '# theirs\n'   > "$PUBPKG/AGENTS.md"       # the conflict the issue reported
+printf '# vendored\n' > "$UVPKG/CLAUDE.md"
+git init -q "$UVPKG"                              # a git root, inside a cache
+printf '# vendored\n' > "$GOPKG/CLAUDE.md"
+printf '# dep\n'      > "$REPO/node_modules/vendored-dep/CLAUDE.md"
+printf '# plain\n'    > "$H/notes/CLAUDE.md"      # a real directory, just not a repo
+
+OUT="$(run --roots "$H" --only claudemd --include-repos --apply)"
+if ! has "somepkg-1.2.3" "$OUT" && ! has "git-v0" "$OUT" && ! has "vendored-dep" "$OUT" \
+   && ! has "somemod@v1.0.0" "$OUT"; then
+  ok "package caches and node_modules are not scanned for CLAUDE.md"
+else bad "proposed an AGENTS.md inside a vendored package tree"; fi
+if [ ! -L "$PUBPKG/AGENTS.md" ] && [ ! -e "$UVPKG/AGENTS.md" ] && [ ! -e "$GOPKG/AGENTS.md" ] \
+   && [ ! -e "$REPO/node_modules/vendored-dep/AGENTS.md" ]; then
+  ok "nothing written inside a package cache, not even beside a conflict"
+else bad "wrote into a package cache"; fi
+if has "not-a-repo" "$OUT" && has "$H/notes" "$OUT" && [ ! -e "$H/notes/AGENTS.md" ]; then
+  ok "a CLAUDE.md outside any repo is reported as skipped, not symlinked"
+else bad "non-repo CLAUDE.md silently dropped, or symlinked anyway"; fi
+rm -rf "$H/AppData" "$H/go" "$H/notes" "$REPO/node_modules"
+
+# --- an excluded root passed in as a root is still excluded ------------------
+# ~/.claude is a recorded project on any machine Claude Code has been run from ~,
+# and it is often a git repo of its own, so the repo rule alone would let it in.
+# Pruning only the children of a root would still offer a symlink beside its own
+# CLAUDE.md, inside the tree this tool treats as read-only.
+printf '# user rules\n' > "$H/.claude/CLAUDE.md"
+git init -q "$H/.claude"
+OUT="$(run --roots "$H/.claude,$H" --only claudemd --include-repos --apply)"
+if ! has "$H/.claude/AGENTS.md" "$OUT" && [ ! -e "$H/.claude/AGENTS.md" ]; then
+  ok "a root that is itself an excluded tree is not scanned"
+else bad "proposed a symlink inside Claude Code's own config dir"; fi
+rm -rf "$H/.claude/.git" "$H/.claude/CLAUDE.md"
 
 # --- a lossy-encoding collision must not misfile memory ----------------------
 # `a_b` and `a/b` both encode to `a-b`. Guessing would write one repo's memory into

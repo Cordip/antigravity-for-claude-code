@@ -49,7 +49,7 @@ So customization is shared across surfaces; session state is not.
 | --- | --- | --- |
 | User skills | **live** — `skills.json` entry pointing at `~/.claude/skills` | no copy; edits show up on both sides |
 | Installed plugins | native `agy plugin import claude`, run in a staging HOME | output is then repaired (below) |
-| `CLAUDE.md` | symlink `AGENTS.md` → `CLAUDE.md` | `--include-repos`; both are plain Markdown |
+| `CLAUDE.md` | symlink `AGENTS.md` → `CLAUDE.md` | `--include-repos`; both are plain Markdown. Git repositories only — a `CLAUDE.md` elsewhere is reported as skipped, and package caches are never scanned |
 | Auto-memory | **generated** rules | global → a plugin's `rules/`; per-repo → `<repo>/.agents/rules/` |
 | MCP servers | merged + translated into `mcp_config.json` | `url`/`httpUrl` → `serverUrl`, `type` dropped |
 | Trusted projects | `trustedWorkspaces` | the one clean settings mapping |
@@ -128,7 +128,7 @@ Also not migrated, by design: `model` (no Gemini equivalent for a Claude model i
 | *(none)* | dry-run report |
 | `--apply` | perform it; backs up `~/.gemini/config` first |
 | `--only` / `--skip` | `plugins,skills,claudemd,memory,mcp,settings` |
-| `--include-repos` | write into git repos (`AGENTS.md`, `.agents/rules/`) |
+| `--include-repos` | write into git repos (`AGENTS.md`, `.agents/rules/`) — and only into those |
 | `--include-orphan-memory` | fold memory whose source directory no longer exists into global rules |
 | `--apply-permissions` | actually write the translated allow-list |
 | `--no-register-projects` | skip agy project registration (workspace rules then stay inert) |
