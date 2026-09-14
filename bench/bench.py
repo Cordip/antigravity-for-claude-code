@@ -49,6 +49,7 @@ def main(argv=None) -> int:
     j.add_argument("--plugin-dir"); j.add_argument("--seed", type=int, default=20260914); j.add_argument("--force", action="store_true")
     an = sub.add_parser("analyze"); an.add_argument("--run-id", required=True); an.add_argument("--ref", default="solo-opus")
     an.add_argument("--boot", type=int, default=10000); an.add_argument("--seed", type=int, default=20260914)
+    b = sub.add_parser("billing"); b.add_argument("--run-id", required=True); b.add_argument("--table"); b.add_argument("--slack-h", type=float, default=3.0)
     g = sub.add_parser("gate"); g.add_argument("command"); g.add_argument("--plugin", action="store_true")
     s = sub.add_parser("stop"); s.add_argument("--run-id", required=True); s.add_argument("--now", action="store_true")
     v = sub.add_parser("versions"); v.add_argument("--plugin-dir")
@@ -96,6 +97,13 @@ def main(argv=None) -> int:
         import analyze as an_mod
         agg = an_mod.analyze(a.run_id, a.ref, a.boot, a.seed)
         print(open(os.path.join(HERE, "results", a.run_id, "tables.md")).read())
+        return 0
+    if a.cmd == "billing":
+        import billing
+        out = billing.reconcile(a.run_id, a.table or billing.DEFAULT_TABLE, a.slack_h)
+        print(json.dumps({k: v for k, v in out.items() if k != "families"}, indent=2))
+        for fam, f in out["families"].items():
+            print("%-16s computed $%-9.4f billed %-10s gap %s" % (fam, f["computed_usd"], ("$%.4f" % f["billed_usd"]) if f["billed_usd"] is not None else "-", ("%+.1f%%" % f["gap_pct"]) if f["gap_pct"] is not None else "-"))
         return 0
     if a.cmd == "gate":
         import gates

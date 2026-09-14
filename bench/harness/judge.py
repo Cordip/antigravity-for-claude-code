@@ -189,6 +189,10 @@ def judge_gemini(prompt: str, plugin_dir: str, log_path: str) -> dict:
             u = json.loads(m.group(1))
             rec["model_id"] = u.get("model")
             rec["usage"] = u.get("usage")
+            from common import Prices
+            key, _ = Prices().gemini_key(u.get("model") or "", u.get("tier") or "pro")
+            rec["cost_usd"], rec["cost_flags"] = Prices().price_gemini(u.get("usage") or {}, key)
+            rec["cost_usd"] = round(rec["cost_usd"], 6)
         except Exception:  # noqa: BLE001
             pass
     return rec
