@@ -381,3 +381,20 @@ def lint_prompt(task_id: str) -> dict:
     task["prompt"] = {"sha256": sha256_text(prompt), "lines": n_lines, "lint": res}
     write_json(os.path.join(task_dir, "task.json"), task)
     return res
+
+
+def vetbase(task_id: str) -> dict:
+    """Record `go vet` findings at the base commit; scoring judges vet relative to them."""
+    from common import load_task
+    task, task_dir = load_task(task_id)
+    repo_cfg = read_json(os.path.join(os.path.dirname(task_dir), "repo.json"))
+    mirror = mirror_path(task["repo"])
+    env = score_mod.go_env(repo_cfg, GOMOD_DIR, GOBUILD_DIR)
+    d = _worktree(mirror, task["base_sha"], task_id + "-vetbase")
+    r = run(["go", "vet", "./..."], cwd=d, env=env, timeout=1800)
+    shutil.rmtree(d, ignore_errors=True)
+    findings = score_mod.vet_findings(r.err)
+    task.setdefault("verify", {})["vet_base_findings"] = findings
+    task["verify"]["vet_base_rc"] = r.rc
+    write_json(os.path.join(task_dir, "task.json"), task)
+    return {"task_id": task_id, "rc": r.rc, "findings": findings}

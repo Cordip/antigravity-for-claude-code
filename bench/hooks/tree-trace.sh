@@ -22,13 +22,22 @@ tool="${rest%%	*}"; rest="${rest#*	}"
 tuid="${rest%%	*}"; rest="${rest#*	}"
 head="${rest%%	*}"; cwd="${rest#*	}"
 repo="${BENCH_REPO_DIR:-$cwd}"
-fp=""
+fp=""; files="[]"
 if [ -n "$repo" ] && git -C "$repo" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  # names + content hashes of modified/untracked files, plus deleted names
-  fp="$( { git -C "$repo" ls-files -m -o --exclude-standard -z | (cd "$repo" && xargs -0 shasum -a 1 2>/dev/null); git -C "$repo" ls-files -d; } | shasum -a 1 | cut -d' ' -f1)"
+  # names + content hashes of modified/untracked files, plus deleted names; the digest is
+  # the pairing key, the list (capped) lets the scorer say WHICH files a call changed
+  listing="$( { git -C "$repo" ls-files -m -o --exclude-standard -z | (cd "$repo" && xargs -0 shasum -a 1 2>/dev/null); git -C "$repo" ls-files -d | sed 's/^/deleted  /'; } )"
+  fp="$(printf '%s' "$listing" | shasum -a 1 | cut -d' ' -f1)"
+  files="$(printf '%s' "$listing" | python3 -c '
+import json,sys
+out=[]
+for l in sys.stdin.read().splitlines():
+    parts=l.split(None,1)
+    if len(parts)==2: out.append([parts[1], parts[0][:12]])
+print(json.dumps(out[:200]))' 2>/dev/null || echo "[]")"
 fi
 ts="$(python3 -c 'import time;print(time.time())' 2>/dev/null || date +%s)"
 esc() { printf '%s' "$1" | python3 -c 'import json,sys;print(json.dumps(sys.stdin.read()))' 2>/dev/null || printf '"%s"' "$1"; }
-printf '{"ts":%s,"event":%s,"tool_name":%s,"tool_use_id":%s,"head":%s,"fp":"%s"}\n' \
-  "$ts" "$(esc "$ev")" "$(esc "$tool")" "$(esc "$tuid")" "$(esc "$head")" "$fp" >>"$BENCH_TRACE_LOG" 2>/dev/null || true
+printf '{"ts":%s,"event":%s,"tool_name":%s,"tool_use_id":%s,"head":%s,"fp":"%s","files":%s}\n' \
+  "$ts" "$(esc "$ev")" "$(esc "$tool")" "$(esc "$tuid")" "$(esc "$head")" "$fp" "$files" >>"$BENCH_TRACE_LOG" 2>/dev/null || true
 exit 0

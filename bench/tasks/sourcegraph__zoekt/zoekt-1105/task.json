@@ -133,7 +133,9 @@
     "environment_failures": [],
     "hidden_dropped_flaky": [],
     "reasons": [],
-    "skip_regex": "^(TestLoggedRunFailure)$"
+    "skip_regex": "^(TestLoggedRunFailure)$",
+    "vet_base_findings": [],
+    "vet_base_rc": 0
   },
   "deps": {
     "go_mod_changed": false

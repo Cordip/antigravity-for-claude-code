@@ -246,6 +246,30 @@ class Scoring(unittest.TestCase):
         self.assertEqual(w["claude_bash_commands"], ["cat x"])
         self.assertEqual(w["pairing"], "tool_use_id")
 
+    def test_toolchain_gomod_change_is_not_a_claude_write(self):
+        """A `go` command whose only tree change is go.mod/go.sum is the module tooling (measured with -mod=mod); calling it claude_bash would fake a violation."""
+        ev = [
+            {"event": "gate", "decision": "allow", "heads": ["go"], "tool_use_id": "a", "command": "go doc x/y"},
+            {"event": "PreToolUse", "tool_name": "Bash", "tool_use_id": "a", "head": "go", "fp": "f0", "files": [["go.mod", "aaa"]]},
+            {"event": "PostToolUse", "tool_name": "Bash", "tool_use_id": "a", "head": "go", "fp": "f1", "files": [["go.mod", "bbb"], ["go.sum", "ccc"]]},
+            {"event": "gate", "decision": "allow", "heads": ["go"], "tool_use_id": "b", "command": "go test ./..."},
+            {"event": "PreToolUse", "tool_name": "Bash", "tool_use_id": "b", "head": "go", "fp": "f1", "files": [["go.mod", "bbb"]]},
+            {"event": "PostToolUse", "tool_name": "Bash", "tool_use_id": "b", "head": "go", "fp": "f2", "files": [["go.mod", "bbb"], ["x.go", "ddd"]]},
+            {"event": "PreToolUse", "tool_name": "Bash", "tool_use_id": "c", "head": "agy-delegate", "fp": "f2", "files": []},
+            {"event": "PostToolUse", "tool_name": "Bash", "tool_use_id": "c", "head": "agy-delegate", "fp": "f3", "files": [["y.go", "eee"]]},
+        ]
+        path = _write(os.path.join(self.tmp, "t2.jsonl"), "\n".join(json.dumps(e) for e in ev) + "\n")
+        w = score.attribute_writes(path)
+        self.assertEqual(w["toolchain_gomod"], 1)
+        self.assertEqual(w["claude_bash"], 1); self.assertEqual(w["claude_bash_files"], ["x.go"])
+        self.assertEqual(w["agy"], 1); self.assertEqual(w["agy_files"], ["y.go"])
+
+    def test_vet_findings_drop_line_numbers(self):
+        """An inherited finding must still match after an edit shifts its line."""
+        a = score.vet_findings("lib/x.go:146:18: the cancel function should be called\n# pkg\n")
+        b = score.vet_findings("lib/x.go:150:18: the cancel function should be called\n")
+        self.assertEqual(a, b); self.assertEqual(a, ["lib/x.go: the cancel function should be called"])
+
     def test_write_attribution_falls_back_to_sequence(self):
         ev = [
             {"event": "PreToolUse", "tool_name": "Bash", "head": "agy-delegate", "fp": "f0"},

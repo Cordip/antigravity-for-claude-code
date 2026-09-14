@@ -1,6 +1,6 @@
 # Benchmark: Claude Code alone vs Claude Code + this plugin on real pull requests
 
-_Status: pilot in progress. Every table on this page is regenerated from
+_Status: pilot complete; full run not started. Every table on this page is regenerated from
 `bench/results/<run-id>/aggregate.json` by `tests/check-bench-claims.py`; a number that
 is not inside a `bench:table` block is not a measurement._
 
@@ -53,9 +53,62 @@ three HTTP/2 tests that fail 3/3 with the author's own patch on this machine and
 hidden test that flaked 1/6. Rejected: caddy #7858 (Windows-only tests pass at base),
 cli #14179 alone (not isolable from its stack).
 
-## Pilot
+## Pilot (2026-09-14/15; n = 1 per cell — calibration, not a claim)
 
-_Results will appear here as `bench:table` blocks once the pilot runs are scored._
+**Smoke, small task caddy-7877, all four arms:**
+
+<!-- bench:table run=smoke kind=arms -->
+| arm | runs | pass | cost-of-pass $ | median $ among passes (min–max) | Claude $ | Gemini $ | wall med s | turns med | delegations med (0-runs) | denials med | warm starts | caps hit |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| hybrid-forced | 1 | 1/1 | 1.34 | 1.34 (1.34–1.34) | 1.06 | 0.28 | 478.80 | 19 | 2 (0) | 2 | 0 | 0 |
+| hybrid-inst | 1 | 1/1 | 1.41 | 1.41 (1.41–1.41) | 1.05 | 0.36 | 594.70 | 23 | 1 (0) | 2 | 0 | 0 |
+| solo-opus | 1 | 1/1 | 0.93 | 0.93 (0.93–0.93) | 0.93 | 0.00 | 241.90 | 15 | 0 (1) | 0 | 0 | 0 |
+| solo-sonnet | 1 | 1/1 | 0.72 | 0.72 (0.72–0.72) | 0.72 | 0.00 | 339.60 | 14 | 0 (1) | 1 | 0 | 0 |
+<!-- /bench:table -->
+
+**Pilot, medium caddy-7913 and large k6-6169, `solo-opus` vs `hybrid-forced`:**
+
+<!-- bench:table run=pilot kind=arms -->
+| arm | runs | pass | cost-of-pass $ | median $ among passes (min–max) | Claude $ | Gemini $ | wall med s | turns med | delegations med (0-runs) | denials med | warm starts | caps hit |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| hybrid-forced | 1 | 0/1 | — | — (—–—) | 5.72 | 3.24 | 3600.20 | 40 | 8 (0) | 0 | 0 | 1 |
+| solo-opus | 2 | 2/2 | 8.72 | 8.72 (4.76–12.68) | 17.45 | 0.00 | 1302.85 | 85.50 | 0.00 (2) | 4.50 | 0 | 0 |
+<!-- /bench:table -->
+
+<!-- bench:table run=pilot kind=size -->
+| arm | size | runs | pass | cost-of-pass $ | median $ among passes | wall med s |
+|---|---|---|---|---|---|---|
+| hybrid-forced | medium | 1 | 0/1 | — | — | 3600.20 |
+| hybrid-forced | large | 0 | 0/0 | — | — | — |
+| solo-opus | medium | 1 | 1/1 | 4.76 | 4.76 | 797.70 |
+| solo-opus | large | 1 | 1/1 | 12.68 | 12.68 | 1808.00 |
+<!-- /bench:table -->
+
+What the pilot established, and what it changed:
+
+- Both `hybrid-forced` runs were **killed by the pilot's wall caps** (60 min medium,
+  100 min large) with trees that already passed the hidden tests and the full suite. Under
+  the protocol a capped run is a failure, so their cost-of-pass is undefined here; their
+  spend is nevertheless known exactly from the transcripts: **$8.96** (Claude $5.72 +
+  Gemini $3.24) on the medium task versus **$4.76** for `solo-opus`, and **$20.60**
+  (Claude $16.05 + Gemini $4.55) versus **$12.68** on the large task. Wall-clock ran
+  4.5× and 3.3× longer. The delegations themselves took 37 and 62 minutes of agy time
+  (8 and 14 calls; one failed, three hit agy's 10-minute print timeout). The full-run caps
+  were set from these numbers so that none binds.
+- On these two tasks the hybrid's **Claude side alone cost more than the solo run**:
+  orchestration (reading to write specifications, verifying) churns the prompt cache —
+  1.6 M cache-write tokens versus 0.44 M for solo on the large task.
+- `go vet` failed for both arms on k6 in files neither touched; the base commit has the
+  same two findings under Go 1.27. The vet gate is now relative to the base commit and
+  both records were re-accounted (`solo-opus` passes; the hybrid stays a capped failure).
+- The large hybrid run carries `claude_side_write_in_forced_arm`: a tree change during a
+  `go doc` call 74 s in, before any delegation. The pilot ran Go with `-mod=mod`, which lets
+  `go` commands rewrite `go.mod`/`go.sum`; the trace then recorded only a digest, so the
+  files cannot be named after the fact. The full run uses `-mod=readonly` and the hook
+  now logs the changed file list, which makes that classification possible.
+- Every accounting cross-check held: Claude Code's `total_cost_usd` versus the frozen
+  price deck within 0.03 percent, transcript usage versus the result object within
+  tolerance, every `AGY_USAGE` line joined by its own `model`/`tier` fields, no warm starts.
 
 ## Full run
 

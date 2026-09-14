@@ -333,10 +333,10 @@
       "./pkg/cmd/pr/shared"
     ],
     "run_regex": "^(TestActiveTokenType|TestActorDisplayName|TestAddFlag|TestApiActorsSupported|TestAppendParagraph|TestAssetMarkdown|TestAssetRendersAsPlayer|TestAttachAssetsToMarkdown|TestAttachAssetsToMarkdownFixture|TestBaseRepoQueriesSelectDatabaseID|TestBranchDeleteRemote|TestCategorizeHost|TestCheckHost|TestCommentablePreRun|TestCommentableRunUploadsAndWritesBodies|TestDefaultHostFromEnvVar|TestDefaultHostLoggedInToOnlyOneHost|TestDefaultHostNotLoggedIn|TestDefaultHostWorksRightAfterMigration|TestDisplayName|TestFlagUserAssets|TestForkRepoReturnsErrorWhenForkIsNotPossible|TestGitHubRepo_notFound|TestGitHubRepo_success|TestGitHubRepo_withParent|TestGitIgnoreTemplateReturnsErrorWhenGitIgnoreTemplateNotFound|TestGitIgnoreTemplateReturnsGitIgnoreTemplate|TestGitProtocolWorksRightAfterMigration|TestGraphQLEndpoint|TestHasActiveToken|TestHasEnvTokenWithEnvToken|TestHasEnvTokenWithNoEnvTokenButAConfigVar|TestHasEnvTokenWithoutAnyEnvToken|TestHasNoActiveToken|TestHostnameValidator|TestHostsIncludesEnvVar|TestHostsWorksRightAfterMigration|TestIsSingleImage|TestIssueCreate|TestIssueCreate_AtCopilotAssignee|TestIssueCreate_AtMeAssignee|TestIssueCreate_continueInBrowser|TestIssueCreate_disabledIssues|TestIssueCreate_metadata|TestIssueCreate_nonLegacyTemplate|TestIssueCreate_projectsV2|TestIssueCreate_recover|TestIssueGraphQL|TestIssueRepoInfo_issuesDisabled|TestIssueRepoInfo_notFound|TestIssueRepoInfo_success|TestIssueRepositoryDatabaseID|TestIssueRepositoryViewerPermission|TestIssue_ExportData|TestLicenseTemplateReturnsErrorWhenLicenseTemplateNotFound|TestLicenseTemplateReturnsLicense|TestListGitIgnoreTemplatesReturnsGitIgnoreTemplates|TestListLicenseTemplatesReturnsLicenses|TestLoginAddsHostIfNotAlreadyAdded|TestLoginAddsUserToConfigWithoutGitProtocolAndWithSecureStorage|TestLoginInsecurePostMigrationUsesConfigForToken|TestLoginInsecureStorage|TestLoginPostMigrationSetsGitProtocol|TestLoginPostMigrationSetsUser|TestLoginSecurePostMigrationRemovesTokenFromConfig|TestLoginSecureStorageRemovesOldInsecureConfigToken|TestLoginSecureStorageUsesKeyring|TestLoginSecureStorageWithErrorFallsbackAndReports|TestLoginSetsGitProtocolForProvidedHost|TestLoginSetsUserForProvidedHost|TestLogoutIgnoresErrorsFromConfigAndKeyring|TestLogoutOfActiveUserSwitchesUserIfPossible|TestLogoutOfInactiveUserDoesNotSwitchUser|TestLogoutRemovesHostAndKeyringToken|TestLogoutRightAfterMigrationRemovesHost|TestMembersToIDs|TestNewAsset|TestNewAssetMissingFile|TestNewAttachableMarkdown|TestNewCmdComment|TestNewCmdCreate|TestNewCmdEdit|TestNewUploader|TestNoRepoCanBeDetermined|TestPRRepositorySelectionMatchesStruct|TestProjectsV1Deprecation|TestPullRequestGraphQL|TestPullRequestRepositoryDatabaseID|TestPullRequestRepositoryViewerPermission|TestPullRequest_ExportData|TestRESTPrefix|TestRemoteGuessing|TestRepoExists|TestRepoNetworkUnmarshalsDatabaseID|TestSuggestedReviewerActors|TestSuggestedReviewerActorsForRepo|TestSwitchClearsActiveInsecureTokenWhenSwitchingToSecureUser|TestSwitchClearsActiveSecureTokenWhenSwitchingToInsecureUser|TestSwitchUserErrorsAndRestoresUserAndInsecureConfigUnderFailure|TestSwitchUserErrorsAndRestoresUserAndKeyringUnderFailure|TestSwitchUserErrorsImmediatelyIfTheActiveTokenComesFromEnvironment|TestSwitchUserMakesInsecureTokenActive|TestSwitchUserMakesSecureTokenActive|TestSwitchUserUpdatesTheActiveUser|TestTenantName|TestTokenForUserInsecureLogin|TestTokenForUserNotFoundErrors|TestTokenForUserSecureLogin|TestTokenFromKeyring|TestTokenFromKeyringForUser|TestTokenFromKeyringForUserErrorsIfUsernameIsBlank|TestTokenFromKeyringNonExistent|TestTokenPrioritizesActiveUserToken|TestTokenStoredInConfig|TestTokenStoredInEnv|TestTokenStoredInKeyring|TestTokenWithActiveUserNotInKeyringFallsBackToBlank|TestTokenWorksRightAfterMigration|TestUpload|TestUploadAuthentication|TestUploadErrors|TestUploadHostForTenant|TestUploadMissingFile|TestUploaderUploadAndAttach|TestUploaderUploadAndAttachAbsolutePathReference|TestUploaderUploadAndAttachDoesNotLeakTheAssetURLIntoAnError|TestUploaderUploadAndAttachNoAssets|TestUploaderUploadAndAttachUploadsOnceForRepeatedReferences|TestUserAssetUploadPrefix|TestUserNotLoggedIn|TestUserWorksRightAfterMigration|TestUsersForHostNoHost|TestUsersForHostWithUsers|Test_Logins|Test_ProjectNamesToPaths|Test_RepoMetadata|Test_RepoMetadata_TeamsAreConditionallyFetched|Test_RepoMilestones|Test_commentRun|Test_createRun|Test_createRun_GHES|Test_editRun|Test_editRun_crossHostRelationshipRefs|Test_generateCompareURL|Test_isSameRef)$",
-    "base_status": null
+    "base_status": "compile_fail"
   },
   "verify": {
-    "status": "unverified",
+    "status": "ok",
     "prewarm": {
       "base": {
         "download_ok": true,
@@ -354,7 +354,33 @@
         "seconds": 28.7,
         "errors": ""
       }
-    }
+    },
+    "checked_at": "2026-09-14T14:39:40+00:00",
+    "base": {
+      "status": "compile_fail",
+      "failed_tests": [],
+      "passed_tests": 0,
+      "seconds": 1.0
+    },
+    "target_hidden": {
+      "pass": true,
+      "failed_tests": [],
+      "passed_tests": 951
+    },
+    "target_suite": {
+      "runs": 3,
+      "median_s": 34.4,
+      "flaky": [],
+      "always_failing": [],
+      "packages": 309
+    },
+    "ok": true,
+    "environment_failures": [],
+    "hidden_dropped_flaky": [],
+    "reasons": [],
+    "skip_regex": null,
+    "vet_base_findings": [],
+    "vet_base_rc": 0
   },
   "deps": {
     "go_mod_changed": false

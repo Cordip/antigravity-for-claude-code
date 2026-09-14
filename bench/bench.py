@@ -35,6 +35,7 @@ def main(argv=None) -> int:
     p = cs.add_parser("verify"); p.add_argument("task_id"); p.add_argument("--suite-runs", type=int, default=3)
     p = cs.add_parser("lint"); p.add_argument("task_id")
     p = cs.add_parser("prewarm"); p.add_argument("task_id")
+    p = cs.add_parser("vetbase"); p.add_argument("task_id")
 
     r = sub.add_parser("run")
     r.add_argument("--run-id", required=True); r.add_argument("--task", required=True); r.add_argument("--arm", required=True)
@@ -50,6 +51,7 @@ def main(argv=None) -> int:
     an = sub.add_parser("analyze"); an.add_argument("--run-id", required=True); an.add_argument("--ref", default="solo-opus")
     an.add_argument("--boot", type=int, default=10000); an.add_argument("--seed", type=int, default=20260914)
     b = sub.add_parser("billing"); b.add_argument("--run-id", required=True); b.add_argument("--table"); b.add_argument("--slack-h", type=float, default=3.0)
+    ra = sub.add_parser("reaccount"); ra.add_argument("--run-id", required=True)
     g = sub.add_parser("gate"); g.add_argument("command"); g.add_argument("--plugin", action="store_true")
     s = sub.add_parser("stop"); s.add_argument("--run-id", required=True); s.add_argument("--now", action="store_true")
     v = sub.add_parser("versions"); v.add_argument("--plugin-dir")
@@ -67,6 +69,8 @@ def main(argv=None) -> int:
             rep = curate.lint_prompt(a.task_id); print(json.dumps(rep, indent=2)); return 0 if rep["ok"] else 1
         if a.ccmd == "prewarm":
             print(json.dumps(curate.prewarm(a.task_id), indent=2)); return 0
+        if a.ccmd == "vetbase":
+            print(json.dumps(curate.vetbase(a.task_id), indent=2)); return 0
     if a.cmd == "run":
         import run as run_mod
         rec = run_mod.run_once(a.task, a.arm, a.rep, a.run_id, a.plugin_dir, a.lane, a.attempt, a.keep,
@@ -104,6 +108,15 @@ def main(argv=None) -> int:
         print(json.dumps({k: v for k, v in out.items() if k != "families"}, indent=2))
         for fam, f in out["families"].items():
             print("%-16s computed $%-9.4f billed %-10s gap %s" % (fam, f["computed_usd"], ("$%.4f" % f["billed_usd"]) if f["billed_usd"] is not None else "-", ("%+.1f%%" % f["gap_pct"]) if f["gap_pct"] is not None else "-"))
+        return 0
+    if a.cmd == "reaccount":
+        import score
+        from common import RESULTS_DIR, Prices, load_task
+        pr = Prices()
+        for rj in sorted(glob.glob(os.path.join(RESULTS_DIR, a.run_id, "runs", "*", "run.json"))):
+            rd = os.path.dirname(rj); rec = json.load(open(rj)); task, _ = load_task(rec["task_id"])
+            new = score.reaccount(rd, task, rec["arm"], pr)
+            print(json.dumps({"run_key": new["run_key"], "pass": new["outcome"]["pass"], "tree_pass": new["outcome"]["tree_pass"], "capped": new["claude"]["capped"], "cost": new["cost"], "violations": new["violations"]}))
         return 0
     if a.cmd == "gate":
         import gates

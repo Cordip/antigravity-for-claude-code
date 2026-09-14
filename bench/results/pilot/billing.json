@@ -1,0 +1,37 @@
+{
+  "run_id": "pilot",
+  "table": "data-agent-bq.billing_export.gcp_billing_export_v1_01F395_17E646_FF0C82",
+  "window_utc": [
+    "2026-09-14 14:05:02",
+    "2026-09-14 19:30:17"
+  ],
+  "slack_h": 1.0,
+  "runs": 4,
+  "families": {
+    "claude_opus": {
+      "computed_usd": 17.4456,
+      "billed_usd": null,
+      "gap_pct": null,
+      "skus": []
+    },
+    "claude_sonnet": {
+      "computed_usd": 0.0,
+      "billed_usd": null,
+      "gap_pct": null,
+      "skus": []
+    },
+    "gemini_flash_38": {
+      "computed_usd": 7.7818,
+      "billed_usd": null,
+      "gap_pct": null,
+      "skus": []
+    },
+    "gemini_pro_31": {
+      "computed_usd": 0.0,
+      "billed_usd": null,
+      "gap_pct": null,
+      "skus": []
+    }
+  },
+  "note": "billed includes every use of these SKUs on the project inside the window, not only the benchmark; a positive gap is other activity or export bucketing, a negative gap means the harness over-counted and must be investigated."
+}

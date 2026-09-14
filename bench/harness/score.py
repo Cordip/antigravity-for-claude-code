@@ -33,10 +33,13 @@ def go_env(repo: dict, gomod_dir: str, gobuild_dir: str) -> Dict[str, str]:
     # tests that compare a resolved path with t.TempDir() fail there for no reason of the
     # code's (measured: zoekt's TestSyncIndexesWithRootRelativeName). A plain directory
     # under the bench home removes that class of environment failure for every arm alike.
+    # -mod=readonly: with -mod=mod a plain `go doc`/`go list` rewrites go.mod/go.sum from the
+    # module cache (measured: a `go doc` call showed up as a tree change in a hybrid-forced
+    # run); readonly makes any such need a loud failure instead of a silent edit.
     tmp = os.path.join(os.path.dirname(gomod_dir), "tmp")
     os.makedirs(tmp, exist_ok=True)
     env = {"GOMODCACHE": gomod_dir, "GOCACHE": gobuild_dir, "GOPROXY": "off", "GOTOOLCHAIN": "local",
-           "GOSUMDB": "off", "GOWORK": "off", "GOFLAGS": "-mod=mod", "CGO_ENABLED": "0", "TMPDIR": tmp}
+           "GOSUMDB": "off", "GOWORK": "off", "GOFLAGS": "-mod=readonly", "CGO_ENABLED": "0", "TMPDIR": tmp}
     env.update(repo.get("go_env") or {})
     return env
 
@@ -148,11 +151,30 @@ def diff_stats(patch_text: str, author_code_files: List[str]) -> dict:
 
 # ---------------------------------------------------------- attribution -----
 
+GOMOD_NAMES = ("go.mod", "go.sum")
+
+
+def _changed_paths(pre: dict, post: dict) -> Optional[List[str]]:
+    """Paths whose (name, hash) differ between two tree events; None if a side lacks the list."""
+    a, b = pre.get("files"), post.get("files")
+    if a is None or b is None:
+        return None
+    da = {f[0]: f[1] for f in a}
+    db = {f[0]: f[1] for f in b}
+    return sorted(set(k for k in set(da) | set(db) if da.get(k) != db.get(k)))
+
+
 def attribute_writes(trace_path: str) -> dict:
-    """Pair pre/post tree fingerprints per tool call; attribute each change."""
-    out = {"claude_tool": 0, "claude_bash": 0, "agy": 0, "between_calls": 0, "events": 0,
+    """Pair pre/post tree fingerprints per tool call; attribute each change.
+
+    claude_tool: Edit/Write/MultiEdit/NotebookEdit; agy: a Bash call whose head is the
+    wrapper; toolchain_gomod: a `go` command whose only changes are go.mod/go.sum (the
+    module tooling, not the agent); claude_bash: any other Bash change — the one that must
+    be zero in hybrid-forced. File lists come from the hook when it recorded them.
+    """
+    out = {"claude_tool": 0, "claude_bash": 0, "agy": 0, "toolchain_gomod": 0, "between_calls": 0, "events": 0,
            "gate_blocks": 0, "blocked_heads": {}, "gate_allows": 0, "pairing": "tool_use_id",
-           "claude_bash_commands": []}
+           "claude_bash_commands": [], "claude_bash_files": [], "agy_files": [], "claude_tool_files": []}
     if not os.path.isfile(trace_path):
         out["pairing"] = "no_trace"
         return out
@@ -205,14 +227,25 @@ def attribute_writes(trace_path: str) -> dict:
         tool = str(ev.get("tool_name") or "")
         head = str(ev.get("head") or pre.get("head") or "")
         base = os.path.basename(head)
+        if base.endswith(".sh"):
+            base = base[:-3]
+        changed = _changed_paths(pre, ev)
         if tool == "Bash":
-            if base in AGY_HEADS or base.endswith(".sh") and base[:-3] in AGY_HEADS:
+            if base in AGY_HEADS:
                 out["agy"] += 1
+                if changed:
+                    out["agy_files"].extend(p for p in changed if p not in out["agy_files"])
+            elif base == "go" and changed is not None and changed and all(os.path.basename(p) in GOMOD_NAMES for p in changed):
+                out["toolchain_gomod"] += 1
             else:
                 out["claude_bash"] += 1
                 out["claude_bash_commands"].append(gate_cmds.get(ev.get("tool_use_id"), head)[:200])
+                if changed:
+                    out["claude_bash_files"].extend(p for p in changed if p not in out["claude_bash_files"])
         else:
             out["claude_tool"] += 1
+            if changed:
+                out["claude_tool_files"].extend(p for p in changed if p not in out["claude_tool_files"])
     return out
 
 
@@ -278,6 +311,14 @@ def score_run(run_dir: str, repo_dir: str, task: dict, task_dir: str, repo_cfg: 
     t_build = int(repo_cfg.get("build_timeout_s", 900))
     build = run(["go", "build", "./..."], cwd=repo_dir, env=env, timeout=t_build)
     vet = run(["go", "vet", "./..."], cwd=repo_dir, env=env, timeout=t_build) if build.ok else None
+    # vet is judged relative to the base commit: a finding the author's own tree already had
+    # (measured: two on k6 with Go 1.27's vet, in files no agent touches) is not the agent's.
+    base_vet = task.get("verify", {}).get("vet_base_findings")
+    vet_new: List[str] = []
+    vet_mode = "relative" if base_vet is not None else "absolute"
+    if vet is not None and not vet.ok:
+        vet_new = [f for f in vet_findings(vet.err) if f not in set(base_vet or [])]
+    vet_ok_rel = bool(vet and (vet.ok or (vet_mode == "relative" and not vet_new)))
     hidden = None
     full = None
     if build.ok:
@@ -344,14 +385,30 @@ def score_run(run_dir: str, repo_dir: str, task: dict, task_dir: str, repo_cfg: 
 
     # 7. outcome
     build_ok = build.ok
-    vet_ok = bool(vet and vet.ok)
+    vet_ok = vet_ok_rel
     hidden_pass = bool(hidden and hidden["pass"])
     full_pass = bool(full and full["pass"])
-    passed = build_ok and vet_ok and hidden_pass and full_pass
+    tree_pass = build_ok and vet_ok and hidden_pass and full_pass
     subtype = result.get("subtype")
     if meta.get("killed_wall"):
         subtype = "killed_wall"
+    capped = subtype in ("killed_wall", "error_max_turns", "error_max_budget_usd")
+    # protocol: a run that hit a cap counts as a failure even if the tree it left passes
+    passed = tree_pass and not capped
     claude_usd = float(result["total_cost_usd"]) if result.get("total_cost_usd") is not None else None
+    claude_usd_source = "result.modelUsage"
+    if claude_usd is None and tsum.get("present"):
+        # killed runs leave no result object; the transcript's per-request usage is exact and
+        # the same numbers Claude Code prices, so the deck reproduces its figure (checked on
+        # completed runs: |gap| < 0.1%).
+        tot = 0.0
+        for m, mu in (tsum.get("models") or {}).items():
+            usd, _ = prices.price_claude(m, mu["input"], mu["output"], mu["cache_creation"], mu["cache_read"])
+            tot += usd or 0.0
+        if tot > 0:
+            claude_usd = round(tot, 6)
+            claude_usd_source = "transcript_list_price"
+            notes.append("Claude $ recomputed from the transcript (no result object: %s)" % subtype)
     gemini_usd = agy.get("shadow_usd")
     total_usd = (claude_usd or 0.0) + (gemini_usd or 0.0) if claude_usd is not None else None
 
@@ -379,8 +436,11 @@ def score_run(run_dir: str, repo_dir: str, task: dict, task_dir: str, repo_cfg: 
         "prompt": meta.get("prompt", {}),
         "claude": {
             "session_id": result.get("session_id"), "subtype": subtype, "is_error": result.get("is_error"),
-            "num_turns": result.get("num_turns"), "duration_ms": result.get("duration_ms"),
+            "num_turns": result.get("num_turns") or (tsum.get("turns") if tsum.get("present") else None),
+            "num_turns_source": "result" if result.get("num_turns") else "transcript",
+            "duration_ms": result.get("duration_ms"),
             "duration_api_ms": result.get("duration_api_ms"), "total_cost_usd": claude_usd,
+            "total_cost_usd_source": claude_usd_source, "capped": capped,
             "usage": result.get("usage"), "model_usage": result.get("model_usage"),
             "list_price_usd_recomputed": None if recomputed is None else round(recomputed, 6),
             "recomputed_vs_reported_gap": cost_gap, "price_flags": price_flags,
@@ -398,10 +458,11 @@ def score_run(run_dir: str, repo_dir: str, task: dict, task_dir: str, repo_cfg: 
         "writes": writes,
         "outcome": {
             "build_ok": build_ok, "build_stderr_tail": build.err[-1500:] if not build_ok else "",
-            "vet_ok": vet_ok, "vet_stderr_tail": (vet.err[-1500:] if vet and not vet.ok else ""),
+            "vet_ok": vet_ok, "vet_mode": vet_mode, "vet_new_findings": vet_new[:20],
+            "vet_stderr_tail": (vet.err[-1500:] if vet and not vet.ok else ""),
             "gofmt_clean": not gofmt_dirty, "gofmt_dirty_files": gofmt_dirty,
             "hidden_tests": _slim(hidden), "full_suite": _slim(full),
-            "hidden_pass": hidden_pass, "pass": passed,
+            "hidden_pass": hidden_pass, "tree_pass": tree_pass, "pass": passed,
             "hidden_test_tampered": bool(tampered), "tampered_files": tampered,
         },
         "diff": {k: v for k, v in dstats.items() if k != "files"},
@@ -411,6 +472,19 @@ def score_run(run_dir: str, repo_dir: str, task: dict, task_dir: str, repo_cfg: 
     }
     write_json(os.path.join(run_dir, "run.json"), rec)
     return rec
+
+
+def vet_findings(stderr: str) -> List[str]:
+    """`path: message` per vet finding, line/column dropped so an edit above it does not
+    turn an inherited finding into a new one."""
+    out: List[str] = []
+    for line in stderr.splitlines():
+        m = re.match(r"^(\S+?\.go):\d+(?::\d+)?:\s*(.*)$", line.strip())
+        if m:
+            key = "%s: %s" % (m.group(1), m.group(2).strip())
+            if key not in out:
+                out.append(key)
+    return out
 
 
 def _count_denials(denials: List[dict]) -> Dict[str, int]:
@@ -429,3 +503,67 @@ def _slim(t: Optional[dict]) -> Optional[dict]:
         return None
     return {k: t.get(k) for k in ("pass", "rc", "timed_out", "seconds", "passed_tests", "failed_tests",
                                   "failed_packages", "build_failed_packages", "packages", "stderr_tail")}
+
+
+def reaccount(run_dir: str, task: dict, arm: str, prices: Prices) -> dict:
+    """Recompute the accounting sections of an existing run.json from raw/ without touching
+    the tree: Claude/agy costs, write attribution, the relative vet rule (from the saved vet
+    stderr) and the capped-run rule. Used after a harness fix so old records follow the
+    same definitions as new ones; the test outcomes themselves are never re-derived here."""
+    raw = os.path.join(run_dir, "raw")
+    rec = read_json(os.path.join(run_dir, "run.json"))
+    meta = read_json(os.path.join(raw, "meta.json")) if os.path.isfile(os.path.join(raw, "meta.json")) else {}
+    result = claude_usage.parse_result(os.path.join(raw, "result.json"))
+    transcripts = sorted(glob.glob(os.path.join(raw, "transcripts", "*.jsonl")))
+    tsum = {"present": False}
+    agy_calls: List[dict] = []
+    if transcripts:
+        main_t = [t for t in transcripts if os.path.basename(t).startswith("main")] or transcripts[:1]
+        tsum = claude_usage.summarize_transcript(main_t[0])
+        agy_calls = list(tsum.get("agy_calls") or [])
+    recomputed, price_flags = claude_usage.recompute_list_price(result.get("model_usage") or {}, prices)
+    claude_usd = float(result["total_cost_usd"]) if result.get("total_cost_usd") is not None else None
+    source = "result.modelUsage"
+    if claude_usd is None and tsum.get("present"):
+        tot = sum((prices.price_claude(m, mu["input"], mu["output"], mu["cache_creation"], mu["cache_read"])[0] or 0.0)
+                  for m, mu in (tsum.get("models") or {}).items())
+        if tot > 0:
+            claude_usd, source = round(tot, 6), "transcript_list_price"
+    agy_recs = agy_usage.parse_log(os.path.join(raw, "agy_usage.log"))
+    try:
+        agy = agy_usage.summarize(agy_recs, prices, agy_calls)
+    except agy_usage.InvariantError as e:
+        agy = {"delegations": None, "invariant_ok": False, "error": str(e), "shadow_usd": None, "conversation_ids": []}
+    audits = {cid: audit_brain(cid) for cid in (agy.get("conversation_ids") or [])}
+    agy["trace_audit"] = audits
+    agy["executor_web_access"] = any(a.get("web_steps", 0) > 0 for a in audits.values())
+    agy["executor_write_steps"] = sum(a.get("write_steps", 0) for a in audits.values())
+    writes = attribute_writes(os.path.join(raw, "tool_trace.jsonl"))
+    o = rec["outcome"]
+    base_vet = task.get("verify", {}).get("vet_base_findings")
+    vet_new = [f for f in vet_findings(o.get("vet_stderr_tail") or "") if f not in set(base_vet or [])]
+    vet_ok = bool(o.get("vet_ok")) or (base_vet is not None and o.get("build_ok") and not vet_new)
+    tree_pass = bool(o.get("build_ok") and vet_ok and o.get("hidden_pass") and (o.get("full_suite") or {}).get("pass"))
+    subtype = result.get("subtype") or ("killed_wall" if meta.get("killed_wall") else rec["claude"].get("subtype"))
+    capped = subtype in ("killed_wall", "error_max_turns", "error_max_budget_usd")
+    violations: List[str] = []
+    if tsum.get("web_tool_calls"):
+        violations.append("claude_web_tool_call")
+    if agy["executor_web_access"]:
+        violations.append("executor_web_access")
+    if arm == "hybrid-forced" and (writes.get("claude_bash") or tsum.get("write_tool_calls")):
+        violations.append("claude_side_write_in_forced_arm")
+    gemini_usd = agy.get("shadow_usd")
+    rec["claude"].update({"total_cost_usd": claude_usd, "total_cost_usd_source": source, "subtype": subtype, "capped": capped,
+                          "num_turns": result.get("num_turns") or (tsum.get("turns") if tsum.get("present") else None),
+                          "list_price_usd_recomputed": None if recomputed is None else round(recomputed, 6), "price_flags": price_flags})
+    rec["agy"] = agy
+    rec["writes"] = writes
+    o.update({"vet_ok": vet_ok, "vet_mode": "relative" if base_vet is not None else "absolute", "vet_new_findings": vet_new[:20],
+              "tree_pass": tree_pass, "pass": tree_pass and not capped})
+    rec["violations"] = violations
+    rec["cost"] = {"claude_usd": claude_usd, "gemini_usd": gemini_usd,
+                   "total_usd": (claude_usd or 0.0) + (gemini_usd or 0.0) if claude_usd is not None else None}
+    rec.setdefault("notes", []).append("reaccounted at %s" % __import__("common").now_iso())
+    write_json(os.path.join(run_dir, "run.json"), rec)
+    return rec

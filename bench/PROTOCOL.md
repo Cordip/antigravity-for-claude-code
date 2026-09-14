@@ -58,9 +58,23 @@ Caps (from the pilot; identical across arms):
 
 | class | max_budget_usd | max_turns | wall_s |
 |---|---|---|---|
-| small | _pilot_ | _pilot_ | _pilot_ |
-| medium | _pilot_ | _pilot_ | _pilot_ |
-| large | _pilot_ | _pilot_ | _pilot_ |
+| small | 8 | 80 | 2,700 (45 min) |
+| medium | 30 | 150 | 9,000 (150 min) |
+| large | 75 | 250 | 14,400 (240 min) |
+
+Set from the pilot so that no cap binds in practice (the pilot's 60/100-minute walls cut
+both hybrid-forced runs while their trees already passed; those runs are failures under
+the rule below, and the walls were the pilot's mistake, not the arm's). A run that hits
+any cap counts as a failure; `tree_pass` is recorded separately.
+
+Further rules fixed after the pilot: `go vet` is judged relative to the base commit
+(findings the author's own tree already has, recorded per task by `curate vetbase`, are
+not the agent's — k6 has two under Go 1.27); Go runs with `-mod=readonly` so no `go`
+command can rewrite `go.mod`/`go.sum`; the tree-fingerprint hook records the changed file
+list, and a `go` command whose only change is `go.mod`/`go.sum` is attributed to the
+toolchain, not to Claude; every hybrid checkout is registered as an agy project before
+the run (`agy --new-project -p /model`, zero-turn) because agy otherwise runs in its
+last project root.
 
 ## Metrics
 

@@ -1,8 +1,13 @@
 {
   "repo": "grafana/k6",
   "_note": "CI (.github/actions/test/action.yml): go test -p 2 -race -timeout 1600s $(go list ./... | grep -v browser/tests); browser tests need Chromium and are excluded.",
-  "go_env": {"GOFLAGS": "-mod=mod"},
-  "test_extra_args": ["-timeout", "1600s"],
+  "go_env": {
+    "GOFLAGS": "-mod=readonly"
+  },
+  "test_extra_args": [
+    "-timeout",
+    "1600s"
+  ],
   "exclude_pkg_regex": "browser/tests",
   "parallel_p": 2,
   "hidden_timeout_s": 900,

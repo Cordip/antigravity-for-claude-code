@@ -256,7 +256,12 @@
       "TestHTTP2GoAwayError",
       "TestHTTP2StreamError"
     ],
-    "hidden_dropped_flaky": []
+    "hidden_dropped_flaky": [],
+    "vet_base_findings": [
+      "internal/js/modules/k6/experimental/fs/file.go: method Seek(offset int64, whence fs.SeekMode) (int64, error) should have signature Seek(int64, int) (int64, error)",
+      "lib/executor/helpers.go: the cancel function returned by context.WithDeadline should be called, not discarded, to avoid a context leak"
+    ],
+    "vet_base_rc": 1
   },
   "deps": {
     "go_mod_changed": false

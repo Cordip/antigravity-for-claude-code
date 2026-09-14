@@ -1,7 +1,9 @@
 {
   "repo": "sourcegraph/zoekt",
   "_note": "CI (.github/workflows/ci.yml): go test ./...; universal-ctags optional (tests skip without it); gitindex/indexserver tests need a git binary on PATH (present).",
-  "go_env": {"GOFLAGS": "-mod=mod"},
+  "go_env": {
+    "GOFLAGS": "-mod=readonly"
+  },
   "test_extra_args": [],
   "exclude_pkg_regex": null,
   "parallel_p": null,
