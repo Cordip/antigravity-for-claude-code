@@ -3,6 +3,17 @@
 All notable changes to **Antigravity for Claude Code**. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/); versions are in `.claude-plugin/plugin.json`.
 
+## 0.27.2
+
+- **Docs: user-level Claude Code assets are no longer described as nonexistent**
+  ([#79](https://github.com/yuting0624/antigravity-for-claude-code/issues/79)).
+  `docs/MIGRATION.md` listed `~/.claude/agents/`, `~/.claude/commands/` and
+  `~/.claude/CLAUDE.md` as locations people will not find, and said hooks exist only inside
+  plugins. All four are real once the user creates them (hooks live under `settings.json`'s
+  `hooks` key). They are now in the §1 layout table and the §6 matrix as *not read*, and the
+  README asset table says what becomes of them instead of leaving them out. No behaviour
+  change.
+
 ## 0.27.1
 
 - **`agy-migrate` runs on Windows**

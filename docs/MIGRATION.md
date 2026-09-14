@@ -25,9 +25,18 @@ default `~/.claude`, but *inside* a relocated dir.
 | Sessions | `~/.claude/projects/<enc>/<uuid>.jsonl` (+ `<uuid>/subagents/`) | JSONL |
 | Credentials | macOS Keychain (`Claude Code-credentials`) | not on disk |
 
-Things people expect and will not find: `~/.claude/CLAUDE.md`, `~/.claude/memory/`,
-`~/.claude/agents/`, `~/.claude/commands/`, `~/.claude/hooks/`, `~/.claude/todos/`
-(now `tasks/`). Hooks exist only inside plugins.
+Not created by a fresh install, but real Claude Code locations once the user populates
+them — so absent on the machine this was measured on, and present on plenty of others:
+
+| Asset | Path | Format |
+| --- | --- | --- |
+| User memory | `~/.claude/CLAUDE.md` | Markdown |
+| User subagents | `~/.claude/agents/<name>.md` | Markdown + frontmatter — `name`, `description`, `tools`, `model` |
+| User slash commands | `~/.claude/commands/<name>.md` | Markdown + frontmatter |
+| User hooks | `hooks` key of `settings.json` / `settings.local.json` | JSON; the `command` can point anywhere — `~/.claude/hooks/` is a common convention, not a location Claude Code reads |
+
+`agy-migrate` reads none of these; see the matrix in §6. Genuinely absent:
+`~/.claude/memory/`, and `~/.claude/todos/` (now `tasks/`).
 
 **The directory-name encoding is lossy.** `/`, `_`, `.` and — on Windows — the drive
 `:` all become `-`:
@@ -180,6 +189,10 @@ the directory holding `hooks.json`, so it is rewritten to `./`.
 | `permissions.allow` `Bash(...)` | `command(...)` | lossy, widening — proposal only |
 | `permissions.allow` `Read/WebFetch/WebSearch/Skill/mcp__*` | — | no equivalent |
 | `model`, `effortLevel`, `env` | — | reported, never written |
+| `~/.claude/agents/*.md` | — | not read: `model:` names a Claude tier, `tools:` lists Claude tool names |
+| `~/.claude/CLAUDE.md` | — | not read; `~/.claude` is pruned from the `CLAUDE.md` walk |
+| `~/.claude/commands/*.md` | — | not read; only plugin `commands/` go through the importer |
+| `settings.json` `hooks` | — | not read; only plugin `hooks.json` is translated |
 | `projects/**/*.jsonl` | — | **impossible**, see below |
 | `tasks/`, `plans/`, `file-history/`, `jobs/`, `paste-cache/` | — | no counterpart |
 | credentials | — | different auth; never copy |

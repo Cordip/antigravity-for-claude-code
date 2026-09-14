@@ -122,6 +122,8 @@ by default; `--apply` backs up first and `--uninstall --apply` reverses it. Your
 | MCP servers (project + desktop app) | merged into `~/.gemini/config/mcp_config.json` |
 | trusted projects | `trustedWorkspaces` |
 | `permissions.allow` | a **proposal file** — see below |
+| `~/.claude/agents/` | nothing. A user subagent's `model:` names a Claude tier (`opus` / `sonnet` / `haiku`) and its `tools:` lists Claude tool names, so there is no honest mapping; subagents shipped *inside a plugin* come across with the plugin |
+| `~/.claude/CLAUDE.md`, `~/.claude/commands/`, `hooks` in `settings.json` | nothing — only the copies that ship inside a plugin are carried across |
 | session history | nothing. Antigravity stores conversations as protobuf blobs inside per-conversation SQLite files; there is no writer |
 
 Two things are deliberately not automatic. **Permissions widen when translated** —
