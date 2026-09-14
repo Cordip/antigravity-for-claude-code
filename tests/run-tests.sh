@@ -2006,6 +2006,14 @@ else
   echo "FAIL: agy-migrate suite"; sed 's/^/    /' "$TMP/migrate.log" | tail -20; FAIL=$((FAIL+1))
 fi
 
+# The benchmark harness (bench/) is python and has its own unittest suite; it runs as a
+# child and reports one line here, the same way the migration suite does.
+if python3 -m unittest discover -s "$HERE/../bench/tests" -t "$HERE/../bench" > "$TMP/bench.log" 2>&1; then
+  echo "ok: bench harness suite ($(sed -n 's/^Ran \([0-9]*\) tests.*/\1/p' "$TMP/bench.log") checks)"; PASS=$((PASS+1))
+else
+  echo "FAIL: bench harness suite"; sed 's/^/    /' "$TMP/bench.log" | tail -20; FAIL=$((FAIL+1))
+fi
+
 echo ""
 if [ "$SKIP" -gt 0 ]; then
   echo "PASS=$PASS FAIL=$FAIL SKIP=$SKIP"
