@@ -18,7 +18,7 @@ from typing import Dict, List, Optional, Tuple
 BENCH_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REPO_DIR = os.path.dirname(BENCH_DIR)
 TASKS_DIR = os.path.join(BENCH_DIR, "tasks")
-RESULTS_DIR = os.path.join(BENCH_DIR, "results")
+RESULTS_DIR = os.environ.get("AGY_BENCH_RESULTS_DIR") or os.path.join(BENCH_DIR, "results")
 PROMPTS_DIR = os.path.join(BENCH_DIR, "prompts")
 POLICY_DIR = os.path.join(BENCH_DIR, "policy")
 HOOKS_DIR = os.path.join(BENCH_DIR, "hooks")
