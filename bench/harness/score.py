@@ -29,8 +29,14 @@ KNOWN_STEP_TYPES = {"RUN_COMMAND", "CODE_ACTION", "VIEW_FILE", "LIST_DIRECTORY",
 # ------------------------------------------------------------ go toolchain --
 
 def go_env(repo: dict, gomod_dir: str, gobuild_dir: str) -> Dict[str, str]:
+    # TMPDIR: macOS's default temp dir sits behind the /var -> /private/var symlink, and
+    # tests that compare a resolved path with t.TempDir() fail there for no reason of the
+    # code's (measured: zoekt's TestSyncIndexesWithRootRelativeName). A plain directory
+    # under the bench home removes that class of environment failure for every arm alike.
+    tmp = os.path.join(os.path.dirname(gomod_dir), "tmp")
+    os.makedirs(tmp, exist_ok=True)
     env = {"GOMODCACHE": gomod_dir, "GOCACHE": gobuild_dir, "GOPROXY": "off", "GOTOOLCHAIN": "local",
-           "GOSUMDB": "off", "GOWORK": "off", "GOFLAGS": "-mod=mod", "CGO_ENABLED": "0"}
+           "GOSUMDB": "off", "GOWORK": "off", "GOFLAGS": "-mod=mod", "CGO_ENABLED": "0", "TMPDIR": tmp}
     env.update(repo.get("go_env") or {})
     return env
 

@@ -22,7 +22,7 @@ at a pinned SHA. Executor default tier `flash` = Gemini 3.8 Flash (High).
 
 ## Tasks
 
-Merged PRs from caddyserver/caddy, cli/cli and grafana/k6, merged after 2026-07-01;
+Merged PRs from caddyserver/caddy, cli/cli, grafana/k6 and sourcegraph/zoekt, merged after 2026-07-01;
 each verified by `bench.py curate verify` (hidden tests fail at base, pass 3/3 at the
 target commit, suite timing recorded; environment failures and flaky tests recorded in
 `task.json` and skipped in the suite gate, never counted as hidden tests). Prompts are
@@ -35,13 +35,16 @@ non-test added lines: small < 100, medium 100–600, large ≥ 700.
 | caddy-7995 | caddyserver/caddy | #7995 | small | verified |
 | caddy-7888 | caddyserver/caddy | #7888 | medium | verified |
 | caddy-7913 | caddyserver/caddy | #7913 | medium | verified (pilot) |
-| cli-14136 | cli/cli | #14136 | medium | verification pending |
+| cli-14136 | cli/cli | #14136 | medium | verified |
 | k6-6169 | grafana/k6 | #6169 | large | verified (pilot) |
-| cli-attach | cli/cli | #14177–#14184 | large | verification pending |
-| _third large task_ | _to be chosen after the pilot_ | | large | |
+| cli-attach | cli/cli | #14177–#14184 | large | verified |
+| zoekt-1105 | sourcegraph/zoekt | #1105 | large | verified |
 
 Rejected during curation: caddy #7858 (hidden tests return early off Windows and pass at
 base); cli #14179 alone (its eight-PR stack landed as one merge, so it is not isolable).
+Environment note: `TMPDIR` is pinned to a plain directory for every run because macOS's
+default temp dir sits behind the `/var -> /private/var` symlink, which failed one zoekt
+test for the author's own code (measured; fixed for all arms alike).
 
 ## Design of one run
 

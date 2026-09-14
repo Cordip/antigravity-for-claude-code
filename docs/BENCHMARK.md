@@ -15,7 +15,7 @@ and to publish the answer either way.
 ## How it is measured (summary; protocol in `bench/PROTOCOL.md`)
 
 - **Tasks**: merged pull requests from public Go repositories (caddyserver/caddy, cli/cli,
-  grafana/k6), merged after 2026-07-01 — after the models' training cutoffs. A task is the
+  grafana/k6, sourcegraph/zoekt), merged after 2026-07-01 — after the models' training cutoffs. A task is the
   repository at the PR's parent commit plus the PR's test files; the requirement is a
   20–30 line prompt written from the PR description without naming files or identifiers
   the author introduced (linted). Every task is verified: the hidden tests fail at the
@@ -46,6 +46,7 @@ and to publish the answer either way.
 | cli-14136 | cli/cli | [#14136](https://github.com/cli/cli/pull/14136) | medium | 199 / 3 | 5 |
 | k6-6169 | grafana/k6 | [#6169](https://github.com/grafana/k6/pull/6169) | large | 1,364 / 16 | 13 |
 | cli-attach | cli/cli | [#14177–#14184](https://github.com/cli/cli/pull/14186) | large | 2,242 / 22 | 22 |
+| zoekt-1105 | sourcegraph/zoekt | [#1105](https://github.com/sourcegraph/zoekt/pull/1105) | large | 749 / 4 | 4 |
 
 Curation notes are in each `bench/tasks/<repo>/<id>/task.json` (`verify`): k6-6169 skips
 three HTTP/2 tests that fail 3/3 with the author's own patch on this machine and drops one
