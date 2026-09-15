@@ -7,6 +7,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(os.path.dirname(HERE), "harness"))
 import analyze  # noqa: E402
 import judge  # noqa: E402
+import schedule  # noqa: E402
 
 GOOD = '{"scores":{"consistency":4,"edge_cases":3,"scope":5,"readability":4,"robustness":3,"maintainability":4},"rationale":{"consistency":"a","edge_cases":"b","scope":"c","readability":"d","robustness":"e","maintainability":"f"},"flags":[]}'
 
@@ -86,3 +87,45 @@ class Analysis(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Scheduler(unittest.TestCase):
+    def _items(self):
+        return [
+            {"task_id": "t1", "arm": "solo", "rep": 1, "status": "done", "history": [{"ended_ts": 1000.0}]},
+            {"task_id": "t2", "arm": "solo", "rep": 1, "status": "pending", "history": []},
+            {"task_id": "t1", "arm": "hyb", "rep": 1, "status": "pending", "history": []},
+            {"task_id": "t3", "arm": "hyb", "rep": 1, "status": "pending", "history": []},
+        ]
+
+    def test_same_arm_and_same_task_gaps(self):
+        """Dropping the arm rule lets item 1 start at t=1100; dropping the task rule lets item 2."""
+        items = self._items()
+        self.assertEqual(schedule.eligible(items, 1100.0, 300), 3)   # t3/hyb: neither arm nor task ran recently
+        self.assertEqual(schedule.eligible(items, 1400.0, 300), 1)   # after the gap the earlier item is taken first
+
+    def test_running_arm_or_task_blocks(self):
+        items = self._items(); items[3]["status"] = "running"
+        self.assertIsNone(schedule.eligible(items, 1100.0, 300))    # hyb running, solo too recent, t1 too recent
+
+    def test_classify_infra_vs_final(self):
+        infra = {"claude": {"subtype": "error_during_execution", "errors": ["529 overloaded"], "transcript": {"present": True, "tool_calls": {}}}, "agy": {}}
+        final = {"claude": {"subtype": "success", "errors": [], "transcript": {"present": True, "tool_calls": {"Bash": 3}}, "total_cost_usd": 1.0}, "agy": {}}
+        quota = {"claude": {"subtype": "success", "errors": [], "transcript": {"present": True, "tool_calls": {"Bash": 3}}, "total_cost_usd": 1.0},
+                 "agy": {"delegations": 2, "usage_lines": 0, "signals": {"QUOTA_EXHAUSTED": 2}}}
+        self.assertEqual(schedule.classify(infra, None), "infra")
+        self.assertEqual(schedule.classify(final, None), "final")
+        self.assertEqual(schedule.classify(quota, None), "infra")
+        self.assertEqual(schedule.classify(None, "Traceback"), "infra")
+
+    def test_queue_order_alternates(self):
+        """Consecutive items must differ in arm (rotation) so two lanes rarely wait on the arm gap."""
+        import tempfile, os
+        os.environ["AGY_BENCH_RESULTS_DIR"] = tempfile.mkdtemp()
+        import importlib, common
+        importlib.reload(common); importlib.reload(schedule)
+        q = schedule.build_queue("qtest", ["a", "b", "c"], 2, 1, None)
+        items = q["items"]
+        if items:
+            self.assertTrue(all(items[i]["arm"] != items[i + 1]["arm"] for i in range(len(items) - 1)))
+            self.assertEqual(len(items), len(q["tasks"]) * 3 * 2)

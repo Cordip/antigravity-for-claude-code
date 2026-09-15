@@ -52,6 +52,11 @@ def main(argv=None) -> int:
     an.add_argument("--boot", type=int, default=10000); an.add_argument("--seed", type=int, default=20260914)
     b = sub.add_parser("billing"); b.add_argument("--run-id", required=True); b.add_argument("--table"); b.add_argument("--slack-h", type=float, default=3.0)
     ra = sub.add_parser("reaccount"); ra.add_argument("--run-id", required=True)
+    qb = sub.add_parser("queue"); qb.add_argument("--run-id", required=True); qb.add_argument("--arms", default="solo-opus,solo-sonnet,hybrid-inst,hybrid-forced")
+    qb.add_argument("--reps", type=int, default=3); qb.add_argument("--seed", type=int, default=20260914); qb.add_argument("--tasks")
+    sc = sub.add_parser("schedule"); sc.add_argument("--run-id", required=True); sc.add_argument("--lane", required=True)
+    sc.add_argument("--plugin-dir", required=True); sc.add_argument("--gap-s", type=float)
+    st = sub.add_parser("status"); st.add_argument("--run-id", required=True)
     g = sub.add_parser("gate"); g.add_argument("command"); g.add_argument("--plugin", action="store_true")
     s = sub.add_parser("stop"); s.add_argument("--run-id", required=True); s.add_argument("--now", action="store_true")
     v = sub.add_parser("versions"); v.add_argument("--plugin-dir")
@@ -108,6 +113,19 @@ def main(argv=None) -> int:
         print(json.dumps({k: v for k, v in out.items() if k != "families"}, indent=2))
         for fam, f in out["families"].items():
             print("%-16s computed $%-9.4f billed %-10s gap %s" % (fam, f["computed_usd"], ("$%.4f" % f["billed_usd"]) if f["billed_usd"] is not None else "-", ("%+.1f%%" % f["gap_pct"]) if f["gap_pct"] is not None else "-"))
+        return 0
+    if a.cmd == "queue":
+        import schedule
+        q = schedule.build_queue(a.run_id, a.arms.split(","), a.reps, a.seed, a.tasks.split(",") if a.tasks else None)
+        print(json.dumps({"run_id": q["run_id"], "items": len(q["items"]), "tasks": q["tasks"], "arms": q["arms"], "reps": q["reps"]}, indent=2))
+        return 0
+    if a.cmd == "schedule":
+        import schedule
+        schedule.lane(a.run_id, a.lane, a.plugin_dir, a.gap_s)
+        return 0
+    if a.cmd == "status":
+        import schedule
+        print(json.dumps(schedule.status(a.run_id), indent=2))
         return 0
     if a.cmd == "reaccount":
         import score

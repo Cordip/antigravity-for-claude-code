@@ -1,9 +1,14 @@
 # Pre-registered protocol — real-PR replay benchmark
 
-Status: **draft during the pilot**. Caps, task list and the full-run size are filled in
-from the pilot; the commit that freezes this file is recorded in every run's
-`versions.protocol_sha` and in `docs/BENCHMARK.md`. Nothing below changes after the full
-run starts; deviations are logged in BENCHMARK.md, never silently applied.
+Status: **frozen on 2026-09-15 before the full run** (git tag `bench/protocol-v1`; the tag's
+commit is recorded in every run's `versions.protocol_sha` via `manifest.json` and in
+`docs/BENCHMARK.md`). Nothing below changes while the run is in progress; deviations are
+logged in BENCHMARK.md, never silently applied. The pilot that calibrated it is described
+in BENCHMARK.md.
+
+**Full run**: 4 arms × 8 tasks × 3 repetitions = 96 runs, two lanes on one machine, queue
+seed 20260914, run id `full`, started 2026-09-15. Judging and analysis follow with the
+seeds named below.
 
 ## Question
 
