@@ -172,6 +172,7 @@ def invoke_claude(repo_dir: str, cfg_dir: str, run_raw: str, prompt: str, arm_cf
         env.pop(k, None)
     write_text(os.path.join(run_raw, "command.txt"), " ".join(_q(c) for c in cmd) + "\n")
     started = time.time()
+    mono0 = time.monotonic()  # does not advance while the machine sleeps; wall time does
     killed = False
     with open(os.path.join(run_raw, "result.json"), "w", encoding="utf-8") as out_fh, \
             open(os.path.join(run_raw, "claude.stderr"), "w", encoding="utf-8") as err_fh:
@@ -189,8 +190,14 @@ def invoke_claude(repo_dir: str, cfg_dir: str, run_raw: str, prompt: str, arm_cf
                     os.killpg(p.pid, signal.SIGKILL)
                 except Exception:  # noqa: BLE001
                     pass
+    wall = time.time() - started
+    mono = time.monotonic() - mono0
+    # a laptop lid closed mid-run: wall clock runs on, the monotonic clock does not, and the
+    # in-flight API call dies on wake. Recorded so the scheduler retries instead of scoring it.
+    suspended = round(max(0.0, wall - mono), 1)
     return {"session_id": session_id, "rc": p.returncode, "killed_wall": killed,
-            "agent_wall_s": round(time.time() - started, 1), "command": cmd}
+            "agent_wall_s": round(wall, 1), "agent_active_s": round(mono, 1),
+            "suspended_s": suspended if suspended > 30 else 0.0, "command": cmd}
 
 
 def _q(s: str) -> str:
@@ -262,7 +269,8 @@ def run_once(task_id: str, arm: str, rep: int, run_id: str, plugin_dir: Optional
     inv = invoke_claude(repo_dir, cfg_dir, raw, prompt, arm_cfg, arms, caps, plugin_dir, repo_cfg)
     if arm_cfg["plugin"]:
         quota_probe(raw, "after")
-    meta.update({"ended_at": now_iso(), "agent_wall_s": inv["agent_wall_s"], "claude_rc": inv["rc"],
+    meta.update({"ended_at": now_iso(), "agent_wall_s": inv["agent_wall_s"], "agent_active_s": inv["agent_active_s"],
+                 "suspended_s": inv["suspended_s"], "claude_rc": inv["rc"],
                  "killed_wall": inv["killed_wall"], "session_id": inv["session_id"]})
     meta["transcripts"] = collect_transcripts(cfg_dir, inv["session_id"], raw)
     write_json(os.path.join(raw, "meta.json"), meta)

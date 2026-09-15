@@ -131,6 +131,8 @@ def classify(rec: Optional[dict], error: Optional[str]) -> str:
     """'infra' or 'final' for a finished attempt."""
     if error:
         return "infra"
+    if (rec.get("suspended_s") or 0) > 30:
+        return "infra"  # the machine slept during the run; the attempt is kept, the item rerun
     c = rec.get("claude", {})
     tool_calls = sum((c.get("transcript") or {}).get("tool_calls", {}).values()) if c.get("transcript") else 0
     errs = " ".join(c.get("errors") or []).lower()
