@@ -112,7 +112,23 @@ What the pilot established, and what it changed:
 
 ## Full run
 
-_Not started. Size to be decided from the pilot._
+Started 2026-09-15 02:43 UTC: 96 runs, two lanes, protocol tag `bench/protocol-v1`.
+Results will appear here as `bench:table` blocks when the run completes.
+
+### Deviations log (kept as the run proceeds)
+
+- 02:43Z — lane A relaunched detached 24 s into its first item (launcher change); the
+  item was rerun; the partial attempt is kept as `interrupted`.
+- 08:20Z — the laptop slept (battery, lid) during two running items; both were rerun
+  as `suspended` and a separate retry budget was introduced for sleep interruptions
+  (`bench/harness/schedule.py`). Spend on interrupted attempts is recorded but not
+  part of any arm's numbers.
+- 08:44Z — `k6-6169__solo-opus__r1` failed only on `websockets.TestLockingUpWithAJustGeneralCancel`,
+  a test in a package the agent did not touch that passed 6/6 during curation; the
+  checkout was already removed, so it **stays a failure** under the protocol. From the next
+  item on, a test that fails in the full suite is rerun once in isolation and counted as a
+  flake if it passes then (`full_suite.flaky_retry` in `run.json`); the final tables state
+  how many runs' `pass` depended on that rule.
 
 ## Versions and provenance
 

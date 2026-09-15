@@ -264,6 +264,11 @@ class Scoring(unittest.TestCase):
         self.assertEqual(w["claude_bash"], 1); self.assertEqual(w["claude_bash_files"], ["x.go"])
         self.assertEqual(w["agy"], 1); self.assertEqual(w["agy_files"], ["y.go"])
 
+    def test_rerun_groups_by_package_and_top_level_test(self):
+        """Subtests collapse to their parent; packages are rerun separately."""
+        g = score.rerun_groups(["a/b.TestX/sub1", "a/b.TestX/sub2", "a/b.TestY", "c/d.TestZ"])
+        self.assertEqual(g, {"a/b": ["TestX", "TestY"], "c/d": ["TestZ"]})
+
     def test_vet_findings_drop_line_numbers(self):
         """An inherited finding must still match after an edit shifts its line."""
         a = score.vet_findings("lib/x.go:146:18: the cancel function should be called\n# pkg\n")

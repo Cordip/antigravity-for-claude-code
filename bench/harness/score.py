@@ -331,6 +331,28 @@ def score_run(run_dir: str, repo_dir: str, task: dict, task_dir: str, repo_cfg: 
             extra += ["-skip", skip]
         full, _ = run_tests(repo_dir, env, pkgs, None, extra, int(repo_cfg.get("suite_timeout_s", 1500)),
                             repo_cfg.get("parallel_p"))
+        # A test that fails in the full suite and passes when rerun alone is a flake (measured
+        # on the full run: websockets.TestLockingUpWithAJustGeneralCancel failed once in an
+        # untouched package under two-lane load after passing 6/6 in curation). Failed tests
+        # are rerun once in isolation; the retry is recorded either way. Build failures and
+        # hidden tests are never retried.
+        full["flaky_retry"] = None
+        if full and not full["pass"] and full["failed_tests"] and not full["build_failed_packages"] and not full["timed_out"]:
+            groups = rerun_groups(full["failed_tests"])
+            retry_ok = True
+            retried = []
+            for pkg, names in groups.items():
+                rr, _ = run_tests(repo_dir, env, [pkg], "^(%s)$" % "|".join(sorted(set(names))), extra,
+                                  int(repo_cfg.get("hidden_timeout_s", 600)))
+                retried.append({"package": pkg, "tests": sorted(set(names)), "pass": rr["pass"], "failed": rr["failed_tests"][:10]})
+                retry_ok = retry_ok and rr["pass"]
+            full["flaky_retry"] = {"groups": retried, "all_passed_on_retry": retry_ok}
+            if retry_ok and not full["failed_packages"] == []:
+                full["failed_packages_before_retry"] = full["failed_packages"]
+            if retry_ok:
+                full["failed_tests_before_retry"] = full["failed_tests"]
+                full["pass"] = True
+                notes.append("full suite passed after a one-time isolated rerun of %d flaky test(s)" % sum(len(g["tests"]) for g in retried))
     changed_go = [p for p in run(["git", "diff", "--name-only", "HEAD"], cwd=repo_dir, timeout=60).out.split()
                   if p.endswith(".go") and os.path.isfile(os.path.join(repo_dir, p))]
     untracked_go = [p for p in run(["git", "ls-files", "--others", "--exclude-standard"], cwd=repo_dir, timeout=60).out.split()
@@ -475,6 +497,19 @@ def score_run(run_dir: str, repo_dir: str, task: dict, task_dir: str, repo_cfg: 
     return rec
 
 
+def rerun_groups(failed_tests: List[str]) -> Dict[str, List[str]]:
+    """'pkg.TestX/sub' entries -> {pkg: [top-level test names]} for an isolated rerun."""
+    groups: Dict[str, List[str]] = {}
+    for f in failed_tests:
+        pkg, _, name = f.rpartition(".")
+        top = name.split("/", 1)[0]
+        if pkg and top:
+            groups.setdefault(pkg, [])
+            if top not in groups[pkg]:
+                groups[pkg].append(top)
+    return groups
+
+
 def vet_findings(stderr: str) -> List[str]:
     """`path: message` per vet finding, line/column dropped so an edit above it does not
     turn an inherited finding into a new one."""
@@ -503,7 +538,8 @@ def _slim(t: Optional[dict]) -> Optional[dict]:
     if t is None:
         return None
     return {k: t.get(k) for k in ("pass", "rc", "timed_out", "seconds", "passed_tests", "failed_tests",
-                                  "failed_packages", "build_failed_packages", "packages", "stderr_tail")}
+                                  "failed_packages", "build_failed_packages", "packages", "stderr_tail",
+                                  "flaky_retry", "failed_tests_before_retry")}
 
 
 def reaccount(run_dir: str, task: dict, arm: str, prices: Prices) -> dict:

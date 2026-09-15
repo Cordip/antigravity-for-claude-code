@@ -149,7 +149,6 @@ def classify(rec: Optional[dict], error: Optional[str]) -> str:
 
 
 def lane(run_id: str, lane_id: str, plugin_dir: str, gap_s: Optional[float] = None, poll_s: int = 30) -> None:
-    import run as run_mod
     arms = load_arms()
     gap = float(gap_s if gap_s is not None else arms.get("cold_gap_s", 300))
     stop = os.path.join(RESULTS_DIR, run_id, "STOP")
@@ -203,10 +202,21 @@ def lane(run_id: str, lane_id: str, plugin_dir: str, gap_s: Optional[float] = No
             shutil.move(run_dir, dst)
         say("lane %s -> %s (attempt %d)" % (lane_id, key, attempt))
         t0 = time.time(); rec = None; err = None
+        # each item runs in a fresh interpreter so a harness fix committed mid-run applies at
+        # the next item without restarting the lane (versions and hashes stay per-run records)
+        import subprocess, sys
+        bench_py = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "bench.py")
+        cmd = [sys.executable, bench_py, "run", "--run-id", run_id, "--task", it["task_id"], "--arm", it["arm"],
+               "--rep", str(it["rep"]), "--plugin-dir", plugin_dir, "--lane", lane_id]
         try:
-            rec = run_mod.run_once(it["task_id"], it["arm"], it["rep"], run_id, plugin_dir, lane_id, 1)
-        except SystemExit as e:
-            err = "SystemExit: %s" % e
+            pr = subprocess.run(cmd, capture_output=True, text=True, timeout=6 * 3600)
+            rj = os.path.join(run_dir, "run.json")
+            if os.path.isfile(rj):
+                rec = read_json(rj)
+            else:
+                err = "no run.json (rc %s): %s" % (pr.returncode, (pr.stderr or pr.stdout)[-1500:])
+        except subprocess.TimeoutExpired:
+            err = "run subprocess exceeded 6h"
         except Exception:  # noqa: BLE001
             err = traceback.format_exc()[-2000:]
         cls = classify(rec, err)
