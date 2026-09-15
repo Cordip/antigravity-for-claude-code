@@ -157,6 +157,25 @@ def lane(run_id: str, lane_id: str, plugin_dir: str, gap_s: Optional[float] = No
         log.write("%s %s\n" % (now_iso(), msg)); log.flush(); print(msg, flush=True)
 
     say("lane %s start (gap %.0fs)" % (lane_id, gap))
+    # A lane that died mid-run (machine sleep, tool timeout, kill) leaves its item "running";
+    # on restart the same lane id reclaims it: the partial attempt is kept and counted as
+    # interrupted, the item goes back to pending.
+    with Locked(run_id):
+        q = read_json(queue_path(run_id))
+        for it in q["items"]:
+            if it["status"] == "running" and it.get("lane") == lane_id:
+                key = _key(it)
+                rd = os.path.join(RESULTS_DIR, run_id, "runs", key)
+                if os.path.isdir(rd):
+                    dst = os.path.join(rd + "__attempts", str(it["attempts"]))
+                    os.makedirs(os.path.dirname(dst), exist_ok=True)
+                    shutil.move(rd, dst)
+                it["history"].append({"attempt": it["attempts"], "lane": lane_id, "started_ts": None, "ended_ts": time.time(),
+                                      "class": "interrupted", "error": "lane restarted while the item was running", "pass": None,
+                                      "total_usd": None, "subtype": None})
+                it["status"] = "pending"
+                say("lane %s reclaimed interrupted item %s (attempt %d)" % (lane_id, key, it["attempts"]))
+        write_json(queue_path(run_id), q)
     while True:
         if os.path.exists(stop) or os.path.exists(stop_now):
             say("STOP present; lane %s exits" % lane_id); return
