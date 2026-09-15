@@ -156,7 +156,7 @@ def _judge_cfg_dir() -> str:
 def judge_claude(prompt: str, model_alias: str = "fable", budget: float = 2.0) -> dict:
     cfg = _judge_cfg_dir()
     schema = read_text(os.path.join(PROMPTS_DIR, "judge.schema.json"))
-    cmd = ["claude", "-p", "--model", model_alias, "--tools", "", "--output-format", "json", "--json-schema", schema,
+    cmd = [run_mod.CLAUDE_BIN, "-p", "--model", model_alias, "--tools", "", "--output-format", "json", "--json-schema", schema,
            "--max-turns", "1", "--max-budget-usd", str(budget), "--no-session-persistence", "--setting-sources", "user",
            "--disallowedTools", "WebFetch,WebSearch,Bash,Edit,Write,Read,Glob,Grep,Agent"]
     env = {"CLAUDE_CONFIG_DIR": cfg}

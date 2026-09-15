@@ -33,6 +33,10 @@ COPIED_ENV_KEYS = ("CLAUDE_CODE_USE_VERTEX", "ANTHROPIC_VERTEX_PROJECT_ID", "CLO
                    "ANTHROPIC_DEFAULT_FABLE_MODEL", "ANTHROPIC_DEFAULT_HAIKU_MODEL", "NODE_EXTRA_CA_CERTS")
 FIXED_ENV = {"BASH_DEFAULT_TIMEOUT_MS": "900000", "BASH_MAX_TIMEOUT_MS": "900000",
              "DISABLE_AUTOUPDATER": "1", "CLAUDE_CODE_ENABLE_TELEMETRY": "0"}
+# The `claude` launcher follows auto-updates (2.1.270 became 2.1.272 between the pilot and
+# the full run, from the operator's interactive sessions). CLAUDE_BIN pins one versioned
+# binary for every run of a study; the path and its --version are recorded per run.
+CLAUDE_BIN = os.environ.get("CLAUDE_BIN", "claude")
 
 
 def mirror_path(repo: str) -> str:
@@ -114,7 +118,7 @@ def register_agy_project(repo_dir: str) -> dict:
 
 
 def tool_versions(plugin_dir: Optional[str]) -> dict:
-    v = {"claude": run(["claude", "--version"], timeout=60).out.strip(),
+    v = {"claude": run([CLAUDE_BIN, "--version"], timeout=60).out.strip(), "claude_bin": CLAUDE_BIN,
          "agy": run(["agy", "--version"], timeout=60).out.strip(),
          "go": run(["go", "version"], timeout=60).out.strip(), "plugin": None, "plugin_sha": None}
     if plugin_dir:
@@ -142,7 +146,7 @@ def invoke_claude(repo_dir: str, cfg_dir: str, run_raw: str, prompt: str, arm_cf
     allow: List[str] = []
     for f in allow_files:
         allow += [l.strip() for l in read_text(os.path.join(POLICY_DIR, f)).splitlines() if l.strip()]
-    cmd = ["claude", "-p", "--model", arm_cfg["conductor_alias"], "--effort", arms["effort"],
+    cmd = [CLAUDE_BIN, "-p", "--model", arm_cfg["conductor_alias"], "--effort", arms["effort"],
            "--output-format", "json", "--session-id", session_id, "--setting-sources", "user",
            "--permission-mode", "acceptEdits", "--permission-prompts", "none",
            "--max-turns", str(caps["max_turns"]), "--max-budget-usd", str(caps["max_budget_usd"]),
