@@ -32,3 +32,5 @@
 2026-09-15T09:52:56+00:00 STOP present; lane B exits
 2026-09-15T09:54:02+00:00 lane B start (gap 300s)
 2026-09-15T09:54:02+00:00 lane B -> cli-attach__solo-opus__r1 (attempt 1)
+2026-09-15T13:34:01+00:00 lane B: cli-attach__solo-opus__r1 interrupted by machine sleep (10600s asleep); will retry
+2026-09-15T13:35:01+00:00 STOP present; lane B exits

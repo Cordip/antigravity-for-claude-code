@@ -277,7 +277,24 @@
       ],
       "build_failed_packages": [],
       "packages": 131,
-      "stderr_tail": ""
+      "stderr_tail": "",
+      "unrelated_failed_packages": {
+        "unrelated": [
+          "go.k6.io/k6/v2/internal/js/modules/k6/websockets"
+        ],
+        "related": [],
+        "touched": [
+          "go.k6.io/k6/v2/cloudapi",
+          "go.k6.io/k6/v2/internal/cloudapi/clientcfg",
+          "go.k6.io/k6/v2/internal/cloudapi/provisioning",
+          "go.k6.io/k6/v2/internal/cloudapi/provisioning/test",
+          "go.k6.io/k6/v2/internal/cloudapi/v6",
+          "go.k6.io/k6/v2/internal/cmd",
+          "go.k6.io/k6/v2/internal/output/cloud",
+          "go.k6.io/k6/v2/output/cloud/expv2"
+        ],
+        "computed_post_hoc": true
+      }
     },
     "hidden_pass": true,
     "tree_pass": false,
@@ -392,6 +409,10 @@
     "gemini_usd": 0.0,
     "total_usd": 12.602867750000001
   },
-  "notes": [],
-  "prices_lock_sha256": "606c43d82972168c3159fa1c45d6cf843d6e52a9cdcc0792cead13e3a71fbc2d"
+  "notes": [
+    "post hoc (2026-09-15T22:55Z): full-suite failure confined to ['go.k6.io/k6/v2/internal/js/modules/k6/websockets'], which has no dependency on the agent's change; reclassified as an environment failure and rerun"
+  ],
+  "prices_lock_sha256": "606c43d82972168c3159fa1c45d6cf843d6e52a9cdcc0792cead13e3a71fbc2d",
+  "env_failure": "suite_failure_in_unrelated_package",
+  "scheduler_class": "infra"
 }

@@ -32,3 +32,5 @@ lane B: cli-14136__hybrid-inst__r1 interrupted by machine sleep (431s asleep); w
 STOP present; lane B exits
 lane B start (gap 300s)
 lane B -> cli-attach__solo-opus__r1 (attempt 1)
+lane B: cli-attach__solo-opus__r1 interrupted by machine sleep (10600s asleep); will retry
+STOP present; lane B exits

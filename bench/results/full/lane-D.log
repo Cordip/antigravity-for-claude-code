@@ -19,3 +19,35 @@
 2026-09-15T11:16:17+00:00 lane D: k6-6169__hybrid-forced__r1 infra failure (no run.json (rc 1): STOP file present: /Users/linyuting/.cache/agy-bench/src/bench/results/full/STOP
 ); will retry
 2026-09-15T13:28:46+00:00 lane D -> cli-14136__hybrid-inst__r1 (attempt 2)
+2026-09-15T13:56:21+00:00 lane D: cli-14136__hybrid-inst__r1 done pass=True $6.154093500000001 in 1655s
+2026-09-15T13:56:21+00:00 lane D -> k6-6169__hybrid-forced__r1 (attempt 1)
+2026-09-15T15:53:01+00:00 lane D: k6-6169__hybrid-forced__r1 done pass=True $24.874600750000003 in 7000s
+2026-09-15T15:53:01+00:00 lane D -> caddy-7877__solo-opus__r2 (attempt 1)
+2026-09-15T15:55:22+00:00 lane D: caddy-7877__solo-opus__r2 done pass=True $0.65210525 in 141s
+2026-09-15T15:55:22+00:00 lane D -> cli-14136__hybrid-inst__r2 (attempt 1)
+2026-09-15T16:32:54+00:00 lane D: cli-14136__hybrid-inst__r2 done pass=True $5.66657525 in 2252s
+2026-09-15T16:32:54+00:00 lane D -> caddy-7877__hybrid-forced__r2 (attempt 1)
+2026-09-15T16:37:12+00:00 lane D: caddy-7877__hybrid-forced__r2 done pass=True $0.83689575 in 258s
+2026-09-15T16:37:12+00:00 lane D -> caddy-7995__solo-opus__r2 (attempt 1)
+2026-09-15T16:44:04+00:00 lane D: caddy-7995__solo-opus__r2 done pass=True $2.17097475 in 412s
+2026-09-15T16:44:04+00:00 lane D -> k6-6169__hybrid-inst__r1 (attempt 1)
+2026-09-15T18:20:53+00:00 lane D: k6-6169__hybrid-inst__r1 done pass=True $22.516645999999998 in 5809s
+2026-09-15T18:20:53+00:00 lane D -> caddy-7995__solo-sonnet__r2 (attempt 1)
+2026-09-15T18:33:19+00:00 lane D: caddy-7995__solo-sonnet__r2 done pass=False $2.5319848999999994 in 747s
+2026-09-15T18:33:19+00:00 lane D -> caddy-7877__hybrid-inst__r2 (attempt 1)
+2026-09-15T18:40:20+00:00 lane D: caddy-7877__hybrid-inst__r2 done pass=True $1.0604675000000001 in 421s
+2026-09-15T18:40:20+00:00 lane D -> cli-14136__solo-sonnet__r2 (attempt 1)
+2026-09-15T18:51:17+00:00 lane D: cli-14136__solo-sonnet__r2 done pass=True $2.559219399999999 in 657s
+2026-09-15T18:51:17+00:00 lane D -> caddy-7888__solo-opus__r2 (attempt 1)
+2026-09-15T18:57:47+00:00 lane D: caddy-7888__solo-opus__r2 done pass=True $2.0914057499999994 in 390s
+2026-09-15T18:57:47+00:00 lane D -> caddy-7913__solo-sonnet__r2 (attempt 1)
+2026-09-15T19:10:46+00:00 lane D: caddy-7913__solo-sonnet__r2 done pass=True $2.4260284 in 779s
+2026-09-15T19:10:46+00:00 lane D -> caddy-7888__hybrid-inst__r2 (attempt 1)
+2026-09-15T19:30:22+00:00 lane D: caddy-7888__hybrid-inst__r2 done pass=True $2.1853979999999997 in 1175s
+2026-09-15T19:30:22+00:00 lane D -> caddy-7913__solo-opus__r2 (attempt 1)
+2026-09-15T19:55:49+00:00 lane D: caddy-7913__solo-opus__r2 done pass=True $9.326167499999997 in 1528s
+2026-09-15T19:55:49+00:00 lane D -> caddy-7888__solo-sonnet__r2 (attempt 1)
+2026-09-15T19:58:57+00:00 lane D: caddy-7888__solo-sonnet__r2 done pass=True $0.5011255000000001 in 187s
+2026-09-15T19:58:57+00:00 lane D -> k6-6169__hybrid-inst__r2 (attempt 1)
+2026-09-15T22:28:01+00:00 lane D: k6-6169__hybrid-inst__r2 done pass=False $24.084331749999997 in 8944s
+2026-09-15T22:28:01+00:00 lane D -> caddy-7913__hybrid-forced__r2 (attempt 1)

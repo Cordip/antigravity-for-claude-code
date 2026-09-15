@@ -146,6 +146,17 @@ Results will appear here as `bench:table` blocks when the run completes.
   detected (`wrapper_not_found`, `env_failure: plugin_bin_missing`) and treated as an
   infrastructure failure. `caddy-7995__hybrid-forced__r1` was reclassified and rerun;
   the other two had already been rerun under the sleep rule.
+- 22:28Z — k6's `websockets` test package hung for 27 minutes at 11 GB inside the full-suite
+  gate of `k6-6169__hybrid-inst__r2` (hidden tests passed) and had failed
+  `k6-6169__solo-opus__r1` earlier on one named test. That package imports nothing the k6
+  task touches (checked with `go list -deps` at the base commit), so neither failure can be a
+  regression from the agent's change. Rule added: a full-suite failure confined to packages
+  with no dependency on the changed packages is rerun once whole; if it still fails it is an
+  environment failure (`env_failure: suite_failure_in_unrelated_package`) and the item is
+  rerun. Applied post hoc to those two runs (reclassified, rerun; the attempts are kept). The
+  hanging test `TestLockingUpWithAJustGeneralCancel` is skipped in k6's suite gate from
+  22:40Z (`task.json` `verify.skip_notes`). A failure in a package that *does* depend on the
+  change remains a failure.
 
 ## Versions and provenance
 

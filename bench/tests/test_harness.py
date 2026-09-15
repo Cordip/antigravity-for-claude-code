@@ -278,6 +278,14 @@ class Scoring(unittest.TestCase):
         g = score.rerun_groups(["a/b.TestX/sub1", "a/b.TestX/sub2", "a/b.TestY", "c/d.TestZ"])
         self.assertEqual(g, {"a/b": ["TestX", "TestY"], "c/d": ["TestZ"]})
 
+    def test_touched_import_paths_ignores_tests_and_dedupes(self):
+        """The dependency triage must compare package import paths, not file paths."""
+        import unittest.mock as m
+        with m.patch.object(score, "run") as fake:
+            fake.return_value = common.Result(0, "go.k6.io/k6/v2\n", "", False, 0.1)
+            ips = score.touched_import_paths("/x", {}, ["internal/a/b.go", "internal/a/c.go", "internal/a/b_test.go", "root.go", "docs/x.md"])
+        self.assertEqual(ips, ["go.k6.io/k6/v2/internal/a", "go.k6.io/k6/v2"])
+
     def test_vet_findings_drop_line_numbers(self):
         """An inherited finding must still match after an edit shifts its line."""
         a = score.vet_findings("lib/x.go:146:18: the cancel function should be called\n# pkg\n")

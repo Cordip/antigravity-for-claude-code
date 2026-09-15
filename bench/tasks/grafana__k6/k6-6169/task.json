@@ -250,7 +250,7 @@
     },
     "ok": true,
     "reasons": [],
-    "skip_regex": "^(TestHTTP2ConnectionError|TestHTTP2GoAwayError|TestHTTP2StreamError|TestRunCSVParseConcurrentFromMultipleModules|TestUploadTest)$",
+    "skip_regex": "^(TestHTTP2ConnectionError|TestHTTP2GoAwayError|TestHTTP2StreamError|TestLockingUpWithAJustGeneralCancel|TestRunCSVParseConcurrentFromMultipleModules|TestUploadTest)$",
     "environment_failures": [
       "TestHTTP2ConnectionError",
       "TestHTTP2GoAwayError",
@@ -261,7 +261,10 @@
       "internal/js/modules/k6/experimental/fs/file.go: method Seek(offset int64, whence fs.SeekMode) (int64, error) should have signature Seek(int64, int) (int64, error)",
       "lib/executor/helpers.go: the cancel function returned by context.WithDeadline should be called, not discarded, to avoid a context leak"
     ],
-    "vet_base_rc": 1
+    "vet_base_rc": 1,
+    "skip_notes": [
+      "TestLockingUpWithAJustGeneralCancel (internal/js/modules/k6/websockets): failed once and hung once (11 GB, package timeout) in untouched-package runs during the full run, 2026-09-15; skipped from 22:40Z"
+    ]
   },
   "deps": {
     "go_mod_changed": false

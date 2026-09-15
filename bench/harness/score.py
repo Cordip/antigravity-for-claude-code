@@ -249,6 +249,39 @@ def attribute_writes(trace_path: str) -> dict:
     return out
 
 
+# ---------------------------------------------------- suite failure triage ----
+
+def touched_import_paths(repo_dir: str, env: Dict[str, str], changed_paths: List[str]) -> List[str]:
+    """Import paths of the packages whose non-test .go files the agent changed."""
+    mod = run(["go", "list", "-m"], cwd=repo_dir, env=env, timeout=120).out.strip().splitlines()
+    mod = mod[0] if mod else ""
+    out: List[str] = []
+    for path in changed_paths:
+        if classify_path(path) != "code":
+            continue
+        d = os.path.dirname(path)
+        ip = (mod + "/" + d) if d else mod
+        if ip and ip not in out:
+            out.append(ip)
+    return out
+
+
+def unrelated_failed_packages(repo_dir: str, env: Dict[str, str], failed_pkgs: List[str], touched: List[str]) -> Tuple[List[str], List[str]]:
+    """Split failed packages into (unrelated, related): a package is unrelated when none of
+    its transitive dependencies is a package the agent changed, so its failure cannot be a
+    regression from the change (measured: k6's websockets package, which hung twice under
+    two-lane load, imports nothing the k6 task touches)."""
+    unrelated: List[str] = []
+    related: List[str] = []
+    for pkg in failed_pkgs:
+        deps = set(run(["go", "list", "-deps", pkg], cwd=repo_dir, env=env, timeout=600).out.split())
+        if pkg in touched or any(t in deps for t in touched):
+            related.append(pkg)
+        else:
+            unrelated.append(pkg)
+    return unrelated, related
+
+
 # -------------------------------------------------------- brain transcripts --
 
 def audit_brain(cid: str) -> dict:
@@ -337,7 +370,28 @@ def score_run(run_dir: str, repo_dir: str, task: dict, task_dir: str, repo_cfg: 
         # are rerun once in isolation; the retry is recorded either way. Build failures and
         # hidden tests are never retried.
         full["flaky_retry"] = None
-        if full and not full["pass"] and full["failed_tests"] and not full["build_failed_packages"] and not full["timed_out"]:
+        full["unrelated_failed_packages"] = None
+        if full and not full["pass"] and full["failed_packages"] and not full["build_failed_packages"]:
+            # a failure confined to packages that do not depend on anything the agent changed
+            # is the environment's (hang, flake), not the arm's: rerun those packages once whole
+            changed = run(["git", "diff", "--name-only", "HEAD"], cwd=repo_dir, timeout=60).out.split() + \
+                      run(["git", "ls-files", "--others", "--exclude-standard"], cwd=repo_dir, timeout=60).out.split()
+            touched = touched_import_paths(repo_dir, env, changed)
+            unrelated, related = unrelated_failed_packages(repo_dir, env, full["failed_packages"], touched)
+            full["unrelated_failed_packages"] = {"unrelated": unrelated, "related": related, "touched": touched}
+            if unrelated and not related:
+                rr, _ = run_tests(repo_dir, env, unrelated, None, [a for a in extra if a not in ("-timeout",) and not a.endswith("s")] + ["-timeout", "600s"],
+                                  int(repo_cfg.get("hidden_timeout_s", 600)))
+                full["unrelated_retry"] = {"packages": unrelated, "pass": rr["pass"], "failed": rr["failed_tests"][:10], "seconds": rr["seconds"]}
+                if rr["pass"]:
+                    full["failed_tests_before_retry"] = full["failed_tests"]
+                    full["failed_packages_before_retry"] = full["failed_packages"]
+                    full["pass"] = True
+                    notes.append("full suite passed after rerunning unrelated package(s) %s once" % unrelated)
+                else:
+                    full["env_failure"] = "suite_failure_in_unrelated_package"
+                    notes.append("full suite failure confined to package(s) with no dependency on the change: %s" % unrelated)
+        if full and not full["pass"] and full["failed_tests"] and not full["build_failed_packages"] and not full["timed_out"] and not full.get("env_failure"):
             groups = rerun_groups(full["failed_tests"])
             retry_ok = True
             retried = []
@@ -435,7 +489,7 @@ def score_run(run_dir: str, repo_dir: str, task: dict, task_dir: str, repo_cfg: 
     total_usd = (claude_usd or 0.0) + (gemini_usd or 0.0) if claude_usd is not None else None
 
     violations: List[str] = []
-    env_failure = None
+    env_failure = (full or {}).get("env_failure") if full else None
     if arm.startswith("hybrid") and not (agy.get("delegations") or 0) and tsum.get("wrapper_not_found"):
         env_failure = "plugin_bin_missing"  # the arm's only write path was absent: an environment failure, rerun
         notes.append("agy-delegate was not on the agent's PATH; no delegation possible")
@@ -543,7 +597,8 @@ def _slim(t: Optional[dict]) -> Optional[dict]:
         return None
     return {k: t.get(k) for k in ("pass", "rc", "timed_out", "seconds", "passed_tests", "failed_tests",
                                   "failed_packages", "build_failed_packages", "packages", "stderr_tail",
-                                  "flaky_retry", "failed_tests_before_retry")}
+                                  "flaky_retry", "failed_tests_before_retry", "failed_packages_before_retry",
+                                  "unrelated_failed_packages", "unrelated_retry", "env_failure")}
 
 
 def reaccount(run_dir: str, task: dict, arm: str, prices: Prices) -> dict:
