@@ -129,6 +129,13 @@ Results will appear here as `bench:table` blocks when the run completes.
   item on, a test that fails in the full suite is rerun once in isolation and counted as a
   flake if it passes then (`full_suite.flaky_retry` in `run.json`); the final tables state
   how many runs' `pass` depended on that rule.
+- 09:00Z — a second clamshell sleep (7 min) interrupted both running items; under the
+  rule above they were rerun ($14.55 of attempts kept, not counted). Measured on those
+  records: Claude Code retried the interrupted API call on wake and both runs had
+  completed normally, so rerunning every slept run only burns money. From 10:00Z the
+  wall cap counts active (monotonic) time, a run that slept but completed is kept and
+  flagged (`suspended_s`), only a run that died of the sleep is rerun, and the final
+  tables carry a sensitivity block without slept runs (`sensitivity_no_sleep`).
 
 ## Versions and provenance
 

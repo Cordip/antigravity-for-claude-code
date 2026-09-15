@@ -67,6 +67,8 @@ def arm_summary(runs: List[dict]) -> dict:
         "caps_hit": sum(1 for r in ok if str(r.get("claude", {}).get("subtype", "")).startswith("error_") or r.get("claude", {}).get("subtype") == "killed_wall"),
         "tampered": sum(1 for r in ok if r.get("outcome", {}).get("hidden_test_tampered")),
         "usage_reconciles": sum(1 for r in ok if r.get("claude", {}).get("usage_reconciles")),
+        "slept_runs": sum(1 for r in ok if (r.get("suspended_s") or 0) > 30),
+        "flaky_retry_passes": sum(1 for r in ok if ((r.get("outcome", {}).get("full_suite") or {}).get("flaky_retry") or {}).get("all_passed_on_retry")),
         "violations": {v: sum(1 for r in excluded if v in r.get("violations", [])) for v in sorted({x for r in excluded for x in r.get("violations", [])})},
     }
 
@@ -240,8 +242,10 @@ def analyze(run_id: str, ref_arm: str = "solo-opus", boots: int = 10000, seed: i
            "n_runs": len(runs), "tasks": tasks, "arms": {}, "paired": {}, "by_size": {}, "judge": judge_summary(run_id, runs),
            "versions": (runs[0].get("versions") if runs else {}), "prices_lock_sha256": (runs[0].get("prices_lock_sha256") if runs else None),
            "exclusions": [{"run_key": r["run_key"], "violations": r["violations"]} for r in runs if r.get("violations")]}
+    agg["sensitivity_no_sleep"] = {}
     for arm in arms:
         agg["arms"][arm] = arm_summary([r for r in runs if r["arm"] == arm])
+        agg["sensitivity_no_sleep"][arm] = arm_summary([r for r in runs if r["arm"] == arm and (r.get("suspended_s") or 0) <= 30])
         agg["arms"][arm]["by_size"] = {s: arm_summary([r for r in runs if r["arm"] == arm and r.get("size_class") == s])
                                        for s in SIZES if any(r.get("size_class") == s for r in runs if r["arm"] == arm)}
         if arm != ref_arm and ref_arm in arms:

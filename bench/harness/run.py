@@ -178,18 +178,28 @@ def invoke_claude(repo_dir: str, cfg_dir: str, run_raw: str, prompt: str, arm_cf
             open(os.path.join(run_raw, "claude.stderr"), "w", encoding="utf-8") as err_fh:
         p = subprocess.Popen(cmd, cwd=repo_dir, env=env, stdin=subprocess.PIPE, stdout=out_fh, stderr=err_fh,
                              text=True, start_new_session=True)
+        # the wall cap counts ACTIVE time (monotonic clock): a laptop asleep for an hour must
+        # not turn into a killed run. Sleep itself is still recorded as suspended_s below.
         try:
-            p.communicate(prompt, timeout=caps["wall_s"])
-        except subprocess.TimeoutExpired:
-            killed = True
+            p.stdin.write(prompt); p.stdin.close()
+        except Exception:  # noqa: BLE001
+            pass
+        while True:
             try:
-                os.killpg(p.pid, signal.SIGTERM)
-                p.wait(timeout=60)
-            except Exception:  # noqa: BLE001
-                try:
-                    os.killpg(p.pid, signal.SIGKILL)
-                except Exception:  # noqa: BLE001
-                    pass
+                p.wait(timeout=15)
+                break
+            except subprocess.TimeoutExpired:
+                if time.monotonic() - mono0 > caps["wall_s"]:
+                    killed = True
+                    try:
+                        os.killpg(p.pid, signal.SIGTERM)
+                        p.wait(timeout=60)
+                    except Exception:  # noqa: BLE001
+                        try:
+                            os.killpg(p.pid, signal.SIGKILL)
+                        except Exception:  # noqa: BLE001
+                            pass
+                    break
     wall = time.time() - started
     mono = time.monotonic() - mono0
     # a laptop lid closed mid-run: wall clock runs on, the monotonic clock does not, and the
@@ -278,6 +288,10 @@ def run_once(task_id: str, arm: str, rep: int, run_id: str, plugin_dir: Optional
     prices = Prices()
     rec = score_mod.score_run(run_dir, repo_dir, task, task_dir, repo_cfg, arm, prices, GOMOD_DIR, GOBUILD_DIR, meta)
     rec["prices_lock_sha256"] = prices.sha256
+    # the scheduler's verdict is computed here, in the per-item interpreter, so a policy
+    # change applies at the next item without restarting the lanes
+    import schedule as sched
+    rec["scheduler_class"] = sched.classify(rec, None)
     write_json(os.path.join(run_dir, "run.json"), rec)
     if not keep_checkout:
         shutil.rmtree(repo_dir, ignore_errors=True)

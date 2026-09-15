@@ -132,9 +132,15 @@ def classify(rec: Optional[dict], error: Optional[str]) -> str:
     """'infra' or 'final' for a finished attempt."""
     if error:
         return "infra"
-    if (rec.get("suspended_s") or 0) > 30:
-        return "suspended"  # the machine slept during the run; the attempt is kept, the item rerun
     c = rec.get("claude", {})
+    if (rec.get("suspended_s") or 0) > 30:
+        # The machine slept during the run. Claude Code retries the interrupted API call on
+        # wake and the wall cap counts active time, so a run that then completed normally is
+        # kept (flagged `slept`, reported with a sensitivity table); only a run that died of
+        # it — killed, or an execution error — is rerun as 'suspended'.
+        if c.get("subtype") in ("killed_wall", "error_during_execution") or not c.get("total_cost_usd"):
+            return "suspended"
+    
     tool_calls = sum((c.get("transcript") or {}).get("tool_calls", {}).values()) if c.get("transcript") else 0
     errs = " ".join(c.get("errors") or []).lower()
     if c.get("subtype") == "error_during_execution" and (tool_calls == 0 or any(k in errs for k in ("429", "529", "overloaded", "rate limit"))):
@@ -151,8 +157,9 @@ def classify(rec: Optional[dict], error: Optional[str]) -> str:
 def lane(run_id: str, lane_id: str, plugin_dir: str, gap_s: Optional[float] = None, poll_s: int = 30) -> None:
     arms = load_arms()
     gap = float(gap_s if gap_s is not None else arms.get("cold_gap_s", 300))
-    stop = os.path.join(RESULTS_DIR, run_id, "STOP")
-    stop_now = os.path.join(RESULTS_DIR, run_id, "STOP-NOW")
+    stop_name = os.environ.get("BENCH_STOP_FILE", "STOP")  # lets a new generation of lanes ignore the old lanes' stop
+    stop = os.path.join(RESULTS_DIR, run_id, stop_name)
+    stop_now = os.path.join(RESULTS_DIR, run_id, stop_name + "-NOW")
     log = open(os.path.join(RESULTS_DIR, run_id, "lane-%s.log" % lane_id), "a")
 
     def say(msg: str):
@@ -219,7 +226,7 @@ def lane(run_id: str, lane_id: str, plugin_dir: str, gap_s: Optional[float] = No
             err = "run subprocess exceeded 6h"
         except Exception:  # noqa: BLE001
             err = traceback.format_exc()[-2000:]
-        cls = classify(rec, err)
+        cls = (rec or {}).get("scheduler_class") or classify(rec, err)
         with Locked(run_id):
             q = read_json(queue_path(run_id))
             it2 = next(x for x in q["items"] if _key(x) == key)
