@@ -32,7 +32,8 @@ from typing import Dict, List, Optional
 from common import RESULTS_DIR, TASKS_DIR, load_arms, now_iso, read_json, write_json
 
 INFRA_SIGNALS = {"QUOTA_EXHAUSTED", "AUTH_REQUIRED", "MODEL_UNAVAILABLE", "AGY_MISSING"}
-MAX_ATTEMPTS = 3
+MAX_ATTEMPTS = 3          # infrastructure failures: an item is retried at most twice
+MAX_SUSPENDED = 6         # machine-sleep interruptions are the operator's, not the arm's: a separate, larger budget
 
 
 # ------------------------------------------------------------------ queue ----
@@ -132,7 +133,7 @@ def classify(rec: Optional[dict], error: Optional[str]) -> str:
     if error:
         return "infra"
     if (rec.get("suspended_s") or 0) > 30:
-        return "infra"  # the machine slept during the run; the attempt is kept, the item rerun
+        return "suspended"  # the machine slept during the run; the attempt is kept, the item rerun
     c = rec.get("claude", {})
     tool_calls = sum((c.get("transcript") or {}).get("tool_calls", {}).values()) if c.get("transcript") else 0
     errs = " ".join(c.get("errors") or []).lower()
@@ -218,18 +219,25 @@ def lane(run_id: str, lane_id: str, plugin_dir: str, gap_s: Optional[float] = No
                                    "total_usd": (rec or {}).get("cost", {}).get("total_usd"),
                                    "subtype": (rec or {}).get("claude", {}).get("subtype")})
             it2["ended_at"] = now_iso()
-            if cls == "infra" and attempt < MAX_ATTEMPTS:
+            n_infra = sum(1 for h in it2["history"] if h.get("class") == "infra")
+            n_susp = sum(1 for h in it2["history"] if h.get("class") in ("suspended", "interrupted"))
+            if cls == "suspended" and n_susp < MAX_SUSPENDED:
+                it2["status"] = "pending"
+                say("lane %s: %s interrupted by machine sleep (%.0fs asleep); will retry" % (lane_id, key, (rec or {}).get("suspended_s") or 0))
+            elif cls == "infra" and n_infra < MAX_ATTEMPTS:
                 it2["status"] = "pending"
                 say("lane %s: %s infra failure (%s); will retry" % (lane_id, key, (err or (rec or {}).get("claude", {}).get("subtype"))))
-            elif cls == "infra":
+            elif cls in ("infra", "suspended"):
                 it2["status"] = "gave_up"
-                say("lane %s: %s gave up after %d attempts" % (lane_id, key, attempt))
+                say("lane %s: %s gave up after %d attempts (%s)" % (lane_id, key, attempt, cls))
             else:
                 it2["status"] = "done"
                 say("lane %s: %s done pass=%s $%s in %.0fs" % (lane_id, key, it2["history"][-1]["pass"], it2["history"][-1]["total_usd"], time.time() - t0))
             write_json(queue_path(run_id), q)
         if cls == "infra":
             time.sleep(300)  # back off before anyone retries
+        elif cls == "suspended":
+            time.sleep(60)   # the machine just woke; let the network settle
 
 
 def status(run_id: str) -> dict:
@@ -248,3 +256,15 @@ def status(run_id: str) -> dict:
     running = [(_key(it), it["lane"], it["started_at"]) for it in items if it["status"] == "running"]
     return {"run_id": run_id, "counts": by, "total": len(items), "spent_usd": round(spent, 2), "passes": passes,
             "per_arm": per_arm, "running": running, "retries": sum(max(0, it["attempts"] - 1) for it in items)}
+
+
+def requeue(run_id: str, key: str) -> dict:
+    """Put a gave_up (or done) item back to pending by hand; its history is kept."""
+    with Locked(run_id):
+        q = read_json(queue_path(run_id))
+        it = next(x for x in q["items"] if _key(x) == key)
+        it["status"] = "pending"
+        it["history"].append({"attempt": it["attempts"], "lane": None, "started_ts": None, "ended_ts": time.time(),
+                              "class": "requeued", "error": "requeued by operator", "pass": None, "total_usd": None, "subtype": None})
+        write_json(queue_path(run_id), q)
+    return it

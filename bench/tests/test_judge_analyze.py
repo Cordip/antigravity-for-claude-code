@@ -117,6 +117,8 @@ class Scheduler(unittest.TestCase):
         self.assertEqual(schedule.classify(final, None), "final")
         self.assertEqual(schedule.classify(quota, None), "infra")
         self.assertEqual(schedule.classify(None, "Traceback"), "infra")
+        slept = {"suspended_s": 1164.6, "claude": {"subtype": "success", "transcript": {"present": True, "tool_calls": {"Bash": 3}}, "total_cost_usd": 2.2}, "agy": {}}
+        self.assertEqual(schedule.classify(slept, None), "suspended")
 
     def test_queue_order_alternates(self):
         """Consecutive items must differ in arm (rotation) so two lanes rarely wait on the arm gap."""

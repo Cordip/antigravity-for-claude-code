@@ -57,6 +57,7 @@ def main(argv=None) -> int:
     sc = sub.add_parser("schedule"); sc.add_argument("--run-id", required=True); sc.add_argument("--lane", required=True)
     sc.add_argument("--plugin-dir", required=True); sc.add_argument("--gap-s", type=float)
     st = sub.add_parser("status"); st.add_argument("--run-id", required=True)
+    rq = sub.add_parser("requeue"); rq.add_argument("--run-id", required=True); rq.add_argument("--key", required=True)
     g = sub.add_parser("gate"); g.add_argument("command"); g.add_argument("--plugin", action="store_true")
     s = sub.add_parser("stop"); s.add_argument("--run-id", required=True); s.add_argument("--now", action="store_true")
     v = sub.add_parser("versions"); v.add_argument("--plugin-dir")
@@ -126,6 +127,10 @@ def main(argv=None) -> int:
     if a.cmd == "status":
         import schedule
         print(json.dumps(schedule.status(a.run_id), indent=2))
+        return 0
+    if a.cmd == "requeue":
+        import schedule
+        it = schedule.requeue(a.run_id, a.key); print(json.dumps({"key": a.key, "status": it["status"], "attempts": it["attempts"]}))
         return 0
     if a.cmd == "reaccount":
         import score
