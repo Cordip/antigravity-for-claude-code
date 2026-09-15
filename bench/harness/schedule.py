@@ -132,6 +132,8 @@ def classify(rec: Optional[dict], error: Optional[str]) -> str:
     """'infra' or 'final' for a finished attempt."""
     if error:
         return "infra"
+    if rec.get("env_failure"):
+        return "infra"  # e.g. plugin_bin_missing: the harness, not the arm
     c = rec.get("claude", {})
     if (rec.get("suspended_s") or 0) > 30:
         # The machine slept during the run. Claude Code retries the interrupted API call on

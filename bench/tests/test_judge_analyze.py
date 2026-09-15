@@ -117,6 +117,7 @@ class Scheduler(unittest.TestCase):
         self.assertEqual(schedule.classify(final, None), "final")
         self.assertEqual(schedule.classify(quota, None), "infra")
         self.assertEqual(schedule.classify(None, "Traceback"), "infra")
+        self.assertEqual(schedule.classify({"env_failure": "plugin_bin_missing", "claude": {"subtype": "success", "errors": [], "transcript": {"present": True, "tool_calls": {"Bash": 5}}, "total_cost_usd": 1.9}, "agy": {}}, None), "infra")
         slept_ok = {"suspended_s": 1164.6, "claude": {"subtype": "success", "errors": [], "transcript": {"present": True, "tool_calls": {"Bash": 3}}, "total_cost_usd": 2.2}, "agy": {}}
         slept_dead = {"suspended_s": 1164.6, "claude": {"subtype": "error_during_execution", "errors": [], "transcript": {"present": True, "tool_calls": {"Bash": 3}}, "total_cost_usd": 2.2}, "agy": {}}
         self.assertEqual(schedule.classify(slept_ok, None), "final")      # completed after the wake: kept, flagged

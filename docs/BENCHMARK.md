@@ -136,6 +136,16 @@ Results will appear here as `bench:table` blocks when the run completes.
   wall cap counts active (monotonic) time, a run that slept but completed is kept and
   flagged (`suspended_s`), only a run that died of the sleep is rerun, and the final
   tables carry a sensitivity block without slept runs (`sensitivity_no_sleep`).
+- 10:00Z–13:26Z — two harness bugs, both fixed and repaired in `queue.json` (`repairs`):
+  (1) the per-run STOP check read the old lanes' `STOP` file instead of the new lanes'
+  `STOP2`, so lanes C/D started four items whose run process exited at once; those
+  attempts never ran and were removed from the items' histories. (2) In three hybrid
+  runs that started within seconds of another session, Claude Code did not put the
+  plugin's `bin/` on the agent's PATH; the agent found no `agy-delegate` and stopped with
+  0 delegations. The harness now prepends the plugin's `bin/` itself, such a run is
+  detected (`wrapper_not_found`, `env_failure: plugin_bin_missing`) and treated as an
+  infrastructure failure. `caddy-7995__hybrid-forced__r1` was reclassified and rerun;
+  the other two had already been rerun under the sleep rule.
 
 ## Versions and provenance
 

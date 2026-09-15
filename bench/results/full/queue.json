@@ -503,7 +503,7 @@
       "arm": "hybrid-forced",
       "rep": 1,
       "size_class": "small",
-      "status": "done",
+      "status": "pending",
       "attempts": 2,
       "lane": "A",
       "started_at": "2026-09-15T09:53:47+00:00",
@@ -525,8 +525,8 @@
           "lane": "A",
           "started_ts": 1789466027.4986482,
           "ended_ts": 1789466432.06945,
-          "class": "final",
-          "error": null,
+          "class": "infra",
+          "error": "plugin_bin_missing: agy-delegate absent from the agent's PATH (reclassified 2026-09-15T13:45Z)",
           "pass": false,
           "total_usd": 1.86061775,
           "subtype": "success"
@@ -1570,6 +1570,13 @@
           "pending",
           0
         ]
+      ]
+    },
+    {
+      "at": "2026-09-15T13:30:54+00:00",
+      "reason": "caddy-7995__hybrid-forced__r1 ran without the plugin bin on PATH (0 delegations, agent reported agy-delegate missing); reclassified infra and requeued",
+      "items": [
+        "caddy-7995__hybrid-forced__r1"
       ]
     }
   ]

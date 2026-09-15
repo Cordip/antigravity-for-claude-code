@@ -435,6 +435,10 @@ def score_run(run_dir: str, repo_dir: str, task: dict, task_dir: str, repo_cfg: 
     total_usd = (claude_usd or 0.0) + (gemini_usd or 0.0) if claude_usd is not None else None
 
     violations: List[str] = []
+    env_failure = None
+    if arm.startswith("hybrid") and not (agy.get("delegations") or 0) and tsum.get("wrapper_not_found"):
+        env_failure = "plugin_bin_missing"  # the arm's only write path was absent: an environment failure, rerun
+        notes.append("agy-delegate was not on the agent's PATH; no delegation possible")
     if tsum.get("web_tool_calls"):
         violations.append("claude_web_tool_call")
     if executor_web:
@@ -447,7 +451,7 @@ def score_run(run_dir: str, repo_dir: str, task: dict, task_dir: str, repo_cfg: 
         "run_id": meta.get("run_id"), "run_key": meta.get("run_key"), "task_id": task["task_id"], "arm": arm,
         "rep": meta.get("rep"), "attempt": meta.get("attempt", 1), "lane": meta.get("lane"),
         "size_class": task.get("size_class"),
-        "status": "ok", "failure_class": None, "violations": violations,
+        "status": "ok", "failure_class": None, "env_failure": env_failure, "violations": violations,
         "started_at": meta.get("started_at"), "ended_at": meta.get("ended_at"),
         "agent_wall_s": meta.get("agent_wall_s"), "agent_active_s": meta.get("agent_active_s"),
         "suspended_s": meta.get("suspended_s", 0.0),
@@ -590,6 +594,7 @@ def reaccount(run_dir: str, task: dict, arm: str, prices: Prices) -> dict:
         violations.append("executor_web_access")
     if arm == "hybrid-forced" and (writes.get("claude_bash") or tsum.get("write_tool_calls")):
         violations.append("claude_side_write_in_forced_arm")
+    rec["env_failure"] = "plugin_bin_missing" if (arm.startswith("hybrid") and not (agy.get("delegations") or 0) and tsum.get("wrapper_not_found")) else None
     gemini_usd = agy.get("shadow_usd")
     rec["claude"].update({"total_cost_usd": claude_usd, "total_cost_usd_source": source, "subtype": subtype, "capped": capped,
                           "num_turns": result.get("num_turns") or (tsum.get("turns") if tsum.get("present") else None),

@@ -181,6 +181,15 @@ class ClaudeUsage(unittest.TestCase):
         self.assertEqual(s["cache_creation"], 10)
         self.assertEqual(s["tool_calls"], {"Read": 2, "Bash": 1})
 
+    def test_wrapper_not_found_is_counted(self):
+        """A hybrid run whose shell says agy-delegate is missing is an environment failure, not the arm's."""
+        lines = [{"type": "user", "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "t1", "content": "x"}]},
+                  "toolUseResult": {"stdout": "", "stderr": "zsh: command not found: agy-delegate"}},
+                 {"type": "user", "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "t2", "content": "x"}]},
+                  "toolUseResult": {"stdout": "agy-delegate not found in PATH", "stderr": ""}}]
+        path = _write(os.path.join(self.tmp, "nf.jsonl"), "\n".join(json.dumps(l) for l in lines) + "\n")
+        self.assertEqual(claude_usage.summarize_transcript(path)["wrapper_not_found"], 2)
+
     def test_reconcile_flags_a_real_mismatch_only(self):
         res = {"usage": {"input_tokens": 100000, "output_tokens": 1000, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0}}
         ok = claude_usage.reconcile(res, {"input": 100500, "output": 1000, "cache_creation": 0, "cache_read": 0})
