@@ -37,3 +37,5 @@ lane A: caddy-7995__hybrid-forced__r1 interrupted by machine sleep (431s asleep)
 STOP present; lane A exits
 lane A start (gap 300s)
 lane A -> caddy-7995__hybrid-forced__r1 (attempt 2)
+lane A: caddy-7995__hybrid-forced__r1 done pass=False $1.86061775 in 405s
+STOP present; lane A exits

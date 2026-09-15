@@ -164,6 +164,12 @@ def invoke_claude(repo_dir: str, cfg_dir: str, run_raw: str, prompt: str, arm_cf
     env.update(score_mod.go_env(task_repo_cfg, GOMOD_DIR, GOBUILD_DIR))
     if AGY_BIN_DIR:
         env["PATH"] = AGY_BIN_DIR + os.pathsep + env.get("PATH", "")
+    if arm_cfg["plugin"] and plugin_dir:
+        # Claude Code puts a plugin's bin/ on the Bash tool's PATH itself, but in 3 of 9 hybrid
+        # runs started within seconds of another session it did not (measured 2026-09-15:
+        # the agent found no agy-delegate and stopped). The plugin's own bin/ goes on PATH
+        # here so the arm's only write path is always present.
+        env["PATH"] = os.path.join(plugin_dir, "bin") + os.pathsep + env["PATH"]
     env.update({"CLAUDE_CONFIG_DIR": cfg_dir, "AGY_USAGE_LOG": os.path.join(run_raw, "agy_usage.log"),
                 "BENCH_TRACE_LOG": os.path.join(run_raw, "tool_trace.jsonl"), "BENCH_REPO_DIR": repo_dir,
                 "BENCH_PLUGIN": "1" if arm_cfg["plugin"] else "0"})
@@ -258,7 +264,7 @@ def run_once(task_id: str, arm: str, rep: int, run_id: str, plugin_dir: Optional
     if os.path.isdir(run_dir):
         shutil.rmtree(run_dir)
     os.makedirs(raw)
-    stop = os.path.join(RESULTS_DIR, run_id, "STOP")
+    stop = os.path.join(RESULTS_DIR, run_id, os.environ.get("BENCH_STOP_FILE", "STOP"))
     if os.path.exists(stop):
         raise SystemExit("STOP file present: %s" % stop)
 
