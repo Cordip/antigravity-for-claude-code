@@ -9,7 +9,8 @@
     "agy": "1.2.3",
     "go": "go version go1.27.1 darwin/arm64",
     "plugin": "0.28.0",
-    "plugin_sha": "5392467"
+    "plugin_sha": "5392467",
+    "agy_bin": "/Users/linyuting/.cache/agy-bench/bin/agy"
   },
   "plugin_dir": "/Users/linyuting/.cache/agy-bench/plugin",
   "caps": {
@@ -47,6 +48,7 @@
   ],
   "queue_seed": 20260914,
   "notes": [
-    "operator's other interactive Claude sessions were running on the same GCP project during the run; billing reconciliation gap is reported, not corrected"
+    "operator's other interactive Claude sessions were running on the same GCP project during the run; billing reconciliation gap is reported, not corrected",
+    "agy pinned to a copy of the 1.2.3 binary in ~/.cache/agy-bench/bin (agy self-updates; 1.2.2 -> 1.2.3 happened during the pilot)"
   ]
 }

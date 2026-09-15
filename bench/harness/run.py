@@ -37,6 +37,9 @@ FIXED_ENV = {"BASH_DEFAULT_TIMEOUT_MS": "900000", "BASH_MAX_TIMEOUT_MS": "900000
 # the full run, from the operator's interactive sessions). CLAUDE_BIN pins one versioned
 # binary for every run of a study; the path and its --version are recorded per run.
 CLAUDE_BIN = os.environ.get("CLAUDE_BIN", "claude")
+# agy self-updates too (1.2.2 -> 1.2.3 during the pilot). AGY_BIN_DIR, when set, is put
+# first on PATH for the run so the wrapper resolves a pinned copy of the binary.
+AGY_BIN_DIR = os.environ.get("AGY_BIN_DIR", "")
 
 
 def mirror_path(repo: str) -> str:
@@ -113,13 +116,15 @@ def register_agy_project(repo_dir: str) -> dict:
     never seen, the agent runs in its last project root (here $HOME) or its scratch dir and
     goes looking for the repository; `--new-project` on a zero-turn `/model` probe registers
     the directory without spending a turn, after which `agy-delegate --dir .` works there."""
-    r = run(["agy", "--new-project", "--output-format", "json", "-p", "/model"], cwd=repo_dir, timeout=120, input_text="")
+    agy_bin = os.path.join(AGY_BIN_DIR, "agy") if AGY_BIN_DIR else "agy"
+    r = run([agy_bin, "--new-project", "--output-format", "json", "-p", "/model"], cwd=repo_dir, timeout=120, input_text="")
     return {"ok": r.ok, "out": r.out[:200], "err": r.err[-300:]}
 
 
 def tool_versions(plugin_dir: Optional[str]) -> dict:
+    agy_bin = os.path.join(AGY_BIN_DIR, "agy") if AGY_BIN_DIR else "agy"
     v = {"claude": run([CLAUDE_BIN, "--version"], timeout=60).out.strip(), "claude_bin": CLAUDE_BIN,
-         "agy": run(["agy", "--version"], timeout=60).out.strip(),
+         "agy": run([agy_bin, "--version"], timeout=60).out.strip(), "agy_bin": agy_bin,
          "go": run(["go", "version"], timeout=60).out.strip(), "plugin": None, "plugin_sha": None}
     if plugin_dir:
         pj = os.path.join(plugin_dir, ".claude-plugin", "plugin.json")
@@ -157,6 +162,8 @@ def invoke_claude(repo_dir: str, cfg_dir: str, run_raw: str, prompt: str, arm_cf
         cmd += ["--plugin-dir", plugin_dir]
     env = dict(os.environ)
     env.update(score_mod.go_env(task_repo_cfg, GOMOD_DIR, GOBUILD_DIR))
+    if AGY_BIN_DIR:
+        env["PATH"] = AGY_BIN_DIR + os.pathsep + env.get("PATH", "")
     env.update({"CLAUDE_CONFIG_DIR": cfg_dir, "AGY_USAGE_LOG": os.path.join(run_raw, "agy_usage.log"),
                 "BENCH_TRACE_LOG": os.path.join(run_raw, "tool_trace.jsonl"), "BENCH_REPO_DIR": repo_dir,
                 "BENCH_PLUGIN": "1" if arm_cfg["plugin"] else "0"})
@@ -209,7 +216,8 @@ def collect_transcripts(cfg_dir: str, session_id: str, run_raw: str) -> List[str
 
 
 def quota_probe(run_raw: str, name: str) -> None:
-    r = run(["agy", "--output-format", "json", "-p", "/quota"], timeout=60, input_text="")
+    agy_bin = os.path.join(AGY_BIN_DIR, "agy") if AGY_BIN_DIR else "agy"
+    r = run([agy_bin, "--output-format", "json", "-p", "/quota"], timeout=60, input_text="")
     write_text(os.path.join(run_raw, "quota_%s.json" % name), r.out or r.err)
 
 

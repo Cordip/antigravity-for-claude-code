@@ -180,7 +180,10 @@ def judge_claude(prompt: str, model_alias: str = "fable", budget: float = 2.0) -
 def judge_gemini(prompt: str, plugin_dir: str, log_path: str) -> dict:
     wrapper = os.path.join(plugin_dir, "bin", "agy-delegate")
     t0 = time.time()
-    r = run([wrapper, "--tier", "pro", "--timeout", "5m", "-"], env={"AGY_USAGE_LOG": log_path}, timeout=420, input_text=prompt)
+    env = {"AGY_USAGE_LOG": log_path}
+    if run_mod.AGY_BIN_DIR:
+        env["PATH"] = run_mod.AGY_BIN_DIR + os.pathsep + os.environ.get("PATH", "")
+    r = run([wrapper, "--tier", "pro", "--timeout", "5m", "-"], env=env, timeout=420, input_text=prompt)
     rec = {"judge": "gemini", "wall_s": round(time.time() - t0, 1), "rc": r.rc, "raw": r.out[-20000:], "stderr": r.err[-2000:],
            "cost_usd": None, "model_id": None, "text": r.out}
     m = re.search(r"AGY_USAGE (\{.*\})", r.err)
