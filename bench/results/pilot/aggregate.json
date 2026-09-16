@@ -1,8 +1,9 @@
 {
   "schema": "bench.aggregate/1",
   "run_id": "pilot",
-  "generated_at": "2026-09-16T18:52:02+00:00",
+  "generated_at": "2026-09-16T23:48:59+00:00",
   "n_runs": 4,
+  "included_from": null,
   "tasks": [
     "caddy-7913",
     "k6-6169"
@@ -18,6 +19,7 @@
       "cost_total_usd": 8.9585,
       "cost_of_pass_usd": null,
       "cost_of_pass_billed_usd": null,
+      "cost_of_pass_claude_only_usd": null,
       "gemini_billed_usd": 6.4728,
       "cost_pass_median": null,
       "cost_pass_min": null,
@@ -55,6 +57,7 @@
           "cost_total_usd": 8.9585,
           "cost_of_pass_usd": null,
           "cost_of_pass_billed_usd": null,
+          "cost_of_pass_claude_only_usd": null,
           "gemini_billed_usd": 6.4728,
           "cost_pass_median": null,
           "cost_pass_min": null,
@@ -90,6 +93,7 @@
           "cost_total_usd": 0.0,
           "cost_of_pass_usd": null,
           "cost_of_pass_billed_usd": null,
+          "cost_of_pass_claude_only_usd": null,
           "gemini_billed_usd": 0,
           "cost_pass_median": null,
           "cost_pass_min": null,
@@ -129,6 +133,7 @@
       "cost_total_usd": 17.4492,
       "cost_of_pass_usd": 8.7246,
       "cost_of_pass_billed_usd": 8.7246,
+      "cost_of_pass_claude_only_usd": 8.7246,
       "gemini_billed_usd": 0.0,
       "cost_pass_median": 8.7246,
       "cost_pass_min": 4.7643,
@@ -164,6 +169,7 @@
           "cost_total_usd": 4.7643,
           "cost_of_pass_usd": 4.7643,
           "cost_of_pass_billed_usd": 4.7643,
+          "cost_of_pass_claude_only_usd": 4.7643,
           "gemini_billed_usd": 0.0,
           "cost_pass_median": 4.7643,
           "cost_pass_min": 4.7643,
@@ -199,6 +205,7 @@
           "cost_total_usd": 12.6849,
           "cost_of_pass_usd": 12.6849,
           "cost_of_pass_billed_usd": 12.6849,
+          "cost_of_pass_claude_only_usd": 12.6849,
           "gemini_billed_usd": 0.0,
           "cost_pass_median": 12.6849,
           "cost_pass_min": 12.6849,
@@ -310,6 +317,7 @@
       "cost_total_usd": 8.9585,
       "cost_of_pass_usd": null,
       "cost_of_pass_billed_usd": null,
+      "cost_of_pass_claude_only_usd": null,
       "gemini_billed_usd": 6.4728,
       "cost_pass_median": null,
       "cost_pass_min": null,
@@ -347,6 +355,7 @@
       "cost_total_usd": 17.4492,
       "cost_of_pass_usd": 8.7246,
       "cost_of_pass_billed_usd": 8.7246,
+      "cost_of_pass_claude_only_usd": 8.7246,
       "gemini_billed_usd": 0.0,
       "cost_pass_median": 8.7246,
       "cost_pass_min": 4.7643,
@@ -423,6 +432,27 @@
       "seed": 20260914,
       "pass_rate_diff": null,
       "per_task": []
+    }
+  },
+  "paired_claude_only": {
+    "hybrid-forced_vs_solo-opus": {
+      "arm": "hybrid-forced",
+      "ref": "solo-opus",
+      "n_tasks": 1,
+      "point": null,
+      "ci95": null,
+      "boot": 10000,
+      "undefined_draws": 10000,
+      "seed": 20260914,
+      "pass_rate_diff": -1.0,
+      "per_task": [
+        {
+          "task_id": "caddy-7913",
+          "arm_cop": null,
+          "ref_cop": 4.764253499999998,
+          "size_class": "medium"
+        }
+      ]
     }
   }
 }

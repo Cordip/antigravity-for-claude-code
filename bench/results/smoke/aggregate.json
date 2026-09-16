@@ -1,8 +1,9 @@
 {
   "schema": "bench.aggregate/1",
   "run_id": "smoke",
-  "generated_at": "2026-09-16T18:52:02+00:00",
+  "generated_at": "2026-09-16T23:48:59+00:00",
   "n_runs": 4,
+  "included_from": null,
   "tasks": [
     "caddy-7877"
   ],
@@ -17,6 +18,7 @@
       "cost_total_usd": 1.3424,
       "cost_of_pass_usd": 1.3424,
       "cost_of_pass_billed_usd": 1.6226,
+      "cost_of_pass_claude_only_usd": 1.0622,
       "gemini_billed_usd": 0.5604,
       "cost_pass_median": 1.3424,
       "cost_pass_min": 1.3424,
@@ -52,6 +54,7 @@
           "cost_total_usd": 1.3424,
           "cost_of_pass_usd": 1.3424,
           "cost_of_pass_billed_usd": 1.6226,
+          "cost_of_pass_claude_only_usd": 1.0622,
           "gemini_billed_usd": 0.5604,
           "cost_pass_median": 1.3424,
           "cost_pass_min": 1.3424,
@@ -89,6 +92,7 @@
       "cost_total_usd": 1.4072,
       "cost_of_pass_usd": 1.4072,
       "cost_of_pass_billed_usd": 1.7677,
+      "cost_of_pass_claude_only_usd": 1.0467,
       "gemini_billed_usd": 0.721,
       "cost_pass_median": 1.4072,
       "cost_pass_min": 1.4072,
@@ -124,6 +128,7 @@
           "cost_total_usd": 1.4072,
           "cost_of_pass_usd": 1.4072,
           "cost_of_pass_billed_usd": 1.7677,
+          "cost_of_pass_claude_only_usd": 1.0467,
           "gemini_billed_usd": 0.721,
           "cost_pass_median": 1.4072,
           "cost_pass_min": 1.4072,
@@ -161,6 +166,7 @@
       "cost_total_usd": 0.9297,
       "cost_of_pass_usd": 0.9297,
       "cost_of_pass_billed_usd": 0.9297,
+      "cost_of_pass_claude_only_usd": 0.9297,
       "gemini_billed_usd": 0.0,
       "cost_pass_median": 0.9297,
       "cost_pass_min": 0.9297,
@@ -196,6 +202,7 @@
           "cost_total_usd": 0.9297,
           "cost_of_pass_usd": 0.9297,
           "cost_of_pass_billed_usd": 0.9297,
+          "cost_of_pass_claude_only_usd": 0.9297,
           "gemini_billed_usd": 0.0,
           "cost_pass_median": 0.9297,
           "cost_pass_min": 0.9297,
@@ -233,6 +240,7 @@
       "cost_total_usd": 0.7211,
       "cost_of_pass_usd": 0.7211,
       "cost_of_pass_billed_usd": 0.7211,
+      "cost_of_pass_claude_only_usd": 0.7211,
       "gemini_billed_usd": 0.0,
       "cost_pass_median": 0.7211,
       "cost_pass_min": 0.7211,
@@ -268,6 +276,7 @@
           "cost_total_usd": 0.7211,
           "cost_of_pass_usd": 0.7211,
           "cost_of_pass_billed_usd": 0.7211,
+          "cost_of_pass_claude_only_usd": 0.7211,
           "gemini_billed_usd": 0.0,
           "cost_pass_median": 0.7211,
           "cost_pass_min": 0.7211,
@@ -617,6 +626,7 @@
       "cost_total_usd": 1.3424,
       "cost_of_pass_usd": 1.3424,
       "cost_of_pass_billed_usd": 1.6226,
+      "cost_of_pass_claude_only_usd": 1.0622,
       "gemini_billed_usd": 0.5604,
       "cost_pass_median": 1.3424,
       "cost_pass_min": 1.3424,
@@ -652,6 +662,7 @@
       "cost_total_usd": 1.4072,
       "cost_of_pass_usd": 1.4072,
       "cost_of_pass_billed_usd": 1.7677,
+      "cost_of_pass_claude_only_usd": 1.0467,
       "gemini_billed_usd": 0.721,
       "cost_pass_median": 1.4072,
       "cost_pass_min": 1.4072,
@@ -687,6 +698,7 @@
       "cost_total_usd": 0.9297,
       "cost_of_pass_usd": 0.9297,
       "cost_of_pass_billed_usd": 0.9297,
+      "cost_of_pass_claude_only_usd": 0.9297,
       "gemini_billed_usd": 0.0,
       "cost_pass_median": 0.9297,
       "cost_pass_min": 0.9297,
@@ -722,6 +734,7 @@
       "cost_total_usd": 0.7211,
       "cost_of_pass_usd": 0.7211,
       "cost_of_pass_billed_usd": 0.7211,
+      "cost_of_pass_claude_only_usd": 0.7211,
       "gemini_billed_usd": 0.0,
       "cost_pass_median": 0.7211,
       "cost_pass_min": 0.7211,
@@ -860,6 +873,74 @@
       ]
     },
     "solo-sonnet_vs_solo-opus@small": {
+      "arm": "solo-sonnet",
+      "ref": "solo-opus",
+      "n_tasks": 1,
+      "point": 0.7756,
+      "ci95": [
+        0.7756,
+        0.7756
+      ],
+      "boot": 10000,
+      "undefined_draws": 0,
+      "seed": 20260914,
+      "pass_rate_diff": 0.0,
+      "per_task": [
+        {
+          "task_id": "caddy-7877",
+          "arm_cop": 0.7210818000000001,
+          "ref_cop": 0.9297062500000001,
+          "size_class": "small"
+        }
+      ]
+    }
+  },
+  "paired_claude_only": {
+    "hybrid-forced_vs_solo-opus": {
+      "arm": "hybrid-forced",
+      "ref": "solo-opus",
+      "n_tasks": 1,
+      "point": 1.1425,
+      "ci95": [
+        1.1425,
+        1.1425
+      ],
+      "boot": 10000,
+      "undefined_draws": 0,
+      "seed": 20260914,
+      "pass_rate_diff": 0.0,
+      "per_task": [
+        {
+          "task_id": "caddy-7877",
+          "arm_cop": 1.0622052499999999,
+          "ref_cop": 0.9297062500000001,
+          "size_class": "small"
+        }
+      ]
+    },
+    "hybrid-inst_vs_solo-opus": {
+      "arm": "hybrid-inst",
+      "ref": "solo-opus",
+      "n_tasks": 1,
+      "point": 1.1259,
+      "ci95": [
+        1.1259,
+        1.1259
+      ],
+      "boot": 10000,
+      "undefined_draws": 0,
+      "seed": 20260914,
+      "pass_rate_diff": 0.0,
+      "per_task": [
+        {
+          "task_id": "caddy-7877",
+          "arm_cop": 1.04672925,
+          "ref_cop": 0.9297062500000001,
+          "size_class": "small"
+        }
+      ]
+    },
+    "solo-sonnet_vs_solo-opus": {
       "arm": "solo-sonnet",
       "ref": "solo-opus",
       "n_tasks": 1,

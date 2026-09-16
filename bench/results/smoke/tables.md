@@ -20,14 +20,14 @@
 
 ## Paired ratios (cost-of-pass, arm ÷ reference; task-level bootstrap)
 
-| comparison | tasks | ratio (deck) | 95% CI | ratio (billed rates) | 95% CI | pass-rate diff | undefined draws |
-|---|---|---|---|---|---|---|---|
-| hybrid-forced_vs_solo-opus | 1 | 1.44 | [1.4439, 1.4439] | 1.75 | [1.7453, 1.7453] | 0.00 | 0/10000 |
-| hybrid-forced_vs_solo-opus@small | 1 | 1.44 | [1.4439, 1.4439] | 1.75 | [1.7453, 1.7453] | 0.00 | 0/10000 |
-| hybrid-inst_vs_solo-opus | 1 | 1.51 | [1.5136, 1.5136] | 1.90 | [1.9014, 1.9014] | 0.00 | 0/10000 |
-| hybrid-inst_vs_solo-opus@small | 1 | 1.51 | [1.5136, 1.5136] | 1.90 | [1.9014, 1.9014] | 0.00 | 0/10000 |
-| solo-sonnet_vs_solo-opus | 1 | 0.78 | [0.7756, 0.7756] | 0.78 | [0.7756, 0.7756] | 0.00 | 0/10000 |
-| solo-sonnet_vs_solo-opus@small | 1 | 0.78 | [0.7756, 0.7756] | 0.78 | [0.7756, 0.7756] | 0.00 | 0/10000 |
+| comparison | tasks | ratio (deck) | 95% CI | ratio (billed rates) | 95% CI | ratio (Claude side only) | 95% CI | pass-rate diff | undefined draws |
+|---|---|---|---|---|---|---|---|---|---|
+| hybrid-forced_vs_solo-opus | 1 | 1.44 | [1.4439, 1.4439] | 1.75 | [1.7453, 1.7453] | 1.14 | [1.1425, 1.1425] | 0.00 | 0/10000 |
+| hybrid-forced_vs_solo-opus@small | 1 | 1.44 | [1.4439, 1.4439] | 1.75 | [1.7453, 1.7453] | — | None | 0.00 | 0/10000 |
+| hybrid-inst_vs_solo-opus | 1 | 1.51 | [1.5136, 1.5136] | 1.90 | [1.9014, 1.9014] | 1.13 | [1.1259, 1.1259] | 0.00 | 0/10000 |
+| hybrid-inst_vs_solo-opus@small | 1 | 1.51 | [1.5136, 1.5136] | 1.90 | [1.9014, 1.9014] | — | None | 0.00 | 0/10000 |
+| solo-sonnet_vs_solo-opus | 1 | 0.78 | [0.7756, 0.7756] | 0.78 | [0.7756, 0.7756] | 0.78 | [0.7756, 0.7756] | 0.00 | 0/10000 |
+| solo-sonnet_vs_solo-opus@small | 1 | 0.78 | [0.7756, 0.7756] | 0.78 | [0.7756, 0.7756] | — | None | 0.00 | 0/10000 |
 
 ## Judges (mean 1–5; author and empty-patch anchors included)
 

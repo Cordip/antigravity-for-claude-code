@@ -18,11 +18,11 @@
 
 ## Paired ratios (cost-of-pass, arm ÷ reference; task-level bootstrap)
 
-| comparison | tasks | ratio (deck) | 95% CI | ratio (billed rates) | 95% CI | pass-rate diff | undefined draws |
-|---|---|---|---|---|---|---|---|
-| hybrid-forced_vs_solo-opus | 1 | — | None | — | None | -1.00 | 10000/10000 |
-| hybrid-forced_vs_solo-opus@medium | 1 | — | None | — | None | -1.00 | 10000/10000 |
-| hybrid-forced_vs_solo-opus@large | 0 | — | None | — | None | — | 0/10000 |
+| comparison | tasks | ratio (deck) | 95% CI | ratio (billed rates) | 95% CI | ratio (Claude side only) | 95% CI | pass-rate diff | undefined draws |
+|---|---|---|---|---|---|---|---|---|---|
+| hybrid-forced_vs_solo-opus | 1 | — | None | — | None | — | None | -1.00 | 10000/10000 |
+| hybrid-forced_vs_solo-opus@medium | 1 | — | None | — | None | — | None | -1.00 | 10000/10000 |
+| hybrid-forced_vs_solo-opus@large | 0 | — | None | — | None | — | None | — | 0/10000 |
 
 ## Judges (mean 1–5; author and empty-patch anchors included)
 
