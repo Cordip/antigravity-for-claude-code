@@ -221,5 +221,13 @@
       "ended_at": null,
       "history": []
     }
+  ],
+  "allow_same_arm_concurrency": true,
+  "repairs": [
+    {
+      "at": "2026-09-17T00:02:00Z",
+      "reason": "single-arm run: same-arm concurrency allowed (checkouts differ per item, so no shared prompt-cache prefix); the 300 s end-gap and first_turn_cache_read stay",
+      "items": []
+    }
   ]
 }

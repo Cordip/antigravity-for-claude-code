@@ -107,6 +107,8 @@ class Scheduler(unittest.TestCase):
     def test_running_arm_or_task_blocks(self):
         items = self._items(); items[3]["status"] = "running"
         self.assertIsNone(schedule.eligible(items, 1100.0, 300))    # hyb running, solo too recent, t1 too recent
+        self.assertEqual(schedule.eligible(items, 1400.0, 300, same_arm_concurrency=True), 1)  # solo after its gap; hyb concurrency allowed but t1 too recent
+        self.assertEqual(schedule.eligible(items, 1100.0, 300, same_arm_concurrency=True), None)
 
     def test_classify_infra_vs_final(self):
         infra = {"claude": {"subtype": "error_during_execution", "errors": ["529 overloaded"], "transcript": {"present": True, "tool_calls": {}}}, "agy": {}}

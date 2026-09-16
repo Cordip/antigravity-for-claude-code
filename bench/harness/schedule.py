@@ -101,8 +101,14 @@ def _key(it: dict) -> str:
     return "%s__%s__r%d" % (it["task_id"], it["arm"], it["rep"])
 
 
-def eligible(items: List[dict], now: float, gap_s: float) -> Optional[int]:
-    """Index of the first pending item whose arm and task both ended ≥ gap_s ago (or never ran)."""
+def eligible(items: List[dict], now: float, gap_s: float, same_arm_concurrency: bool = False) -> Optional[int]:
+    """Index of the first pending item whose arm and task both ended ≥ gap_s ago (or never ran).
+
+    Two runs of the same arm never overlap unless `same_arm_concurrency` is set. Claude
+    Code's system prompt embeds the working directory, and every item has its own checkout,
+    so concurrent same-arm runs on different tasks do not share a prompt-cache prefix
+    (measured: the only warm starts in the main run were reruns in a reused checkout);
+    single-arm follow-ups set the flag in queue.json so two lanes can work."""
     last_arm: Dict[str, float] = {}
     last_task: Dict[str, float] = {}
     running_arms = set()
@@ -118,7 +124,7 @@ def eligible(items: List[dict], now: float, gap_s: float) -> Optional[int]:
     for i, it in enumerate(items):
         if it["status"] != "pending":
             continue
-        if it["arm"] in running_arms or it["task_id"] in running_tasks:
+        if (it["arm"] in running_arms and not same_arm_concurrency) or it["task_id"] in running_tasks:
             continue
         if now - last_arm.get(it["arm"], 0) < gap_s:
             continue
@@ -214,7 +220,7 @@ def lane(run_id: str, lane_id: str, plugin_dir: str, gap_s: Optional[float] = No
             items = q["items"]
             if all(it["status"] in ("done", "gave_up") for it in items):
                 say("queue complete; lane %s exits" % lane_id); return
-            idx = eligible(items, time.time(), gap)
+            idx = eligible(items, time.time(), gap, bool(q.get("allow_same_arm_concurrency")))
             if idx is not None:
                 it = items[idx]
                 it["status"] = "running"; it["lane"] = lane_id; it["attempts"] += 1
