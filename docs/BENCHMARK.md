@@ -307,6 +307,11 @@ it has never seen runs in its last project root until `agy --new-project` is iss
   run. The 21 skipped items are third repetitions (`status: skipped` in `queue.json`).
   The decision was taken on machine constraints, not on the interim numbers, and the
   pre-registered analysis is unchanged; the tables state n per cell.
+- Found after the run (2026-09-17): agy **self-updated the pinned copy of its binary**
+  from 1.2.3 to 1.2.4 during the run; 59 runs record agy 1.2.3 and 16 (from 2026-09-16
+  04:08Z) record 1.2.4 (`versions.agy` in each `run.json`). The solo arms do not use agy;
+  the hybrid arms span both versions. The copy is now read-only (`chmod a-w`). The
+  follow-up hand-off arm runs on 1.2.4 throughout.
 
 ## Versions and provenance
 
