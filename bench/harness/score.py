@@ -164,7 +164,7 @@ def _changed_paths(pre: dict, post: dict) -> Optional[List[str]]:
     return sorted(set(k for k in set(da) | set(db) if da.get(k) != db.get(k)))
 
 
-def attribute_writes(trace_path: str) -> dict:
+def attribute_writes(trace_path: str, agy_background: bool = False) -> dict:
     """Pair pre/post tree fingerprints per tool call; attribute each change.
 
     claude_tool: Edit/Write/MultiEdit/NotebookEdit; agy: a Bash call whose head is the
@@ -172,7 +172,7 @@ def attribute_writes(trace_path: str) -> dict:
     module tooling, not the agent); claude_bash: any other Bash change — the one that must
     be zero in hybrid-forced. File lists come from the hook when it recorded them.
     """
-    out = {"claude_tool": 0, "claude_bash": 0, "agy": 0, "toolchain_gomod": 0, "between_calls": 0, "events": 0,
+    out = {"claude_tool": 0, "claude_bash": 0, "agy": 0, "agy_background": 0, "toolchain_gomod": 0, "between_calls": 0, "events": 0,
            "gate_blocks": 0, "blocked_heads": {}, "gate_allows": 0, "pairing": "tool_use_id",
            "claude_bash_commands": [], "claude_bash_files": [], "agy_files": [], "claude_tool_files": []}
     if not os.path.isfile(trace_path):
@@ -237,6 +237,13 @@ def attribute_writes(trace_path: str) -> dict:
                     out["agy_files"].extend(p for p in changed if p not in out["agy_files"])
             elif base == "go" and changed is not None and changed and all(os.path.basename(p) in GOMOD_NAMES for p in changed):
                 out["toolchain_gomod"] += 1
+            elif agy_background and base not in ("go", "gofmt", "git"):
+                # a delegation was backgrounded (measured: `sleep 600; tail …output` polling a
+                # background agy-delegate while it edited pkg/cmd/issue/edit/edit.go); the
+                # read-only poll cannot write, the wrapper running underneath can
+                out["agy_background"] += 1
+                if changed:
+                    out["agy_files"].extend(p for p in changed if p not in out["agy_files"])
             else:
                 out["claude_bash"] += 1
                 out["claude_bash_commands"].append(gate_cmds.get(ev.get("tool_use_id"), head)[:200])
@@ -418,10 +425,8 @@ def score_run(run_dir: str, repo_dir: str, task: dict, task_dir: str, repo_cfg: 
     # 3. diff stats
     dstats = diff_stats(patch, task.get("author_patch", {}).get("files_code", []))
 
-    # 4. write attribution + gate log
-    writes = attribute_writes(os.path.join(raw, "tool_trace.jsonl"))
-
-    # 5. Claude accounting
+    # 4/5. Claude accounting first (the write attribution needs to know whether a
+    # delegation was backgrounded), then the gate log
     result = claude_usage.parse_result(os.path.join(raw, "result.json"))
     transcripts = sorted(glob.glob(os.path.join(raw, "transcripts", "*.jsonl")))
     tsum = {"present": False}
@@ -430,6 +435,8 @@ def score_run(run_dir: str, repo_dir: str, task: dict, task_dir: str, repo_cfg: 
         main_t = [t for t in transcripts if os.path.basename(t).startswith("main")] or transcripts[:1]
         tsum = claude_usage.summarize_transcript(main_t[0])
         agy_calls = list(tsum.get("agy_calls") or [])
+    writes = attribute_writes(os.path.join(raw, "tool_trace.jsonl"), bool(tsum.get("background_delegations")))
+    if transcripts:
         for extra_t in transcripts:
             if extra_t == main_t[0]:
                 continue
@@ -637,7 +644,8 @@ def reaccount(run_dir: str, task: dict, arm: str, prices: Prices) -> dict:
     agy["trace_audit"] = audits
     agy["executor_web_access"] = any(a.get("web_steps", 0) > 0 for a in audits.values())
     agy["executor_write_steps"] = sum(a.get("write_steps", 0) for a in audits.values())
-    writes = attribute_writes(os.path.join(raw, "tool_trace.jsonl"))
+    writes = attribute_writes(os.path.join(raw, "tool_trace.jsonl"), bool(tsum.get("background_delegations")))
+    rec["claude"].setdefault("transcript", {})["background_delegations"] = tsum.get("background_delegations")
     o = rec["outcome"]
     base_vet = task.get("verify", {}).get("vet_base_findings")
     vet_new = [f for f in vet_findings(o.get("vet_stderr_tail") or "") if f not in set(base_vet or [])]

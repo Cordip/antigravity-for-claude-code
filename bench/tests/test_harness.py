@@ -303,6 +303,18 @@ class Scoring(unittest.TestCase):
         b = score.vet_findings("lib/x.go:150:18: the cancel function should be called\n")
         self.assertEqual(a, b); self.assertEqual(a, ["lib/x.go: the cancel function should be called"])
 
+    def test_background_delegation_writes_are_agy(self):
+        """With a backgrounded agy-delegate, a change during a read-only poll (sleep/tail) is the wrapper's, not Claude's."""
+        ev = [
+            {"event": "gate", "decision": "allow", "heads": ["sleep", "tail"], "tool_use_id": "p", "command": "sleep 600; tail -5 x.out"},
+            {"event": "PreToolUse", "tool_name": "Bash", "tool_use_id": "p", "head": "sleep", "fp": "f0", "files": []},
+            {"event": "PostToolUse", "tool_name": "Bash", "tool_use_id": "p", "head": "sleep", "fp": "f1", "files": [["pkg/x.go", "abc"]]},
+        ]
+        path = _write(os.path.join(self.tmp, "bg.jsonl"), "\n".join(json.dumps(e) for e in ev) + "\n")
+        self.assertEqual(score.attribute_writes(path, agy_background=True)["agy_background"], 1)
+        self.assertEqual(score.attribute_writes(path, agy_background=True)["claude_bash"], 0)
+        self.assertEqual(score.attribute_writes(path, agy_background=False)["claude_bash"], 1)
+
     def test_write_attribution_falls_back_to_sequence(self):
         ev = [
             {"event": "PreToolUse", "tool_name": "Bash", "head": "agy-delegate", "fp": "f0"},

@@ -143,7 +143,8 @@
       },
       "web_tool_calls": 0,
       "write_tool_calls": 14,
-      "sidechain_turns": 0
+      "sidechain_turns": 0,
+      "background_delegations": 0
     },
     "warm_start": false,
     "usage_reconciles": false,
@@ -176,7 +177,13 @@
       "Bash:gofmt": 2
     },
     "result_head": "go.mod is untouched, confirming no new dependencies. The implementation is complete and left uncommitted as requested.\n\n## Summary\n\nAdded `cmd/zoekt-local-sync`, a new command that discovers git repositories under given root directories and syncs a zoekt index against them:\n\n- **`discover.go`**: `discoverRepositories` walks each root, detects normal worktrees (`.git` dir or file, for linked worktr",
-    "errors": []
+    "errors": [],
+    "long_context": {
+      "usd_long_context_est": 3.048507,
+      "requests": 63,
+      "requests_over_200k": 0,
+      "ctx_tokens_over_200k_share": 0.0
+    }
   },
   "agy": {
     "delegations": 0,
@@ -215,6 +222,7 @@
     "claude_tool": 14,
     "claude_bash": 0,
     "agy": 0,
+    "agy_background": 0,
     "toolchain_gomod": 0,
     "between_calls": 0,
     "events": 209,
@@ -326,7 +334,10 @@
     "gemini_usd": 0.0,
     "total_usd": 2.2753129000000003
   },
-  "notes": [],
+  "notes": [
+    "reaccounted at 2026-09-16T17:22:55+00:00",
+    "reaccounted at 2026-09-16T17:24:11+00:00"
+  ],
   "prices_lock_sha256": "606c43d82972168c3159fa1c45d6cf843d6e52a9cdcc0792cead13e3a71fbc2d",
   "scheduler_class": "final"
 }

@@ -142,7 +142,8 @@
       },
       "web_tool_calls": 0,
       "write_tool_calls": 11,
-      "sidechain_turns": 0
+      "sidechain_turns": 0,
+      "background_delegations": 0
     },
     "warm_start": false,
     "usage_reconciles": true,
@@ -176,7 +177,13 @@
       "Bash:go": 1
     },
     "result_head": "Done. The changes are uncommitted in the working tree.\n\n## What was added\n\n**`modules/caddyhttp/idletimeout.go`** (new) — the core primitives:\n- `IdleDeadline{Start, Timeout, MinRate, HardDeadline}` with a `next(now, transferred)` that takes the **minimum** of the idle-reset deadline (`now+Timeout`) and the rate allowance (`Start + Timeout + transferred/MinRate`), then caps both by `HardDeadline`.",
-    "errors": []
+    "errors": [],
+    "long_context": {
+      "usd_long_context_est": 7.746194,
+      "requests": 53,
+      "requests_over_200k": 0,
+      "ctx_tokens_over_200k_share": 0.0
+    }
   },
   "agy": {
     "delegations": 10,
@@ -427,6 +434,7 @@
     "claude_tool": 10,
     "claude_bash": 0,
     "agy": 2,
+    "agy_background": 0,
     "toolchain_gomod": 0,
     "between_calls": 0,
     "events": 165,
@@ -564,7 +572,10 @@
     "gemini_usd": 4.460463,
     "total_usd": 12.208527
   },
-  "notes": [],
+  "notes": [
+    "reaccounted at 2026-09-16T17:22:54+00:00",
+    "reaccounted at 2026-09-16T17:24:10+00:00"
+  ],
   "prices_lock_sha256": "606c43d82972168c3159fa1c45d6cf843d6e52a9cdcc0792cead13e3a71fbc2d",
   "scheduler_class": "final"
 }

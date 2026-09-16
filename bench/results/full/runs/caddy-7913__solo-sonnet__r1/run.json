@@ -138,7 +138,8 @@
       },
       "web_tool_calls": 0,
       "write_tool_calls": 13,
-      "sidechain_turns": 0
+      "sidechain_turns": 0,
+      "background_delegations": 0
     },
     "warm_start": false,
     "usage_reconciles": true,
@@ -173,7 +174,13 @@
       "Bash:go": 2
     },
     "result_head": "Changes are left uncommitted in the working tree as requested. Summary:\n\n**New files:**\n- `modules/caddyhttp/idletimeout.go` — `IdleDeadline` (idle-reset + min-rate deadline computation, capped by an optional hard deadline), `IdleTimeoutReader`, `IdleTimeoutWriter` (chunks writes/`ReadFrom` at `DefaultMaxWriteChunk` = 64 KiB, overridable via `MaxChunk`)\n- `modules/caddyhttp/timeouts/timeouts.go` +",
-    "errors": []
+    "errors": [],
+    "long_context": {
+      "usd_long_context_est": 3.80593,
+      "requests": 61,
+      "requests_over_200k": 0,
+      "ctx_tokens_over_200k_share": 0.0
+    }
   },
   "agy": {
     "delegations": 0,
@@ -212,6 +219,7 @@
     "claude_tool": 13,
     "claude_bash": 0,
     "agy": 0,
+    "agy_background": 0,
     "toolchain_gomod": 0,
     "between_calls": 0,
     "events": 165,
@@ -337,6 +345,10 @@
     "gemini_usd": 0.0,
     "total_usd": 2.5389347000000013
   },
-  "notes": [],
-  "prices_lock_sha256": "606c43d82972168c3159fa1c45d6cf843d6e52a9cdcc0792cead13e3a71fbc2d"
+  "notes": [
+    "reaccounted at 2026-09-16T17:22:54+00:00",
+    "reaccounted at 2026-09-16T17:24:10+00:00"
+  ],
+  "prices_lock_sha256": "606c43d82972168c3159fa1c45d6cf843d6e52a9cdcc0792cead13e3a71fbc2d",
+  "env_failure": null
 }

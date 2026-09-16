@@ -139,7 +139,8 @@
       },
       "web_tool_calls": 0,
       "write_tool_calls": 0,
-      "sidechain_turns": 0
+      "sidechain_turns": 0,
+      "background_delegations": 0
     },
     "warm_start": false,
     "usage_reconciles": true,
@@ -171,7 +172,13 @@
       "Bash:git": 1
     },
     "result_head": "Done — implemented and verified.\n\n## What changed (uncommitted)\n\n**`pkg/cmd/pr/shared/worktree.go`** (new) — the worktree path helpers, moved out of `pr checkout` so both commands share them:\n- `WorktreeTarget{Path, Reuse}`\n- `ResolveWorktreeTarget(client, path)` — absolutises the path, rejects a leaf symlink / non-directory, and uses `git rev-parse --path-format=absolute` to detect reuse or rejec",
-    "errors": []
+    "errors": [],
+    "long_context": {
+      "usd_long_context_est": 4.410067,
+      "requests": 29,
+      "requests_over_200k": 0,
+      "ctx_tokens_over_200k_share": 0.0
+    }
   },
   "agy": {
     "delegations": 4,
@@ -310,6 +317,7 @@
     "claude_tool": 0,
     "claude_bash": 0,
     "agy": 4,
+    "agy_background": 0,
     "toolchain_gomod": 0,
     "between_calls": 0,
     "events": 82,
@@ -428,7 +436,10 @@
     "gemini_usd": 1.883097,
     "total_usd": 6.2949645
   },
-  "notes": [],
+  "notes": [
+    "reaccounted at 2026-09-16T17:22:55+00:00",
+    "reaccounted at 2026-09-16T17:24:10+00:00"
+  ],
   "prices_lock_sha256": "606c43d82972168c3159fa1c45d6cf843d6e52a9cdcc0792cead13e3a71fbc2d",
   "scheduler_class": "final"
 }

@@ -144,7 +144,8 @@
       },
       "web_tool_calls": 0,
       "write_tool_calls": 84,
-      "sidechain_turns": 0
+      "sidechain_turns": 0,
+      "background_delegations": 0
     },
     "warm_start": false,
     "usage_reconciles": false,
@@ -182,7 +183,13 @@
     "result_head": "",
     "errors": [
       "Reached maximum number of turns (250)"
-    ]
+    ],
+    "long_context": {
+      "usd_long_context_est": 85.696124,
+      "requests": 250,
+      "requests_over_200k": 237,
+      "ctx_tokens_over_200k_share": 0.9892
+    }
   },
   "agy": {
     "delegations": 0,
@@ -221,6 +228,7 @@
     "claude_tool": 83,
     "claude_bash": 0,
     "agy": 0,
+    "agy_background": 0,
     "toolchain_gomod": 0,
     "between_calls": 1,
     "events": 630,
@@ -405,7 +413,10 @@
     "gemini_usd": 0.0,
     "total_usd": 33.88966569999998
   },
-  "notes": [],
+  "notes": [
+    "reaccounted at 2026-09-16T17:22:55+00:00",
+    "reaccounted at 2026-09-16T17:24:10+00:00"
+  ],
   "prices_lock_sha256": "606c43d82972168c3159fa1c45d6cf843d6e52a9cdcc0792cead13e3a71fbc2d",
   "scheduler_class": "final"
 }

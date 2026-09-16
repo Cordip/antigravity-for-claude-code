@@ -131,7 +131,7 @@ def summarize_transcript(path: str, include_sidechains: bool = True) -> dict:
     s = {"present": os.path.isfile(path), "turns": 0, "input": 0, "output": 0, "cache_creation": 0,
          "cache_read": 0, "first_turn_cache_read": None, "models": {}, "tool_calls": {},
          "web_tool_calls": 0, "write_tool_calls": 0, "bash_commands": [], "agy_calls": [],
-         "sidechain_turns": 0, "wrapper_not_found": 0}
+         "sidechain_turns": 0, "wrapper_not_found": 0, "background_delegations": 0}
     if not s["present"]:
         return s
     pending: Dict[str, dict] = {}  # tool_use_id -> agy call record awaiting its result
@@ -181,6 +181,8 @@ def summarize_transcript(path: str, include_sidechains: bool = True) -> dict:
                         s["bash_commands"].append(cmd[:500])
                         head, tier, model = _tier_from_command(cmd)
                         if head in AGY_HEADS:
+                            if (block.get("input") or {}).get("run_in_background"):
+                                s["background_delegations"] += 1  # Claude Code's background Bash: the wrapper keeps writing after the call returns
                             order += 1
                             call = {"order": order, "tool_use_id": block.get("id"), "head": head,
                                     "tier": tier, "model": model, "conversation_ids": [], "command": cmd[:300]}

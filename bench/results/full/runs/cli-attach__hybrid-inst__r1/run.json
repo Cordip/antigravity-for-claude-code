@@ -141,7 +141,8 @@
       },
       "web_tool_calls": 0,
       "write_tool_calls": 12,
-      "sidechain_turns": 0
+      "sidechain_turns": 0,
+      "background_delegations": 0
     },
     "warm_start": true,
     "usage_reconciles": true,
@@ -175,7 +176,13 @@
       "Bash:find": 1
     },
     "result_head": "Done. Everything is implemented, uncommitted in the working tree, and verified by me.\n\n## Verification (run by me, clean state)\n\n```\ngo build ./...        clean\ngo vet ./...          clean\ngofmt -l ...          clean\ngo test ./...         all packages pass (no failures, no build errors)\n```\n\n## What was added\n\n**New package `internal/attachments`** (6 files, ~1,100 lines):\n- `userasset.go` — nine ",
-    "errors": []
+    "errors": [],
+    "long_context": {
+      "usd_long_context_est": 66.429306,
+      "requests": 123,
+      "requests_over_200k": 90,
+      "ctx_tokens_over_200k_share": 0.8728
+    }
   },
   "agy": {
     "delegations": 23,
@@ -675,6 +682,7 @@
     "claude_tool": 0,
     "claude_bash": 9,
     "agy": 5,
+    "agy_background": 0,
     "toolchain_gomod": 0,
     "between_calls": 6,
     "events": 343,
@@ -899,7 +907,10 @@
     "gemini_usd": 10.784929,
     "total_usd": 48.16534349999999
   },
-  "notes": [],
+  "notes": [
+    "reaccounted at 2026-09-16T17:22:55+00:00",
+    "reaccounted at 2026-09-16T17:24:10+00:00"
+  ],
   "prices_lock_sha256": "606c43d82972168c3159fa1c45d6cf843d6e52a9cdcc0792cead13e3a71fbc2d",
   "scheduler_class": "final"
 }

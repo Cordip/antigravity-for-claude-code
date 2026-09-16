@@ -142,7 +142,8 @@
       },
       "web_tool_calls": 0,
       "write_tool_calls": 32,
-      "sidechain_turns": 0
+      "sidechain_turns": 0,
+      "background_delegations": 0
     },
     "warm_start": false,
     "usage_reconciles": true,
@@ -173,7 +174,13 @@
       "Bash:perl": 1
     },
     "result_head": "Done. All tests pass (`go test ./...` green), `gofmt` and `go vet ./...` clean, changes left uncommitted.\n\n## What changed\n\n**`git/client.go`** — the reusable worktree operations on the git client:\n- `WorktreeAdd(ctx, path, branch)` → `git worktree add -- <path> <branch>`\n- `WorktreeAddTracking(ctx, path, remote, branch)` → `git worktree add --track -b <branch> -- <path> <remote>/<branch>`\n- `Chec",
-    "errors": []
+    "errors": [],
+    "long_context": {
+      "usd_long_context_est": 4.761427,
+      "requests": 63,
+      "requests_over_200k": 0,
+      "ctx_tokens_over_200k_share": 0.0
+    }
   },
   "agy": {
     "delegations": 0,
@@ -212,6 +219,7 @@
     "claude_tool": 32,
     "claude_bash": 0,
     "agy": 0,
+    "agy_background": 0,
     "toolchain_gomod": 0,
     "between_calls": 0,
     "events": 140,
@@ -324,7 +332,10 @@
     "gemini_usd": 0.0,
     "total_usd": 4.7629800000000015
   },
-  "notes": [],
+  "notes": [
+    "reaccounted at 2026-09-16T17:22:55+00:00",
+    "reaccounted at 2026-09-16T17:24:10+00:00"
+  ],
   "prices_lock_sha256": "606c43d82972168c3159fa1c45d6cf843d6e52a9cdcc0792cead13e3a71fbc2d",
   "scheduler_class": "final"
 }

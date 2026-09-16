@@ -139,7 +139,8 @@
       },
       "web_tool_calls": 0,
       "write_tool_calls": 0,
-      "sidechain_turns": 0
+      "sidechain_turns": 0,
+      "background_delegations": 0
     },
     "warm_start": false,
     "usage_reconciles": true,
@@ -171,7 +172,13 @@
       "Bash:git": 1
     },
     "result_head": "Done. The change is in the working tree, uncommitted.\n\n## Root cause\n`parseOptOrder` assigned the result to the package-level `directiveOrder` var, so the `order` global option permanently rewrote the process-wide order — leaking into later adaptations, surviving failed adaptations, and racing when adaptations ran concurrently. It also called `slices.DeleteFunc` directly on `directiveOrder`, which",
-    "errors": []
+    "errors": [],
+    "long_context": {
+      "usd_long_context_est": 2.081342,
+      "requests": 26,
+      "requests_over_200k": 0,
+      "ctx_tokens_over_200k_share": 0.0
+    }
   },
   "agy": {
     "delegations": 1,
@@ -243,6 +250,7 @@
     "claude_tool": 0,
     "claude_bash": 0,
     "agy": 1,
+    "agy_background": 0,
     "toolchain_gomod": 0,
     "between_calls": 0,
     "events": 92,
@@ -346,7 +354,10 @@
     "gemini_usd": 0.85009,
     "total_usd": 2.933027
   },
-  "notes": [],
+  "notes": [
+    "reaccounted at 2026-09-16T17:22:54+00:00",
+    "reaccounted at 2026-09-16T17:24:10+00:00"
+  ],
   "prices_lock_sha256": "606c43d82972168c3159fa1c45d6cf843d6e52a9cdcc0792cead13e3a71fbc2d",
   "scheduler_class": "final"
 }
