@@ -120,6 +120,10 @@ class Scheduler(unittest.TestCase):
         self.assertEqual(schedule.classify({"env_failure": "plugin_bin_missing", "claude": {"subtype": "success", "errors": [], "transcript": {"present": True, "tool_calls": {"Bash": 5}}, "total_cost_usd": 1.9}, "agy": {}}, None), "infra")
         slept_ok = {"suspended_s": 1164.6, "claude": {"subtype": "success", "errors": [], "transcript": {"present": True, "tool_calls": {"Bash": 3}}, "total_cost_usd": 2.2}, "agy": {}}
         slept_dead = {"suspended_s": 1164.6, "claude": {"subtype": "error_during_execution", "errors": [], "transcript": {"present": True, "tool_calls": {"Bash": 3}}, "total_cost_usd": 2.2}, "agy": {}}
+        api_dead = {"suspended_s": 998.6, "claude": {"subtype": "success", "is_error": True, "result_head": "API Error: getaddrinfo ENOTFOUND oauth2.googleapis.com", "errors": [], "transcript": {"present": True, "tool_calls": {"Bash": 15}}, "total_cost_usd": 1.09}, "agy": {}}
+        self.assertEqual(schedule.classify(api_dead, None), "suspended")   # died of the network after a wake
+        api_dead_awake = dict(api_dead, suspended_s=0.0)
+        self.assertEqual(schedule.classify(api_dead_awake, None), "infra")   # same death without sleep: infrastructure
         self.assertEqual(schedule.classify(slept_ok, None), "final")      # completed after the wake: kept, flagged
         self.assertEqual(schedule.classify(slept_dead, None), "suspended")  # died of the sleep: rerun
 

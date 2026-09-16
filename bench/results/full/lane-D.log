@@ -51,3 +51,9 @@
 2026-09-15T19:58:57+00:00 lane D -> k6-6169__hybrid-inst__r2 (attempt 1)
 2026-09-15T22:28:01+00:00 lane D: k6-6169__hybrid-inst__r2 done pass=False $24.084331749999997 in 8944s
 2026-09-15T22:28:01+00:00 lane D -> caddy-7913__hybrid-forced__r2 (attempt 1)
+2026-09-15T23:31:02+00:00 lane D: caddy-7913__hybrid-forced__r2 done pass=True $11.052365749999998 in 3781s
+2026-09-15T23:31:02+00:00 lane D -> cli-attach__hybrid-inst__r1 (attempt 1)
+2026-09-16T00:39:30+00:00 lane D: cli-attach__hybrid-inst__r1 done pass=False $1.6335225 in 4107s
+2026-09-16T00:39:30+00:00 lane D -> caddy-7995__solo-sonnet__r3 (attempt 1)
+2026-09-16T00:49:05+00:00 lane D: caddy-7995__solo-sonnet__r3 done pass=True $2.1337162000000003 in 576s
+2026-09-16T00:49:05+00:00 lane D -> caddy-7913__hybrid-inst__r2 (attempt 1)

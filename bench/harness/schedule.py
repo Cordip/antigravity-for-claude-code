@@ -135,6 +135,12 @@ def classify(rec: Optional[dict], error: Optional[str]) -> str:
     if rec.get("env_failure"):
         return "infra"  # e.g. plugin_bin_missing: the harness, not the arm
     c = rec.get("claude", {})
+    # Claude Code reports subtype "success" with is_error=true when the final message is an
+    # API error (measured: "API Error: getaddrinfo ENOTFOUND oauth2.googleapis.com" right
+    # after a wake, 0 files changed). That is the network, not the arm.
+    api_death = bool(c.get("is_error")) and (str(c.get("result_head") or "").startswith("API Error") or bool(c.get("errors")))
+    if api_death:
+        return "suspended" if (rec.get("suspended_s") or 0) > 30 else "infra"
     if (rec.get("suspended_s") or 0) > 30:
         # The machine slept during the run. Claude Code retries the interrupted API call on
         # wake and the wall cap counts active time, so a run that then completed normally is

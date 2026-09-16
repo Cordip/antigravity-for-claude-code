@@ -34,3 +34,9 @@
 2026-09-15T22:06:12+00:00 lane C -> caddy-7888__hybrid-forced__r2 (attempt 1)
 2026-09-15T22:14:43+00:00 lane C: caddy-7888__hybrid-forced__r2 done pass=True $1.33223675 in 511s
 2026-09-15T22:14:43+00:00 lane C -> cli-attach__solo-opus__r2 (attempt 1)
+2026-09-15T23:06:12+00:00 lane C: cli-attach__solo-opus__r2 done pass=True $33.431903999999996 in 3089s
+2026-09-15T23:06:12+00:00 lane C -> k6-6169__solo-sonnet__r2 (attempt 1)
+2026-09-15T23:31:55+00:00 lane C: k6-6169__solo-sonnet__r2 done pass=True $8.8268491 in 1544s
+2026-09-15T23:31:55+00:00 lane C -> cli-14136__solo-opus__r3 (attempt 1)
+2026-09-16T00:39:15+00:00 lane C: cli-14136__solo-opus__r3 done pass=False $1.086825 in 4040s
+2026-09-16T00:39:15+00:00 lane C -> k6-6169__hybrid-forced__r2 (attempt 1)

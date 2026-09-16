@@ -157,6 +157,11 @@ Results will appear here as `bench:table` blocks when the run completes.
   hanging test `TestLockingUpWithAJustGeneralCancel` is skipped in k6's suite gate from
   22:40Z (`task.json` `verify.skip_notes`). A failure in a package that *does* depend on the
   change remains a failure.
+- 2026-09-16 00:39Z — `cli-14136__solo-opus__r3` ended 3.5 minutes after a wake with the
+  message "API Error: getaddrinfo ENOTFOUND oauth2.googleapis.com" (Claude Code reports
+  `subtype: success`, `is_error: true`), 0 files changed. A run whose final message is an
+  API error is now classified `suspended` (after sleep) or `infra` (otherwise) and rerun;
+  this one was reclassified post hoc and requeued.
 
 ## Versions and provenance
 

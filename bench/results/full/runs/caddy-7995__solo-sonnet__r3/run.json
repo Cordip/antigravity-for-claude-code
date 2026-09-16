@@ -1,10 +1,10 @@
 {
   "schema": "bench.run/1",
   "run_id": "full",
-  "run_key": "caddy-7995__solo-sonnet__r2",
+  "run_key": "caddy-7995__solo-sonnet__r3",
   "task_id": "caddy-7995",
   "arm": "solo-sonnet",
-  "rep": 2,
+  "rep": 3,
   "attempt": 1,
   "lane": "D",
   "size_class": "small",
@@ -12,10 +12,10 @@
   "failure_class": null,
   "env_failure": null,
   "violations": [],
-  "started_at": "2026-09-15T18:20:53+00:00",
-  "ended_at": "2026-09-15T18:33:08+00:00",
-  "agent_wall_s": 734.4,
-  "agent_active_s": 734.4,
+  "started_at": "2026-09-16T00:39:30+00:00",
+  "ended_at": "2026-09-16T00:48:53+00:00",
+  "agent_wall_s": 562.4,
+  "agent_active_s": 562.4,
   "suspended_s": 0.0,
   "versions": {
     "claude": "2.1.272 (Claude Code)",
@@ -51,23 +51,23 @@
     "sent_sha256": "5759194aa07a5afe5182428dd1a810afc1e5000bc59b35dccac1ea5a8f104c2d"
   },
   "claude": {
-    "session_id": "111ae89d-2ef4-445e-8be4-9618c61d4cfd",
-    "subtype": "error_max_turns",
-    "is_error": true,
-    "num_turns": 81,
+    "session_id": "e3ce32d5-2395-4f99-b6ce-fa672286528b",
+    "subtype": "success",
+    "is_error": false,
+    "num_turns": 68,
     "num_turns_source": "result",
-    "duration_ms": 734080,
-    "duration_api_ms": 529267,
-    "total_cost_usd": 2.5319848999999994,
+    "duration_ms": 562020,
+    "duration_api_ms": 489682,
+    "total_cost_usd": 2.1337162000000003,
     "total_cost_usd_source": "result.modelUsage",
-    "capped": true,
+    "capped": false,
     "usage": {
-      "input_tokens": 160,
-      "cache_creation_input_tokens": 193205,
-      "cache_read_input_tokens": 8076977,
-      "output_tokens": 43191,
+      "input_tokens": 134,
+      "cache_creation_input_tokens": 164734,
+      "cache_read_input_tokens": 6506006,
+      "output_tokens": 41906,
       "output_tokens_details": {
-        "thinking_tokens": 24355
+        "thinking_tokens": 24329
       },
       "server_tool_use": {
         "web_search_requests": 0,
@@ -76,7 +76,7 @@
       "service_tier": "standard",
       "cache_creation": {
         "ephemeral_1h_input_tokens": 0,
-        "ephemeral_5m_input_tokens": 193205
+        "ephemeral_5m_input_tokens": 164734
       },
       "inference_geo": "",
       "iterations": [],
@@ -85,11 +85,11 @@
     "model_usage": {
       "claude-haiku-4-5@20251001": {
         "inputTokens": 1227,
-        "outputTokens": 24,
+        "outputTokens": 25,
         "cacheReadInputTokens": 0,
         "cacheCreationInputTokens": 0,
         "webSearchRequests": 0,
-        "costUSD": 0.001347,
+        "costUSD": 0.001352,
         "contextWindow": 200000,
         "maxOutputTokens": 32000,
         "thinkingTokens": 0,
@@ -98,86 +98,79 @@
         "costBasis": "list"
       },
       "claude-sonnet-5[1m]": {
-        "inputTokens": 160,
-        "outputTokens": 43191,
-        "cacheReadInputTokens": 8076977,
-        "cacheCreationInputTokens": 193205,
+        "inputTokens": 134,
+        "outputTokens": 41906,
+        "cacheReadInputTokens": 6506006,
+        "cacheCreationInputTokens": 164734,
         "webSearchRequests": 0,
-        "costUSD": 2.5306378999999994,
+        "costUSD": 2.1323642000000005,
         "contextWindow": 1000000,
         "maxOutputTokens": 64000,
-        "thinkingTokens": 24355,
+        "thinkingTokens": 24329,
         "canonicalModel": "claude-sonnet-5",
         "provider": "vertex",
         "costBasis": "list"
       }
     },
-    "list_price_usd_recomputed": 3.795957,
-    "recomputed_vs_reported_gap": 0.4992,
+    "list_price_usd_recomputed": 3.198546,
+    "recomputed_vs_reported_gap": 0.499,
     "price_flags": [
       "no_claude_rate_for:claude-haiku-4-5@20251001"
     ],
     "transcript": {
       "present": true,
-      "turns": 80,
-      "input": 160,
-      "output": 43191,
-      "cache_creation": 193205,
-      "cache_read": 8076977,
+      "turns": 67,
+      "input": 134,
+      "output": 41906,
+      "cache_creation": 164734,
+      "cache_read": 6506006,
       "first_turn_cache_read": 0,
       "models": {
         "claude-sonnet-5": {
-          "turns": 80,
-          "input": 160,
-          "output": 43191,
-          "cache_creation": 193205,
-          "cache_read": 8076977
+          "turns": 67,
+          "input": 134,
+          "output": 41906,
+          "cache_creation": 164734,
+          "cache_read": 6506006
         }
       },
       "tool_calls": {
-        "Read": 22,
-        "Bash": 37,
-        "Edit": 22
+        "Read": 19,
+        "Bash": 27,
+        "Edit": 21
       },
       "web_tool_calls": 0,
-      "write_tool_calls": 22,
+      "write_tool_calls": 21,
       "sidechain_turns": 0
     },
     "warm_start": false,
     "usage_reconciles": true,
     "usage_reconciliation": {
       "input": {
-        "result": 160,
-        "transcript": 160,
+        "result": 134,
+        "transcript": 134,
         "rel": 0.0
       },
       "output": {
-        "result": 43191,
-        "transcript": 43191,
+        "result": 41906,
+        "transcript": 41906,
         "rel": 0.0
       },
       "cache_creation": {
-        "result": 193205,
-        "transcript": 193205,
+        "result": 164734,
+        "transcript": 164734,
         "rel": 0.0
       },
       "cache_read": {
-        "result": 8076977,
-        "transcript": 8076977,
+        "result": 6506006,
+        "transcript": 6506006,
         "rel": 0.0
       }
     },
-    "permission_denials": 4,
-    "denied_tools": {
-      "Bash:grep": 1,
-      "Bash:go": 1,
-      "Bash:wc": 1,
-      "Bash:git": 1
-    },
-    "result_head": "",
-    "errors": [
-      "Reached maximum number of turns (80)"
-    ]
+    "permission_denials": 0,
+    "denied_tools": {},
+    "result_head": "Changes are uncommitted as required, tests pass under `-race`, and `go vet`/`gofmt` are clean.\n\n## Summary\n\nThe `order` global option previously mutated a single package-level `directiveOrder` variable directly (in `parseOptOrder`), so it leaked across adaptations, corrupted `defaultDirectiveOrder`'s backing array via slice aliasing, and raced under concurrent use. Fixed by:\n\n- **`directives.go`**",
+    "errors": []
   },
   "agy": {
     "delegations": 0,
@@ -213,28 +206,24 @@
     "executor_write_steps": 0
   },
   "writes": {
-    "claude_tool": 22,
+    "claude_tool": 21,
     "claude_bash": 0,
     "agy": 0,
     "toolchain_gomod": 0,
     "between_calls": 0,
-    "events": 151,
-    "gate_blocks": 3,
-    "blocked_heads": {
-      "grep": 1,
-      "go": 1,
-      "git": 1
-    },
-    "gate_allows": 34,
+    "events": 123,
+    "gate_blocks": 0,
+    "blocked_heads": {},
+    "gate_allows": 27,
     "pairing": "tool_use_id",
     "claude_bash_commands": [],
     "claude_bash_files": [],
     "agy_files": [],
     "claude_tool_files": [
-      "caddyconfig/httpcaddyfile/options.go",
       "caddyconfig/httpcaddyfile/directives.go",
       "caddyconfig/httpcaddyfile/builtins.go",
-      "caddyconfig/httpcaddyfile/httptype.go"
+      "caddyconfig/httpcaddyfile/httptype.go",
+      "caddyconfig/httpcaddyfile/options.go"
     ]
   },
   "outcome": {
@@ -250,7 +239,7 @@
       "pass": true,
       "rc": 0,
       "timed_out": false,
-      "seconds": 1.5,
+      "seconds": 1.6,
       "passed_tests": 7,
       "failed_tests": [],
       "failed_packages": [],
@@ -258,13 +247,17 @@
       "packages": 1,
       "stderr_tail": "",
       "flaky_retry": null,
-      "failed_tests_before_retry": null
+      "failed_tests_before_retry": null,
+      "failed_packages_before_retry": null,
+      "unrelated_failed_packages": null,
+      "unrelated_retry": null,
+      "env_failure": null
     },
     "full_suite": {
       "pass": true,
       "rc": 0,
       "timed_out": false,
-      "seconds": 7.5,
+      "seconds": 8.4,
       "passed_tests": 1287,
       "failed_tests": [],
       "failed_packages": [],
@@ -272,18 +265,22 @@
       "packages": 48,
       "stderr_tail": "",
       "flaky_retry": null,
-      "failed_tests_before_retry": null
+      "failed_tests_before_retry": null,
+      "failed_packages_before_retry": null,
+      "unrelated_failed_packages": null,
+      "unrelated_retry": null,
+      "env_failure": null
     },
     "hidden_pass": true,
     "tree_pass": true,
-    "pass": false,
+    "pass": true,
     "hidden_test_tampered": false,
     "tampered_files": []
   },
   "diff": {
     "files_touched": 4,
-    "code_added": 80,
-    "code_removed": 37,
+    "code_added": 86,
+    "code_removed": 32,
     "test_added": 0,
     "test_removed": 0,
     "doc_added": 0,
@@ -291,7 +288,7 @@
     "gomod_changed": false,
     "files_outside_author_set": [],
     "stray_binaries": [],
-    "patch_sha256": "8c51bdfde8a6bcb8b8a587450362a691e5f105974ea6bdf9d3aa9e620cbdfec9"
+    "patch_sha256": "60b6c2b37612d8f83d4c6786c167b5c3713cc464e58e71a56b8d084130f6fb62"
   },
   "diff_files": {
     "caddyconfig/httpcaddyfile/builtins.go": {
@@ -300,29 +297,27 @@
       "class": "code"
     },
     "caddyconfig/httpcaddyfile/directives.go": {
-      "added": 7,
-      "removed": 3,
+      "added": 19,
+      "removed": 7,
       "class": "code"
     },
     "caddyconfig/httpcaddyfile/httptype.go": {
-      "added": 61,
-      "removed": 27,
+      "added": 49,
+      "removed": 17,
       "class": "code"
     },
     "caddyconfig/httpcaddyfile/options.go": {
-      "added": 11,
-      "removed": 6,
+      "added": 17,
+      "removed": 7,
       "class": "code"
     }
   },
   "cost": {
-    "claude_usd": 2.5319848999999994,
+    "claude_usd": 2.1337162000000003,
     "gemini_usd": 0.0,
-    "total_usd": 2.5319848999999994
+    "total_usd": 2.1337162000000003
   },
-  "notes": [
-    "post hoc 2026-09-16T01:25Z: final message was an API error (); classified infra and rerun"
-  ],
+  "notes": [],
   "prices_lock_sha256": "606c43d82972168c3159fa1c45d6cf843d6e52a9cdcc0792cead13e3a71fbc2d",
-  "scheduler_class": "infra"
+  "scheduler_class": "final"
 }

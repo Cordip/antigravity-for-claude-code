@@ -298,6 +298,9 @@
     "gemini_usd": 0.0,
     "total_usd": 1.4877089999999997
   },
-  "notes": [],
-  "prices_lock_sha256": "606c43d82972168c3159fa1c45d6cf843d6e52a9cdcc0792cead13e3a71fbc2d"
+  "notes": [
+    "post hoc 2026-09-16T01:25Z: final message was an API error (API Error: getaddrinfo ENOTFOUND oauth2.googleapis.com); classified infra and rerun"
+  ],
+  "prices_lock_sha256": "606c43d82972168c3159fa1c45d6cf843d6e52a9cdcc0792cead13e3a71fbc2d",
+  "scheduler_class": "infra"
 }
