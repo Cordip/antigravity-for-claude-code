@@ -172,6 +172,14 @@ Results will appear here as `bench:table` blocks when the run completes.
   14:20Z no new item starts while the machine is on battery power (running items are not
   touched); lanes C/D were replaced by E/F to pick the rule up. The waiting time is
   recorded per run (`waited_for_ac_s`).
+- 2026-09-16 14:20Z — **stopping rule changed by the operator** at 72 of 96 runs done: the
+  laptop must travel and sleeps when closed, and every run death so far came from those
+  sleeps. The run stops once every task × arm cell has **n ≥ 2** instead of n = 3. At that
+  point 10 cells had n = 3, 20 had n = 2 and 2 had n = 1 (both cli-attach hybrids, the
+  2-hour runs most exposed to sleep); only those two cells' second repetitions were still
+  run. The 21 skipped items are third repetitions (`status: skipped` in `queue.json`).
+  The decision was taken on machine constraints, not on the interim numbers, and the
+  pre-registered analysis is unchanged; the tables state n per cell.
 
 ## Versions and provenance
 
