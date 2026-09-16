@@ -1,6 +1,6 @@
 # Benchmark: Claude Code alone vs Claude Code + this plugin on real pull requests
 
-_Status: pilot complete; full run not started. Every table on this page is regenerated from
+_Status: complete (full run 2026-09-15/16; 75 runs). Every table on this page is regenerated from
 `bench/results/<run-id>/aggregate.json` by `tests/check-bench-claims.py`; a number that
 is not inside a `bench:table` block is not a measurement._
 
@@ -58,30 +58,30 @@ cli #14179 alone (not isolable from its stack).
 **Smoke, small task caddy-7877, all four arms:**
 
 <!-- bench:table run=smoke kind=arms -->
-| arm | runs | pass | cost-of-pass $ | median $ among passes (min–max) | Claude $ | Gemini $ | wall med s | turns med | delegations med (0-runs) | denials med | warm starts | caps hit |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| hybrid-forced | 1 | 1/1 | 1.34 | 1.34 (1.34–1.34) | 1.06 | 0.28 | 478.80 | 19 | 2 (0) | 2 | 0 | 0 |
-| hybrid-inst | 1 | 1/1 | 1.41 | 1.41 (1.41–1.41) | 1.05 | 0.36 | 594.70 | 23 | 1 (0) | 2 | 0 | 0 |
-| solo-opus | 1 | 1/1 | 0.93 | 0.93 (0.93–0.93) | 0.93 | 0.00 | 241.90 | 15 | 0 (1) | 0 | 0 | 0 |
-| solo-sonnet | 1 | 1/1 | 0.72 | 0.72 (0.72–0.72) | 0.72 | 0.00 | 339.60 | 14 | 0 (1) | 1 | 0 | 0 |
+| arm | runs | pass | cost-of-pass $ (deck) | cost-of-pass $ (billed rates) | median $ among passes (min–max) | Claude $ | Gemini $ deck / billed | wall med s | turns med | delegations med (0-runs) | denials med | warm starts | caps hit |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| hybrid-forced | 1 | 1/1 | 1.34 | 1.62 | 1.34 (1.34–1.34) | 1.06 | 0.28 / 0.56 | 478.80 | 19 | 2 (0) | 2 | 0 | 0 |
+| hybrid-inst | 1 | 1/1 | 1.41 | 1.77 | 1.41 (1.41–1.41) | 1.05 | 0.36 / 0.72 | 594.70 | 23 | 1 (0) | 2 | 0 | 0 |
+| solo-opus | 1 | 1/1 | 0.93 | 0.93 | 0.93 (0.93–0.93) | 0.93 | 0.00 / 0.00 | 241.90 | 15 | 0 (1) | 0 | 0 | 0 |
+| solo-sonnet | 1 | 1/1 | 0.72 | 0.72 | 0.72 (0.72–0.72) | 0.72 | 0.00 / 0.00 | 339.60 | 14 | 0 (1) | 1 | 0 | 0 |
 <!-- /bench:table -->
 
 **Pilot, medium caddy-7913 and large k6-6169, `solo-opus` vs `hybrid-forced`:**
 
 <!-- bench:table run=pilot kind=arms -->
-| arm | runs | pass | cost-of-pass $ | median $ among passes (min–max) | Claude $ | Gemini $ | wall med s | turns med | delegations med (0-runs) | denials med | warm starts | caps hit |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| hybrid-forced | 1 | 0/1 | — | — (—–—) | 5.72 | 3.24 | 3600.20 | 40 | 8 (0) | 0 | 0 | 1 |
-| solo-opus | 2 | 2/2 | 8.72 | 8.72 (4.76–12.68) | 17.45 | 0.00 | 1302.85 | 85.50 | 0.00 (2) | 4.50 | 0 | 0 |
+| arm | runs | pass | cost-of-pass $ (deck) | cost-of-pass $ (billed rates) | median $ among passes (min–max) | Claude $ | Gemini $ deck / billed | wall med s | turns med | delegations med (0-runs) | denials med | warm starts | caps hit |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| hybrid-forced | 1 | 0/1 | — | — | — (—–—) | 5.72 | 3.24 / 6.47 | 3600.20 | 40 | 8 (0) | 0 | 0 | 1 |
+| solo-opus | 2 | 2/2 | 8.72 | 8.72 | 8.72 (4.76–12.68) | 17.45 | 0.00 / 0.00 | 1302.85 | 85.50 | 0.00 (2) | 4.50 | 0 | 0 |
 <!-- /bench:table -->
 
 <!-- bench:table run=pilot kind=size -->
-| arm | size | runs | pass | cost-of-pass $ | median $ among passes | wall med s |
-|---|---|---|---|---|---|---|
-| hybrid-forced | medium | 1 | 0/1 | — | — | 3600.20 |
-| hybrid-forced | large | 0 | 0/0 | — | — | — |
-| solo-opus | medium | 1 | 1/1 | 4.76 | 4.76 | 797.70 |
-| solo-opus | large | 1 | 1/1 | 12.68 | 12.68 | 1808.00 |
+| arm | size | runs | pass | cost-of-pass $ (deck) | cost-of-pass $ (billed rates) | median $ among passes | wall med s |
+|---|---|---|---|---|---|---|---|
+| hybrid-forced | medium | 1 | 0/1 | — | — | — | 3600.20 |
+| hybrid-forced | large | 0 | 0/0 | — | — | — | — |
+| solo-opus | medium | 1 | 1/1 | 4.76 | 4.76 | 4.76 | 797.70 |
+| solo-opus | large | 1 | 1/1 | 12.68 | 12.68 | 12.68 | 1808.00 |
 <!-- /bench:table -->
 
 What the pilot established, and what it changed:
@@ -110,10 +110,137 @@ What the pilot established, and what it changed:
   price deck within 0.03 percent, transcript usage versus the result object within
   tolerance, every `AGY_USAGE` line joined by its own `model`/`tier` fields, no warm starts.
 
-## Full run
+## Full run — results (2026-09-15 02:43Z to 2026-09-16 18:21Z)
 
-Started 2026-09-15 02:43 UTC: 96 runs, two lanes, protocol tag `bench/protocol-v1`.
-Results will appear here as `bench:table` blocks when the run completes.
+**Headline.** On eight merged pull requests from four public Go repositories, Claude
+Code with this plugin delegating the implementation to agy cost **more per successful
+task than Claude Code alone, at equal test outcomes, and took 3.8–4.6× the wall-clock**.
+Paired on the same tasks, cost-of-pass was **1.33× `solo-opus` for `hybrid-forced`**
+(95% CI 1.03–1.78) and **1.68× for `hybrid-inst`** (1.34–2.12) at the pre-registered
+price deck; at the unit prices the project was actually billed (Gemini 3.8 Flash at twice
+the deck's promotional rate, see below) 1.75× (1.39–2.28) and 2.08× (1.67–2.66). Every
+hybrid run passed its hidden tests and the repository's full suite (16/16 and 16/16), as
+did every `solo-opus` run (21/21). `solo-sonnet` cost 0.58× `solo-opus` (0.42–0.83) and
+passed 17/20 — two of its failures were the turn cap with a passing tree. No size class
+showed a saving. The closest to parity was the largest task, cli-attach (2,242 lines),
+where `hybrid-forced` cost 0.87× `solo-opus` on n = 2 per arm.
+
+- **H1 (cost)** — not supported: no class has a ratio below 1; the overall CIs exclude 1
+  at both price bases.
+- **H2 (quality)** — pass rates non-inferior (−0 pp); judge means non-inferior for
+  `hybrid-inst` under both judges and for `hybrid-forced` under the Gemini judge; under
+  the Claude judge `hybrid-forced` sits 0.28 below `solo-opus` (3.74 vs 4.02, margin 0.3).
+- **H3 (mechanism)** — satisfied: every hybrid run delegated (median 4–5 calls) and agy
+  wrote files in every one, so the hybrid numbers measure delegation, not a baseline.
+
+Design as run: 75 counted runs over 32 task × arm cells (11 cells at n = 3, 21 at n = 2;
+the operator stopped the run at n ≥ 2 per cell, see the deviations log). Two `hybrid-forced`
+runs are excluded by the pre-registered rule: the executor used `search_web` to look for
+the upstream file or pull request (caddy-7888 r1, zoekt-1105 r1; both had passed).
+
+<!-- bench:table run=full kind=arms -->
+| arm | runs | pass | cost-of-pass $ (deck) | cost-of-pass $ (billed rates) | median $ among passes (min–max) | Claude $ | Gemini $ deck / billed | wall med s | turns med | delegations med (0-runs) | denials med | warm starts | caps hit |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| hybrid-forced | 16 | 16/16 | 10.89 | 14.34 | 6.74 (0.74–38.03) | 118.98 | 55.24 / 110.49 | 2451.60 | 36.00 | 5.00 (0) | 3.00 | 0 | 0 |
+| hybrid-inst | 16 | 16/16 | 13.77 | 17.06 | 6.14 (1.06–48.17) | 153.33 | 67.05 / 119.66 | 2974.25 | 59.50 | 4.00 (0) | 4.50 | 3 | 0 |
+| solo-opus | 21 | 21/21 | 8.22 | 8.22 | 4.32 (0.65–40.92) | 172.55 | 0.00 / 0.00 | 653.10 | 63 | 0 (21) | 2 | 0 | 0 |
+| solo-sonnet | 20 | 17/20 | 4.74 | 4.74 | 2.28 (0.46–8.83) | 80.50 | 0.00 / 0.00 | 676.40 | 69.00 | 0.00 (20) | 3.00 | 0 | 2 |
+<!-- /bench:table -->
+<!-- bench:table run=full kind=size -->
+| arm | size | runs | pass | cost-of-pass $ (deck) | cost-of-pass $ (billed rates) | median $ among passes | wall med s |
+|---|---|---|---|---|---|---|---|
+| hybrid-forced | small | 5 | 5/5 | 2.40 | 3.26 | 2.93 | 924.40 |
+| hybrid-forced | medium | 6 | 6/6 | 6.62 | 8.75 | 6.74 | 2451.60 |
+| hybrid-forced | large | 5 | 5/5 | 24.50 | 32.14 | 24.87 | 6976.50 |
+| hybrid-inst | small | 4 | 4/4 | 3.29 | 4.42 | 3.18 | 969.15 |
+| hybrid-inst | medium | 6 | 6/6 | 5.84 | 7.41 | 5.90 | 2074.60 |
+| hybrid-inst | large | 6 | 6/6 | 28.70 | 35.14 | 28.11 | 6580.00 |
+| solo-opus | small | 5 | 5/5 | 1.98 | 1.98 | 2.17 | 399.40 |
+| solo-opus | medium | 8 | 8/8 | 4.41 | 4.41 | 4.07 | 576.35 |
+| solo-opus | large | 8 | 8/8 | 15.92 | 15.92 | 11.83 | 1487.95 |
+| solo-sonnet | small | 5 | 4/5 | 1.98 | 1.98 | 1.32 | 485.10 |
+| solo-sonnet | medium | 8 | 8/8 | 1.81 | 1.81 | 2.46 | 630.70 |
+| solo-sonnet | large | 7 | 5/7 | 11.62 | 11.62 | 2.73 | 870.90 |
+<!-- /bench:table -->
+<!-- bench:table run=full kind=paired -->
+| comparison | tasks | ratio (deck) | 95% CI | ratio (billed rates) | 95% CI | pass-rate diff | undefined draws |
+|---|---|---|---|---|---|---|---|
+| hybrid-forced_vs_solo-opus | 8 | 1.33 | [1.0315, 1.7782] | 1.75 | [1.3913, 2.2794] | 0.00 | 0/10000 |
+| hybrid-forced_vs_solo-opus@small | 2 | 1.21 | [1.0802, 1.2331] | 1.64 | [1.2455, 1.7097] | 0.00 | 0/10000 |
+| hybrid-forced_vs_solo-opus@medium | 3 | 1.50 | [0.6581, 1.7067] | 1.98 | [0.8997, 2.2242] | 0.00 | 0/10000 |
+| hybrid-forced_vs_solo-opus@large | 3 | 1.54 | [0.874, 2.5213] | 2.02 | [1.191, 3.264] | 0.00 | 0/10000 |
+| hybrid-inst_vs_solo-opus | 8 | 1.68 | [1.3377, 2.1172] | 2.08 | [1.6703, 2.6609] | 0.00 | 0/10000 |
+| hybrid-inst_vs_solo-opus@small | 2 | 1.66 | [1.6361, 1.9059] | 2.23 | [1.9658, 2.6256] | 0.00 | 0/10000 |
+| hybrid-inst_vs_solo-opus@medium | 3 | 1.32 | [1.1246, 1.3732] | 1.68 | [1.4323, 1.7073] | 0.00 | 0/10000 |
+| hybrid-inst_vs_solo-opus@large | 3 | 1.80 | [1.1929, 2.8419] | 2.21 | [1.4568, 3.6679] | 0.00 | 0/10000 |
+| solo-sonnet_vs_solo-opus | 8 | 0.58 | [0.4211, 0.8287] | 0.58 | [0.4211, 0.8287] | -0.15 | 0/10000 |
+| solo-sonnet_vs_solo-opus@small | 2 | 1.00 | [0.8373, 1.1861] | 1.00 | [0.8373, 1.1861] | -0.20 | 0/10000 |
+| solo-sonnet_vs_solo-opus@medium | 3 | 0.41 | [0.254, 0.6196] | 0.41 | [0.254, 0.6196] | 0.00 | 0/10000 |
+| solo-sonnet_vs_solo-opus@large | 3 | 0.73 | [0.4861, 1.6266] | 0.73 | [0.4861, 1.6266] | -0.29 | 360/10000 |
+<!-- /bench:table -->
+**Reading the numbers.**
+
+- The hybrid arms' **Claude side alone** often matched or exceeded the solo run
+  (zoekt-1105: `hybrid-forced` $12.09 vs `solo-opus` $4.80 per pass; k6-6169: $26.07 vs
+  $12.86). Writing a specification for the executor and verifying its output means the
+  conductor still reads the code, and the executor's tokens come on top. agy's 2–10
+  minute turnaround per delegation, run one call at a time, is where the wall-clock goes.
+- The hybrid won or tied on three tasks (caddy-7888 $1.33 vs $2.02, caddy-7877 $0.79 vs
+  $0.73, cli-attach $32.49 vs $37.18 for `hybrid-forced`) and lost clearly on the rest;
+  with n = 2–3 per cell those per-task differences are within noise.
+- **Judges.** Both judges scored the empty patch 1.0 on every task (floor intact). They do
+  **not** rank the author's patch highly (median rank 8 of 12 for both judges), so a judge
+  score here measures conformance to the rubric more than agreement with the maintainers;
+  inter-judge Spearman 0.43, 55 percent of candidates within one point, point-biserial
+  against `pass` 0.37 (Claude judge) and 0.21 (Gemini judge). The Gemini judge compresses
+  every arm into 4.3–4.75.
+- **Sensitivity.** Without the four runs that slept (see deviations): `hybrid-forced`
+  cost-of-pass $10.25 (n = 15), `hybrid-inst` $13.67 (14), `solo-opus` $7.88 (20),
+  `solo-sonnet` $4.74 (20) — same ordering, same conclusion.
+
+<!-- bench:table run=full kind=judge -->
+| arm | judge | n | mean | consistency | edge_cases | scope | readability | robustness | maintainability |
+|---|---|---|---|---|---|---|---|---|---|
+| solo-opus | claude | 21 | 4.02 | 4.24 | 4.00 | 3.81 | 4.19 | 4.19 | 3.71 |
+| solo-opus | gemini | 21 | 4.74 | 4.76 | 4.62 | 4.71 | 4.95 | 4.62 | 4.76 |
+| solo-sonnet | claude | 20 | 3.65 | 3.90 | 3.35 | 3.85 | 3.90 | 3.50 | 3.40 |
+| solo-sonnet | gemini | 20 | 4.29 | 4.70 | 3.80 | 4.10 | 4.75 | 4.15 | 4.25 |
+| hybrid-forced | claude | 18 | 3.74 | 3.89 | 3.78 | 3.94 | 3.72 | 3.83 | 3.28 |
+| hybrid-forced | gemini | 18 | 4.72 | 4.89 | 4.56 | 4.83 | 4.72 | 4.78 | 4.56 |
+| author | gemini | 8 | 4.44 | 4.75 | 4.12 | 4.38 | 4.88 | 4.25 | 4.25 |
+| author | claude | 8 | 3.79 | 4.12 | 3.88 | 3.50 | 3.75 | 3.88 | 3.62 |
+| hybrid-inst | gemini | 16 | 4.75 | 4.81 | 4.56 | 4.56 | 4.88 | 4.94 | 4.75 |
+| hybrid-inst | claude | 16 | 3.75 | 3.94 | 3.75 | 3.94 | 3.69 | 3.94 | 3.25 |
+| null | gemini | 8 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |
+| null | claude | 8 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |
+
+anchors: {"author_rank_by_task": {"claude": {"caddy-7877": "3/10", "caddy-7888": "9/12", "caddy-7913": "8/10", "caddy-7995": "9/13", "cli-14136": "4/13", "cli-attach": "1/10", "k6-6169": "8/11", "zoekt-1105": "9/12"}, "gemini": {"caddy-7877": "2/10", "caddy-7888": "11/12", "caddy-7913": "8/10", "caddy-7995": "6/13", "cli-14136": "11/13", "cli-attach": "2/10", "k6-6169": "7/11", "zoekt-1105": "11/12"}}, "null_max_by_judge": {"claude": 1.0, "gemini": 1.0}, "null_mean_by_judge": {"claude": 1.0, "gemini": 1.0}}; agreement: {"n_candidates_both": 91, "spearman_mean": 0.4349, "within1_pct": 0.549}; judge-vs-pass: {"claude": 0.3688, "gemini": 0.2074}; failed judge calls: 0
+<!-- /bench:table -->
+**Billing reconciliation.** The project's billing export gives unit prices per SKU over
+the run window: Claude Opus 5 $5 / $25 per Mtok with cache write 1.25× and cache read 0.1×
+in both context tiers (no long-context premium billed); Claude Sonnet 5 $2 / $10 (Claude
+Code's own `costUSD` used these rates; `prices.json`'s 3 / 15 is stale); **Gemini 3.8
+Flash $1.50 / $7.50 / $0.15 (input / output / cached), twice the deck's promotional
+$0.75 / $3.75 / $0.075**. Totals over the window (other activity on the shared project is
+included on the billed side and cannot be separated): Claude Opus computed $458.57 vs
+billed $636.07; Claude Sonnet $80.47 vs $137.06; Gemini 3.8 Flash $116.34 at the deck,
+$232.68 at the billed rates, vs $277.06 billed; Claude Fable 5.1 $499.50 billed is the
+operator's own Claude Code session that ran the study, not part of it. Both cost bases
+are therefore shown in every table; the ordering of the arms is the same under either.
+
+**Spend.** $856.82 across all attempts, of which $663.21 in the 75 counted runs, $144.01
+in eight attempts interrupted by machine sleep and $49.60 in seven infrastructure
+failures (all kept under `runs/*__attempts/`); judging $69.55; smoke and pilot before the
+run about $120.
+
+**What this means for the plugin.** The result is the one `docs/POC-PLAYBOOK.md` §0
+predicts for repository editing: delegation does not remove the reading and verifying the
+conductor must do to own the result, and here it added the executor's tokens and its
+latency on top. For implementation work, use Claude Code directly; the plugin's saving
+lives where the digest *is* the deliverable (research, log analysis, multi-source
+lookups). Two operational findings from the run belong in the plugin itself: `prices.json`
+should carry the Vertex-billed Gemini and Sonnet 5 rates, and agy started in a directory
+it has never seen runs in its last project root until `agy --new-project` is issued there.
 
 ### Deviations log (kept as the run proceeds)
 

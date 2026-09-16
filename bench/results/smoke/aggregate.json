@@ -1,7 +1,7 @@
 {
   "schema": "bench.aggregate/1",
   "run_id": "smoke",
-  "generated_at": "2026-09-14T18:37:49+00:00",
+  "generated_at": "2026-09-16T18:52:02+00:00",
   "n_runs": 4,
   "tasks": [
     "caddy-7877"
@@ -16,6 +16,8 @@
       "hidden_pass": 1,
       "cost_total_usd": 1.3424,
       "cost_of_pass_usd": 1.3424,
+      "cost_of_pass_billed_usd": 1.6226,
+      "gemini_billed_usd": 0.5604,
       "cost_pass_median": 1.3424,
       "cost_pass_min": 1.3424,
       "cost_pass_max": 1.3424,
@@ -33,6 +35,11 @@
       "caps_hit": 0,
       "tampered": 0,
       "usage_reconciles": 1,
+      "slept_runs": 0,
+      "claude_usd_long_context_est": 1.0622,
+      "runs_with_200k_requests": 0,
+      "tree_pass": 1,
+      "flaky_retry_passes": 0,
       "violations": {},
       "by_size": {
         "small": {
@@ -44,6 +51,8 @@
           "hidden_pass": 1,
           "cost_total_usd": 1.3424,
           "cost_of_pass_usd": 1.3424,
+          "cost_of_pass_billed_usd": 1.6226,
+          "gemini_billed_usd": 0.5604,
           "cost_pass_median": 1.3424,
           "cost_pass_min": 1.3424,
           "cost_pass_max": 1.3424,
@@ -61,6 +70,11 @@
           "caps_hit": 0,
           "tampered": 0,
           "usage_reconciles": 1,
+          "slept_runs": 0,
+          "claude_usd_long_context_est": 1.0622,
+          "runs_with_200k_requests": 0,
+          "tree_pass": 1,
+          "flaky_retry_passes": 0,
           "violations": {}
         }
       }
@@ -74,6 +88,8 @@
       "hidden_pass": 1,
       "cost_total_usd": 1.4072,
       "cost_of_pass_usd": 1.4072,
+      "cost_of_pass_billed_usd": 1.7677,
+      "gemini_billed_usd": 0.721,
       "cost_pass_median": 1.4072,
       "cost_pass_min": 1.4072,
       "cost_pass_max": 1.4072,
@@ -91,6 +107,11 @@
       "caps_hit": 0,
       "tampered": 0,
       "usage_reconciles": 1,
+      "slept_runs": 0,
+      "claude_usd_long_context_est": 1.0467,
+      "runs_with_200k_requests": 0,
+      "tree_pass": 1,
+      "flaky_retry_passes": 0,
       "violations": {},
       "by_size": {
         "small": {
@@ -102,6 +123,8 @@
           "hidden_pass": 1,
           "cost_total_usd": 1.4072,
           "cost_of_pass_usd": 1.4072,
+          "cost_of_pass_billed_usd": 1.7677,
+          "gemini_billed_usd": 0.721,
           "cost_pass_median": 1.4072,
           "cost_pass_min": 1.4072,
           "cost_pass_max": 1.4072,
@@ -119,6 +142,11 @@
           "caps_hit": 0,
           "tampered": 0,
           "usage_reconciles": 1,
+          "slept_runs": 0,
+          "claude_usd_long_context_est": 1.0467,
+          "runs_with_200k_requests": 0,
+          "tree_pass": 1,
+          "flaky_retry_passes": 0,
           "violations": {}
         }
       }
@@ -132,6 +160,8 @@
       "hidden_pass": 1,
       "cost_total_usd": 0.9297,
       "cost_of_pass_usd": 0.9297,
+      "cost_of_pass_billed_usd": 0.9297,
+      "gemini_billed_usd": 0.0,
       "cost_pass_median": 0.9297,
       "cost_pass_min": 0.9297,
       "cost_pass_max": 0.9297,
@@ -149,6 +179,11 @@
       "caps_hit": 0,
       "tampered": 0,
       "usage_reconciles": 1,
+      "slept_runs": 0,
+      "claude_usd_long_context_est": 0.9297,
+      "runs_with_200k_requests": 0,
+      "tree_pass": 1,
+      "flaky_retry_passes": 0,
       "violations": {},
       "by_size": {
         "small": {
@@ -160,6 +195,8 @@
           "hidden_pass": 1,
           "cost_total_usd": 0.9297,
           "cost_of_pass_usd": 0.9297,
+          "cost_of_pass_billed_usd": 0.9297,
+          "gemini_billed_usd": 0.0,
           "cost_pass_median": 0.9297,
           "cost_pass_min": 0.9297,
           "cost_pass_max": 0.9297,
@@ -177,6 +214,11 @@
           "caps_hit": 0,
           "tampered": 0,
           "usage_reconciles": 1,
+          "slept_runs": 0,
+          "claude_usd_long_context_est": 0.9297,
+          "runs_with_200k_requests": 0,
+          "tree_pass": 1,
+          "flaky_retry_passes": 0,
           "violations": {}
         }
       }
@@ -190,6 +232,8 @@
       "hidden_pass": 1,
       "cost_total_usd": 0.7211,
       "cost_of_pass_usd": 0.7211,
+      "cost_of_pass_billed_usd": 0.7211,
+      "gemini_billed_usd": 0.0,
       "cost_pass_median": 0.7211,
       "cost_pass_min": 0.7211,
       "cost_pass_max": 0.7211,
@@ -207,6 +251,11 @@
       "caps_hit": 0,
       "tampered": 0,
       "usage_reconciles": 1,
+      "slept_runs": 0,
+      "claude_usd_long_context_est": 0.7211,
+      "runs_with_200k_requests": 0,
+      "tree_pass": 1,
+      "flaky_retry_passes": 0,
       "violations": {},
       "by_size": {
         "small": {
@@ -218,6 +267,8 @@
           "hidden_pass": 1,
           "cost_total_usd": 0.7211,
           "cost_of_pass_usd": 0.7211,
+          "cost_of_pass_billed_usd": 0.7211,
+          "gemini_billed_usd": 0.0,
           "cost_pass_median": 0.7211,
           "cost_pass_min": 0.7211,
           "cost_pass_max": 0.7211,
@@ -235,6 +286,11 @@
           "caps_hit": 0,
           "tampered": 0,
           "usage_reconciles": 1,
+          "slept_runs": 0,
+          "claude_usd_long_context_est": 0.7211,
+          "runs_with_200k_requests": 0,
+          "tree_pass": 1,
+          "flaky_retry_passes": 0,
           "violations": {}
         }
       }
@@ -549,5 +605,281 @@
     "plugin_sha": "5392467"
   },
   "prices_lock_sha256": "606c43d82972168c3159fa1c45d6cf843d6e52a9cdcc0792cead13e3a71fbc2d",
-  "exclusions": []
+  "exclusions": [],
+  "sensitivity_no_sleep": {
+    "hybrid-forced": {
+      "n": 1,
+      "runs_ok": 1,
+      "excluded": 0,
+      "pass": 1,
+      "pass_rate": 1.0,
+      "hidden_pass": 1,
+      "cost_total_usd": 1.3424,
+      "cost_of_pass_usd": 1.3424,
+      "cost_of_pass_billed_usd": 1.6226,
+      "gemini_billed_usd": 0.5604,
+      "cost_pass_median": 1.3424,
+      "cost_pass_min": 1.3424,
+      "cost_pass_max": 1.3424,
+      "cost_all_median": 1.3424,
+      "claude_usd": 1.0622,
+      "gemini_usd": 0.2802,
+      "wall_median_s": 478.8,
+      "turns_median": 19,
+      "delegations_median": 2,
+      "delegations_zero_runs": 0,
+      "agy_writes_runs": 1,
+      "claude_bash_writes": 0,
+      "denials_median": 2,
+      "warm_starts": 0,
+      "caps_hit": 0,
+      "tampered": 0,
+      "usage_reconciles": 1,
+      "slept_runs": 0,
+      "claude_usd_long_context_est": 1.0622,
+      "runs_with_200k_requests": 0,
+      "tree_pass": 1,
+      "flaky_retry_passes": 0,
+      "violations": {}
+    },
+    "hybrid-inst": {
+      "n": 1,
+      "runs_ok": 1,
+      "excluded": 0,
+      "pass": 1,
+      "pass_rate": 1.0,
+      "hidden_pass": 1,
+      "cost_total_usd": 1.4072,
+      "cost_of_pass_usd": 1.4072,
+      "cost_of_pass_billed_usd": 1.7677,
+      "gemini_billed_usd": 0.721,
+      "cost_pass_median": 1.4072,
+      "cost_pass_min": 1.4072,
+      "cost_pass_max": 1.4072,
+      "cost_all_median": 1.4072,
+      "claude_usd": 1.0467,
+      "gemini_usd": 0.3605,
+      "wall_median_s": 594.7,
+      "turns_median": 23,
+      "delegations_median": 1,
+      "delegations_zero_runs": 0,
+      "agy_writes_runs": 1,
+      "claude_bash_writes": 0,
+      "denials_median": 2,
+      "warm_starts": 0,
+      "caps_hit": 0,
+      "tampered": 0,
+      "usage_reconciles": 1,
+      "slept_runs": 0,
+      "claude_usd_long_context_est": 1.0467,
+      "runs_with_200k_requests": 0,
+      "tree_pass": 1,
+      "flaky_retry_passes": 0,
+      "violations": {}
+    },
+    "solo-opus": {
+      "n": 1,
+      "runs_ok": 1,
+      "excluded": 0,
+      "pass": 1,
+      "pass_rate": 1.0,
+      "hidden_pass": 1,
+      "cost_total_usd": 0.9297,
+      "cost_of_pass_usd": 0.9297,
+      "cost_of_pass_billed_usd": 0.9297,
+      "gemini_billed_usd": 0.0,
+      "cost_pass_median": 0.9297,
+      "cost_pass_min": 0.9297,
+      "cost_pass_max": 0.9297,
+      "cost_all_median": 0.9297,
+      "claude_usd": 0.9297,
+      "gemini_usd": 0,
+      "wall_median_s": 241.9,
+      "turns_median": 15,
+      "delegations_median": 0,
+      "delegations_zero_runs": 1,
+      "agy_writes_runs": 0,
+      "claude_bash_writes": 0,
+      "denials_median": 0,
+      "warm_starts": 0,
+      "caps_hit": 0,
+      "tampered": 0,
+      "usage_reconciles": 1,
+      "slept_runs": 0,
+      "claude_usd_long_context_est": 0.9297,
+      "runs_with_200k_requests": 0,
+      "tree_pass": 1,
+      "flaky_retry_passes": 0,
+      "violations": {}
+    },
+    "solo-sonnet": {
+      "n": 1,
+      "runs_ok": 1,
+      "excluded": 0,
+      "pass": 1,
+      "pass_rate": 1.0,
+      "hidden_pass": 1,
+      "cost_total_usd": 0.7211,
+      "cost_of_pass_usd": 0.7211,
+      "cost_of_pass_billed_usd": 0.7211,
+      "gemini_billed_usd": 0.0,
+      "cost_pass_median": 0.7211,
+      "cost_pass_min": 0.7211,
+      "cost_pass_max": 0.7211,
+      "cost_all_median": 0.7211,
+      "claude_usd": 0.7211,
+      "gemini_usd": 0,
+      "wall_median_s": 339.6,
+      "turns_median": 14,
+      "delegations_median": 0,
+      "delegations_zero_runs": 1,
+      "agy_writes_runs": 0,
+      "claude_bash_writes": 0,
+      "denials_median": 1,
+      "warm_starts": 0,
+      "caps_hit": 0,
+      "tampered": 0,
+      "usage_reconciles": 1,
+      "slept_runs": 0,
+      "claude_usd_long_context_est": 0.7211,
+      "runs_with_200k_requests": 0,
+      "tree_pass": 1,
+      "flaky_retry_passes": 0,
+      "violations": {}
+    }
+  },
+  "paired_billed": {
+    "hybrid-forced_vs_solo-opus": {
+      "arm": "hybrid-forced",
+      "ref": "solo-opus",
+      "n_tasks": 1,
+      "point": 1.7453,
+      "ci95": [
+        1.7453,
+        1.7453
+      ],
+      "boot": 10000,
+      "undefined_draws": 0,
+      "seed": 20260914,
+      "pass_rate_diff": 0.0,
+      "per_task": [
+        {
+          "task_id": "caddy-7877",
+          "arm_cop": 1.6225941499999998,
+          "ref_cop": 0.9297062500000001,
+          "size_class": "small"
+        }
+      ]
+    },
+    "hybrid-forced_vs_solo-opus@small": {
+      "arm": "hybrid-forced",
+      "ref": "solo-opus",
+      "n_tasks": 1,
+      "point": 1.7453,
+      "ci95": [
+        1.7453,
+        1.7453
+      ],
+      "boot": 10000,
+      "undefined_draws": 0,
+      "seed": 20260914,
+      "pass_rate_diff": 0.0,
+      "per_task": [
+        {
+          "task_id": "caddy-7877",
+          "arm_cop": 1.6225941499999998,
+          "ref_cop": 0.9297062500000001,
+          "size_class": "small"
+        }
+      ]
+    },
+    "hybrid-inst_vs_solo-opus": {
+      "arm": "hybrid-inst",
+      "ref": "solo-opus",
+      "n_tasks": 1,
+      "point": 1.9014,
+      "ci95": [
+        1.9014,
+        1.9014
+      ],
+      "boot": 10000,
+      "undefined_draws": 0,
+      "seed": 20260914,
+      "pass_rate_diff": 0.0,
+      "per_task": [
+        {
+          "task_id": "caddy-7877",
+          "arm_cop": 1.76773485,
+          "ref_cop": 0.9297062500000001,
+          "size_class": "small"
+        }
+      ]
+    },
+    "hybrid-inst_vs_solo-opus@small": {
+      "arm": "hybrid-inst",
+      "ref": "solo-opus",
+      "n_tasks": 1,
+      "point": 1.9014,
+      "ci95": [
+        1.9014,
+        1.9014
+      ],
+      "boot": 10000,
+      "undefined_draws": 0,
+      "seed": 20260914,
+      "pass_rate_diff": 0.0,
+      "per_task": [
+        {
+          "task_id": "caddy-7877",
+          "arm_cop": 1.76773485,
+          "ref_cop": 0.9297062500000001,
+          "size_class": "small"
+        }
+      ]
+    },
+    "solo-sonnet_vs_solo-opus": {
+      "arm": "solo-sonnet",
+      "ref": "solo-opus",
+      "n_tasks": 1,
+      "point": 0.7756,
+      "ci95": [
+        0.7756,
+        0.7756
+      ],
+      "boot": 10000,
+      "undefined_draws": 0,
+      "seed": 20260914,
+      "pass_rate_diff": 0.0,
+      "per_task": [
+        {
+          "task_id": "caddy-7877",
+          "arm_cop": 0.7210818000000001,
+          "ref_cop": 0.9297062500000001,
+          "size_class": "small"
+        }
+      ]
+    },
+    "solo-sonnet_vs_solo-opus@small": {
+      "arm": "solo-sonnet",
+      "ref": "solo-opus",
+      "n_tasks": 1,
+      "point": 0.7756,
+      "ci95": [
+        0.7756,
+        0.7756
+      ],
+      "boot": 10000,
+      "undefined_draws": 0,
+      "seed": 20260914,
+      "pass_rate_diff": 0.0,
+      "per_task": [
+        {
+          "task_id": "caddy-7877",
+          "arm_cop": 0.7210818000000001,
+          "ref_cop": 0.9297062500000001,
+          "size_class": "small"
+        }
+      ]
+    }
+  }
 }

@@ -1,7 +1,7 @@
 ---
 name: antigravity
 description: Run the Antigravity CLI (Gemini) as a collaborating AI inside Claude Code, with intelligent model routing across the software development lifecycle. Claude is the conductor/orchestrator — requirements, architecture, the hard 20%, verification, and review — and routes deterministic, high-volume work (scaffolding, boilerplate, test generation, first-pass review, migrations, web/Vertex AI Search) to Antigravity (Gemini), the cheaper, faster model. Use when the user wants to "use Antigravity / agy", "vibe code / agentic engineering", "accelerate the SDLC", "delegate to Gemini", "scaffold / generate tests / migrate", "first-pass code review", "search web or internal/company data", "deep research / multi-source research report", "second-model cross-check", or "lower token cost on a big job". Claude always verifies Antigravity's output and re-checks itself if unsatisfied.
-version: 0.27.4
+version: 0.28.1
 ---
 
 # Antigravity for Claude Code — hybrid SDLC
@@ -254,7 +254,7 @@ commands** (`--yolo` grants write + terminal):
 
 ## Cost discipline — where the savings actually come from
 
-Delegation does **not** save money by itself. Measured reality: on a small task the
+Delegation does **not** save money by itself. Measured on 8 real pull requests × 4 arms (`docs/BENCHMARK.md`, 2026-09): delegating the *implementation* cost 1.3–1.7× a solo Opus 5 run per passing task at equal test outcomes and took 3.8–4.6× longer — do not delegate code-writing for cost. Measured reality: on a small task the
 hybrid cost *more* than Claude-only, because the dominant cost was Claude's own
 `cache_read` — re-reading a large, growing context across many orchestration turns.
 The savings the "Gemini sub-agent" concept promises are real, but only when you keep

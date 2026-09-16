@@ -21,8 +21,19 @@ SIZES = ("small", "medium", "large")
 
 
 def load_runs(run_id: str) -> List[dict]:
+    """Every run.json whose queue item finished (`done`). A record left behind by an
+    attempt that was later rerun or whose item was skipped (measured: one suspended
+    k6 attempt) is not a result and is not loaded."""
+    qpath = os.path.join(RESULTS_DIR, run_id, "queue.json")
+    done = None
+    if os.path.isfile(qpath):
+        q = read_json(qpath)
+        done = {"%s__%s__r%d" % (i["task_id"], i["arm"], i["rep"]) for i in q["items"] if i["status"] == "done"}
     recs = []
     for p in sorted(glob.glob(os.path.join(RESULTS_DIR, run_id, "runs", "*", "run.json"))):
+        key = os.path.basename(os.path.dirname(p))
+        if done is not None and key not in done:
+            continue
         r = read_json(p)
         r["_path"] = p
         recs.append(r)
@@ -213,6 +224,8 @@ def judge_summary(run_id: str, runs: List[dict]) -> dict:
     author_ranks: Dict[str, Dict[str, int]] = {}
     null_means: Dict[str, List[float]] = {}
     fails = sum(1 for p in glob.glob(os.path.join(jdir, "*", "*__*.json")) if read_json(p).get("status") != "ok")
+    recs = [r for r in recs if not str(blind.get(r["candidate_id"], {}).get("source", "")).startswith("run:")
+            or blind[r["candidate_id"]]["source"][4:] in run_by_key]  # candidates from attempts that are not results are dropped
     for r in recs:
         src = blind.get(r["candidate_id"], {}).get("source", "?")
         arm = "author" if src == "author" else ("null" if src == "null" else run_by_key.get(src[4:], {}).get("arm", "?"))

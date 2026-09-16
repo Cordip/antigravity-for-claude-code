@@ -1,8 +1,8 @@
 {
   "schema": "bench.aggregate/1",
   "run_id": "full",
-  "generated_at": "2026-09-16T18:24:27+00:00",
-  "n_runs": 76,
+  "generated_at": "2026-09-16T18:48:33+00:00",
+  "n_runs": 75,
   "tasks": [
     "caddy-7877",
     "caddy-7888",
@@ -15,35 +15,35 @@
   ],
   "arms": {
     "hybrid-forced": {
-      "n": 19,
-      "runs_ok": 17,
+      "n": 18,
+      "runs_ok": 16,
       "excluded": 2,
       "pass": 16,
-      "pass_rate": 0.9412,
+      "pass_rate": 1.0,
       "hidden_pass": 16,
-      "cost_total_usd": 180.9655,
-      "cost_of_pass_usd": 11.3103,
-      "cost_of_pass_billed_usd": 14.8693,
-      "gemini_billed_usd": 113.8876,
+      "cost_total_usd": 174.2248,
+      "cost_of_pass_usd": 10.889,
+      "cost_of_pass_billed_usd": 14.3418,
+      "gemini_billed_usd": 110.4877,
       "cost_pass_median": 6.7395,
       "cost_pass_min": 0.7374,
       "cost_pass_max": 38.0256,
-      "cost_all_median": 6.7406,
-      "claude_usd": 124.0217,
-      "gemini_usd": 56.9438,
-      "wall_median_s": 2649.2,
-      "turns_median": 38,
-      "delegations_median": 4,
+      "cost_all_median": 6.7395,
+      "claude_usd": 118.981,
+      "gemini_usd": 55.2438,
+      "wall_median_s": 2451.6,
+      "turns_median": 36.0,
+      "delegations_median": 5.0,
       "delegations_zero_runs": 0,
-      "agy_writes_runs": 17,
+      "agy_writes_runs": 16,
       "claude_bash_writes": 0,
-      "denials_median": 3,
+      "denials_median": 3.0,
       "warm_starts": 0,
       "caps_hit": 0,
       "tampered": 0,
-      "usage_reconciles": 16,
-      "slept_runs": 2,
-      "claude_usd_long_context_est": 165.8151,
+      "usage_reconciles": 15,
+      "slept_runs": 1,
+      "claude_usd_long_context_est": 160.7767,
       "runs_with_200k_requests": 4,
       "tree_pass": 16,
       "flaky_retry_passes": 0,
@@ -124,35 +124,35 @@
           }
         },
         "large": {
-          "n": 7,
-          "runs_ok": 6,
+          "n": 6,
+          "runs_ok": 5,
           "excluded": 1,
           "pass": 5,
-          "pass_rate": 0.8333,
+          "pass_rate": 1.0,
           "hidden_pass": 5,
-          "cost_total_usd": 129.2267,
-          "cost_of_pass_usd": 25.8453,
-          "cost_of_pass_billed_usd": 33.827,
-          "gemini_billed_usd": 79.8169,
+          "cost_total_usd": 122.4861,
+          "cost_of_pass_usd": 24.4972,
+          "cost_of_pass_billed_usd": 32.1389,
+          "gemini_billed_usd": 76.417,
           "cost_pass_median": 24.8746,
           "cost_pass_min": 12.0947,
           "cost_pass_max": 38.0256,
-          "cost_all_median": 22.7039,
-          "claude_usd": 89.3182,
-          "gemini_usd": 39.9085,
-          "wall_median_s": 6950.7,
-          "turns_median": 76.0,
-          "delegations_median": 14.0,
+          "cost_all_median": 24.8746,
+          "claude_usd": 84.2776,
+          "gemini_usd": 38.2085,
+          "wall_median_s": 6976.5,
+          "turns_median": 76,
+          "delegations_median": 15,
           "delegations_zero_runs": 0,
-          "agy_writes_runs": 6,
+          "agy_writes_runs": 5,
           "claude_bash_writes": 0,
-          "denials_median": 5.0,
+          "denials_median": 5,
           "warm_starts": 0,
           "caps_hit": 0,
           "tampered": 0,
-          "usage_reconciles": 5,
-          "slept_runs": 2,
-          "claude_usd_long_context_est": 131.1305,
+          "usage_reconciles": 4,
+          "slept_runs": 1,
+          "claude_usd_long_context_est": 126.092,
           "runs_with_200k_requests": 4,
           "tree_pass": 5,
           "flaky_retry_passes": 0,
@@ -594,15 +594,15 @@
       "arm": "hybrid-forced",
       "ref": "solo-opus",
       "n_tasks": 8,
-      "point": 1.3765,
+      "point": 1.3252,
       "ci95": [
-        1.0356,
-        1.8983
+        1.0315,
+        1.7782
       ],
       "boot": 10000,
       "undefined_draws": 0,
       "seed": 20260914,
-      "pass_rate_diff": -0.0588,
+      "pass_rate_diff": 0.0,
       "per_task": [
         {
           "task_id": "caddy-7877",
@@ -642,7 +642,7 @@
         },
         {
           "task_id": "k6-6169",
-          "arm_cop": 26.074201875,
+          "arm_cop": 22.703885125,
           "ref_cop": 12.864748916666663,
           "size_class": "large"
         },
@@ -720,15 +720,15 @@
       "arm": "hybrid-forced",
       "ref": "solo-opus",
       "n_tasks": 3,
-      "point": 1.6237,
+      "point": 1.539,
       "ci95": [
         0.874,
-        2.5493
+        2.5213
       ],
       "boot": 10000,
       "undefined_draws": 0,
       "seed": 20260914,
-      "pass_rate_diff": -0.1667,
+      "pass_rate_diff": 0.0,
       "per_task": [
         {
           "task_id": "cli-attach",
@@ -738,7 +738,7 @@
         },
         {
           "task_id": "k6-6169",
-          "arm_cop": 26.074201875,
+          "arm_cop": 22.703885125,
           "ref_cop": 12.864748916666663,
           "size_class": "large"
         },
@@ -1074,122 +1074,122 @@
   "by_size": {},
   "judge": {
     "present": true,
-    "records_ok": 165,
+    "records_ok": 182,
     "records_failed": 0,
     "by_arm": {
       "solo-opus": {
         "claude": {
-          "n": 19,
-          "mean": 4.097,
-          "consistency": 4.263,
-          "edge_cases": 4.053,
-          "scope": 3.895,
-          "readability": 4.316,
-          "robustness": 4.263,
-          "maintainability": 3.789
+          "n": 21,
+          "mean": 4.024,
+          "consistency": 4.238,
+          "edge_cases": 4.0,
+          "scope": 3.81,
+          "readability": 4.19,
+          "robustness": 4.19,
+          "maintainability": 3.714
         },
         "gemini": {
-          "n": 19,
-          "mean": 4.737,
-          "consistency": 4.737,
-          "edge_cases": 4.632,
-          "scope": 4.789,
-          "readability": 4.947,
-          "robustness": 4.579,
-          "maintainability": 4.737
+          "n": 21,
+          "mean": 4.738,
+          "consistency": 4.762,
+          "edge_cases": 4.619,
+          "scope": 4.714,
+          "readability": 4.952,
+          "robustness": 4.619,
+          "maintainability": 4.762
         }
       },
       "solo-sonnet": {
         "claude": {
-          "n": 18,
-          "mean": 3.806,
-          "consistency": 4.0,
-          "edge_cases": 3.556,
-          "scope": 4.056,
-          "readability": 4.0,
-          "robustness": 3.667,
-          "maintainability": 3.556
+          "n": 20,
+          "mean": 3.65,
+          "consistency": 3.9,
+          "edge_cases": 3.35,
+          "scope": 3.85,
+          "readability": 3.9,
+          "robustness": 3.5,
+          "maintainability": 3.4
         },
         "gemini": {
-          "n": 18,
-          "mean": 4.398,
-          "consistency": 4.667,
-          "edge_cases": 4.0,
-          "scope": 4.278,
-          "readability": 4.778,
-          "robustness": 4.333,
-          "maintainability": 4.333
+          "n": 20,
+          "mean": 4.292,
+          "consistency": 4.7,
+          "edge_cases": 3.8,
+          "scope": 4.1,
+          "readability": 4.75,
+          "robustness": 4.15,
+          "maintainability": 4.25
         }
       },
       "hybrid-forced": {
         "claude": {
           "n": 18,
-          "mean": 3.713,
+          "mean": 3.741,
           "consistency": 3.889,
-          "edge_cases": 3.722,
-          "scope": 3.833,
-          "readability": 3.778,
-          "robustness": 3.778,
+          "edge_cases": 3.778,
+          "scope": 3.944,
+          "readability": 3.722,
+          "robustness": 3.833,
           "maintainability": 3.278
         },
         "gemini": {
-          "n": 17,
-          "mean": 4.637,
-          "consistency": 4.824,
-          "edge_cases": 4.412,
-          "scope": 4.588,
-          "readability": 4.765,
-          "robustness": 4.706,
-          "maintainability": 4.529
+          "n": 18,
+          "mean": 4.722,
+          "consistency": 4.889,
+          "edge_cases": 4.556,
+          "scope": 4.833,
+          "readability": 4.722,
+          "robustness": 4.778,
+          "maintainability": 4.556
         }
       },
       "author": {
         "gemini": {
-          "n": 7,
-          "mean": 4.381,
-          "consistency": 4.714,
-          "edge_cases": 4.0,
-          "scope": 4.429,
-          "readability": 4.857,
-          "robustness": 4.143,
-          "maintainability": 4.143
+          "n": 8,
+          "mean": 4.438,
+          "consistency": 4.75,
+          "edge_cases": 4.125,
+          "scope": 4.375,
+          "readability": 4.875,
+          "robustness": 4.25,
+          "maintainability": 4.25
         },
         "claude": {
-          "n": 7,
-          "mean": 3.833,
-          "consistency": 4.143,
-          "edge_cases": 3.857,
-          "scope": 3.571,
-          "readability": 3.857,
-          "robustness": 3.857,
-          "maintainability": 3.714
+          "n": 8,
+          "mean": 3.792,
+          "consistency": 4.125,
+          "edge_cases": 3.875,
+          "scope": 3.5,
+          "readability": 3.75,
+          "robustness": 3.875,
+          "maintainability": 3.625
         }
       },
       "hybrid-inst": {
         "gemini": {
-          "n": 14,
-          "mean": 4.762,
-          "consistency": 4.786,
-          "edge_cases": 4.571,
-          "scope": 4.571,
-          "readability": 4.929,
-          "robustness": 4.929,
-          "maintainability": 4.786
+          "n": 16,
+          "mean": 4.75,
+          "consistency": 4.812,
+          "edge_cases": 4.562,
+          "scope": 4.562,
+          "readability": 4.875,
+          "robustness": 4.938,
+          "maintainability": 4.75
         },
         "claude": {
-          "n": 14,
-          "mean": 3.917,
-          "consistency": 4.071,
-          "edge_cases": 3.857,
-          "scope": 4.143,
-          "readability": 3.929,
-          "robustness": 4.071,
-          "maintainability": 3.429
+          "n": 16,
+          "mean": 3.75,
+          "consistency": 3.938,
+          "edge_cases": 3.75,
+          "scope": 3.938,
+          "readability": 3.688,
+          "robustness": 3.938,
+          "maintainability": 3.25
         }
       },
       "null": {
         "gemini": {
-          "n": 7,
+          "n": 8,
           "mean": 1.0,
           "consistency": 1.0,
           "edge_cases": 1.0,
@@ -1199,7 +1199,7 @@
           "maintainability": 1.0
         },
         "claude": {
-          "n": 7,
+          "n": 8,
           "mean": 1.0,
           "consistency": 1.0,
           "edge_cases": 1.0,
@@ -1223,31 +1223,33 @@
         "claude": {
           "caddy-7995": "9/13",
           "caddy-7877": "3/10",
+          "cli-attach": "1/10",
           "cli-14136": "4/13",
           "zoekt-1105": "9/12",
           "caddy-7888": "9/12",
-          "k6-6169": "8/12",
+          "k6-6169": "8/11",
           "caddy-7913": "8/10"
         },
         "gemini": {
           "caddy-7995": "6/13",
           "caddy-7877": "2/10",
+          "cli-attach": "2/10",
           "cli-14136": "11/13",
           "zoekt-1105": "11/12",
           "caddy-7888": "11/12",
-          "k6-6169": "7/12",
+          "k6-6169": "7/11",
           "caddy-7913": "8/10"
         }
       }
     },
     "agreement": {
-      "n_candidates_both": 82,
-      "spearman_mean": 0.353,
-      "within1_pct": 0.598
+      "n_candidates_both": 91,
+      "spearman_mean": 0.4349,
+      "within1_pct": 0.549
     },
     "judge_vs_pass_pointbiserial": {
-      "claude": 0.3127,
-      "gemini": 0.2031
+      "claude": 0.3688,
+      "gemini": 0.2074
     }
   },
   "versions": {
@@ -1423,15 +1425,15 @@
       "arm": "hybrid-forced",
       "ref": "solo-opus",
       "n_tasks": 8,
-      "point": 1.8097,
+      "point": 1.7455,
       "ci95": [
-        1.3986,
-        2.4364
+        1.3913,
+        2.2794
       ],
       "boot": 10000,
       "undefined_draws": 0,
       "seed": 20260914,
-      "pass_rate_diff": -0.0588,
+      "pass_rate_diff": 0.0,
       "per_task": [
         {
           "task_id": "caddy-7877",
@@ -1471,7 +1473,103 @@
         },
         {
           "task_id": "k6-6169",
-          "arm_cop": 32.460002599999996,
+          "arm_cop": 28.23970705,
+          "ref_cop": 12.864748916666663,
+          "size_class": "large"
+        },
+        {
+          "task_id": "zoekt-1105",
+          "arm_cop": 15.657661649999998,
+          "ref_cop": 4.797041083333334,
+          "size_class": "large"
+        }
+      ]
+    },
+    "hybrid-forced_vs_solo-opus@small": {
+      "arm": "hybrid-forced",
+      "ref": "solo-opus",
+      "n_tasks": 2,
+      "point": 1.6415,
+      "ci95": [
+        1.2455,
+        1.7097
+      ],
+      "boot": 10000,
+      "undefined_draws": 0,
+      "seed": 20260914,
+      "pass_rate_diff": 0.0,
+      "per_task": [
+        {
+          "task_id": "caddy-7877",
+          "arm_cop": 0.90761725,
+          "ref_cop": 0.7287248749999999,
+          "size_class": "small"
+        },
+        {
+          "task_id": "caddy-7995",
+          "arm_cop": 4.824420966666666,
+          "ref_cop": 2.8217320000000004,
+          "size_class": "small"
+        }
+      ]
+    },
+    "hybrid-forced_vs_solo-opus@medium": {
+      "arm": "hybrid-forced",
+      "ref": "solo-opus",
+      "n_tasks": 3,
+      "point": 1.9832,
+      "ci95": [
+        0.8997,
+        2.2242
+      ],
+      "boot": 10000,
+      "undefined_draws": 0,
+      "seed": 20260914,
+      "pass_rate_diff": 0.0,
+      "per_task": [
+        {
+          "task_id": "caddy-7888",
+          "arm_cop": 1.82135055,
+          "ref_cop": 2.024355083333333,
+          "size_class": "medium"
+        },
+        {
+          "task_id": "caddy-7913",
+          "arm_cop": 11.992110625,
+          "ref_cop": 8.151014374999999,
+          "size_class": "medium"
+        },
+        {
+          "task_id": "cli-14136",
+          "arm_cop": 8.893350416666667,
+          "ref_cop": 4.304048250000001,
+          "size_class": "medium"
+        }
+      ]
+    },
+    "hybrid-forced_vs_solo-opus@large": {
+      "arm": "hybrid-forced",
+      "ref": "solo-opus",
+      "n_tasks": 3,
+      "point": 2.0191,
+      "ci95": [
+        1.191,
+        3.264
+      ],
+      "boot": 10000,
+      "undefined_draws": 0,
+      "seed": 20260914,
+      "pass_rate_diff": 0.0,
+      "per_task": [
+        {
+          "task_id": "cli-attach",
+          "arm_cop": 44.27874452500001,
+          "ref_cop": 37.177185124999994,
+          "size_class": "large"
+        },
+        {
+          "task_id": "k6-6169",
+          "arm_cop": 28.23970705,
           "ref_cop": 12.864748916666663,
           "size_class": "large"
         },
@@ -1547,6 +1645,102 @@
         }
       ]
     },
+    "hybrid-inst_vs_solo-opus@small": {
+      "arm": "hybrid-inst",
+      "ref": "solo-opus",
+      "n_tasks": 2,
+      "point": 2.2275,
+      "ci95": [
+        1.9658,
+        2.6256
+      ],
+      "boot": 10000,
+      "undefined_draws": 0,
+      "seed": 20260914,
+      "pass_rate_diff": 0.0,
+      "per_task": [
+        {
+          "task_id": "caddy-7877",
+          "arm_cop": 1.432538225,
+          "ref_cop": 0.7287248749999999,
+          "size_class": "small"
+        },
+        {
+          "task_id": "caddy-7995",
+          "arm_cop": 7.408684575,
+          "ref_cop": 2.8217320000000004,
+          "size_class": "small"
+        }
+      ]
+    },
+    "hybrid-inst_vs_solo-opus@medium": {
+      "arm": "hybrid-inst",
+      "ref": "solo-opus",
+      "n_tasks": 3,
+      "point": 1.6792,
+      "ci95": [
+        1.4323,
+        1.7073
+      ],
+      "boot": 10000,
+      "undefined_draws": 0,
+      "seed": 20260914,
+      "pass_rate_diff": 0.0,
+      "per_task": [
+        {
+          "task_id": "caddy-7888",
+          "arm_cop": 3.26941065,
+          "ref_cop": 2.024355083333333,
+          "size_class": "medium"
+        },
+        {
+          "task_id": "caddy-7913",
+          "arm_cop": 11.6743034,
+          "ref_cop": 8.151014374999999,
+          "size_class": "medium"
+        },
+        {
+          "task_id": "cli-14136",
+          "arm_cop": 7.276874925,
+          "ref_cop": 4.304048250000001,
+          "size_class": "medium"
+        }
+      ]
+    },
+    "hybrid-inst_vs_solo-opus@large": {
+      "arm": "hybrid-inst",
+      "ref": "solo-opus",
+      "n_tasks": 3,
+      "point": 2.2079,
+      "ci95": [
+        1.4568,
+        3.6679
+      ],
+      "boot": 10000,
+      "undefined_draws": 0,
+      "seed": 20260914,
+      "pass_rate_diff": 0.0,
+      "per_task": [
+        {
+          "task_id": "cli-attach",
+          "arm_cop": 54.161323875,
+          "ref_cop": 37.177185124999994,
+          "size_class": "large"
+        },
+        {
+          "task_id": "k6-6169",
+          "arm_cop": 33.6762699,
+          "ref_cop": 12.864748916666663,
+          "size_class": "large"
+        },
+        {
+          "task_id": "zoekt-1105",
+          "arm_cop": 17.59486535,
+          "ref_cop": 4.797041083333334,
+          "size_class": "large"
+        }
+      ]
+    },
     "solo-sonnet_vs_solo-opus": {
       "arm": "solo-sonnet",
       "ref": "solo-opus",
@@ -1591,6 +1785,102 @@
           "ref_cop": 4.304048250000001,
           "size_class": "medium"
         },
+        {
+          "task_id": "cli-attach",
+          "arm_cop": null,
+          "ref_cop": 37.177185124999994,
+          "size_class": "large"
+        },
+        {
+          "task_id": "k6-6169",
+          "arm_cop": 7.34397075,
+          "ref_cop": 12.864748916666663,
+          "size_class": "large"
+        },
+        {
+          "task_id": "zoekt-1105",
+          "arm_cop": 2.403690666666667,
+          "ref_cop": 4.797041083333334,
+          "size_class": "large"
+        }
+      ]
+    },
+    "solo-sonnet_vs_solo-opus@small": {
+      "arm": "solo-sonnet",
+      "ref": "solo-opus",
+      "n_tasks": 2,
+      "point": 0.9969,
+      "ci95": [
+        0.8373,
+        1.1861
+      ],
+      "boot": 10000,
+      "undefined_draws": 0,
+      "seed": 20260914,
+      "pass_rate_diff": -0.2,
+      "per_task": [
+        {
+          "task_id": "caddy-7877",
+          "arm_cop": 0.61013465,
+          "ref_cop": 0.7287248749999999,
+          "size_class": "small"
+        },
+        {
+          "task_id": "caddy-7995",
+          "arm_cop": 3.3468019,
+          "ref_cop": 2.8217320000000004,
+          "size_class": "small"
+        }
+      ]
+    },
+    "solo-sonnet_vs_solo-opus@medium": {
+      "arm": "solo-sonnet",
+      "ref": "solo-opus",
+      "n_tasks": 3,
+      "point": 0.4111,
+      "ci95": [
+        0.254,
+        0.6196
+      ],
+      "boot": 10000,
+      "undefined_draws": 0,
+      "seed": 20260914,
+      "pass_rate_diff": 0.0,
+      "per_task": [
+        {
+          "task_id": "caddy-7888",
+          "arm_cop": 0.5142594000000001,
+          "ref_cop": 2.024355083333333,
+          "size_class": "medium"
+        },
+        {
+          "task_id": "caddy-7913",
+          "arm_cop": 2.4824815500000006,
+          "ref_cop": 8.151014374999999,
+          "size_class": "medium"
+        },
+        {
+          "task_id": "cli-14136",
+          "arm_cop": 2.6667906,
+          "ref_cop": 4.304048250000001,
+          "size_class": "medium"
+        }
+      ]
+    },
+    "solo-sonnet_vs_solo-opus@large": {
+      "arm": "solo-sonnet",
+      "ref": "solo-opus",
+      "n_tasks": 3,
+      "point": 0.7297,
+      "ci95": [
+        0.4861,
+        1.6266
+      ],
+      "boot": 10000,
+      "undefined_draws": 360,
+      "seed": 20260914,
+      "pass_rate_diff": -0.2857,
+      "per_task": [
         {
           "task_id": "cli-attach",
           "arm_cop": null,

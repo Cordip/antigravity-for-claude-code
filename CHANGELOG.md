@@ -3,6 +3,37 @@
 All notable changes to **Antigravity for Claude Code**. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/); versions are in `.claude-plugin/plugin.json`.
 
+## 0.28.1
+
+- **A real-PR replay benchmark, and the README claim it replaces.** `bench/` runs
+  Claude Code alone against Claude Code + this plugin on merged pull requests from
+  public Go repositories (caddy, cli/cli, k6, zoekt; 52–2,242 lines; merged after the
+  models' training cutoff), replayed from the parent commit with the PR's tests restored
+  before scoring, one verification-only Bash policy in every arm, per-write attribution
+  by a tree-fingerprint hook, blinded two-family judging with the author's patch and an
+  empty patch as unlabelled anchors, and a pre-registered protocol (tag
+  `bench/protocol-v1`). Measured over 75 runs (n ≥ 2 per task × arm): delegating the
+  implementation to agy cost **1.33× (hybrid-forced) and 1.68× (hybrid-inst) a solo
+  Opus 5 run per passing task** at the pre-registered deck, 1.75× and 2.08× at the unit
+  prices the project was billed, with equal test outcomes and 3.8–4.6× the wall-clock;
+  Sonnet 5 alone cost 0.58×. README's "Measured results" now says so, with the table
+  regenerated from `bench/results/full/aggregate.json` by `tests/check-bench-claims.py`
+  (a quoted number can no longer drift from its record); the n = 1 ADK A/B stays in
+  `docs/AB-RESULTS.md` as history. Full write-up, deviations log and per-run records:
+  `docs/BENCHMARK.md`.
+- **Two facts from the billing export worth acting on** (not changed here, recorded in
+  `bench/prices.lock.json` `_observed_billing`): this Vertex project bills Gemini 3.8
+  Flash at $1.50 / $7.50 / $0.15 per Mtok — twice `prices.json`'s promotional
+  `gemini_flash` — and Claude Sonnet 5 at $2 / $10, which Claude Code's own cost figure
+  already uses; `prices.json` says 3 / 15. Opus 5 matched the deck in both context tiers.
+- **Two agy behaviours the harness had to work around**: in a directory agy has never
+  seen, the agent runs in its last project root or scratch directory until
+  `agy --new-project` is issued there (measured: 450 s → 119 s for the same delegation);
+  and under `--dangerously-skip-permissions` the executor may `search_web` for the
+  upstream file or pull request (2 of 33 hybrid runs; excluded by the protocol).
+- Test suite: 343 checks plus a 46-check harness suite run as a child; five fixtures pin
+  the doc-claims guard.
+
 ## 0.27.4
 
 - **CI refuses a CHANGELOG entry filed under a section that has already shipped.** #77

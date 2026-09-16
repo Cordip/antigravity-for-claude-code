@@ -56,16 +56,41 @@ you → Claude Code (conduct: design / verify / review)
 
 ## 📊 Measured results
 
-On a **large** ADK multi-agent build (+ `adk eval`), same task / same model, 3 ways:
+**Delegating implementation to agy did not save money on our benchmark.** Eight merged
+pull requests from four public Go repositories (caddy, cli/cli, k6, zoekt; 52–2,242 lines,
+merged after the models' training cutoff) were replayed from the parent commit with the
+PR's tests restored before scoring; 75 runs, Claude Opus 5 as the conductor in every arm,
+agy on Gemini 3.8 Flash. Cost per *successful* task, paired on the same tasks (task-level
+bootstrap, 95% CI; "deck" is the pre-registered price list, "billed rates" the unit prices
+the GCP project actually charged):
 
-| | Claude solo @high | solo @max | **hybrid** |
-|---|---|---|---|
-| frontier cost (COST-WEIGHTED) | 2.62M | 5.34M | **1.91M** |
-| quality (`adk eval`) | ✅ 3/3 | ✅ 3/3 | ✅ **3/3** |
+<!-- bench:table run=full kind=paired -->
+| comparison | tasks | ratio (deck) | 95% CI | ratio (billed rates) | 95% CI | pass-rate diff | undefined draws |
+|---|---|---|---|---|---|---|---|
+| hybrid-forced_vs_solo-opus | 8 | 1.33 | [1.0315, 1.7782] | 1.75 | [1.3913, 2.2794] | 0.00 | 0/10000 |
+| hybrid-forced_vs_solo-opus@small | 2 | 1.21 | [1.0802, 1.2331] | 1.64 | [1.2455, 1.7097] | 0.00 | 0/10000 |
+| hybrid-forced_vs_solo-opus@medium | 3 | 1.50 | [0.6581, 1.7067] | 1.98 | [0.8997, 2.2242] | 0.00 | 0/10000 |
+| hybrid-forced_vs_solo-opus@large | 3 | 1.54 | [0.874, 2.5213] | 2.02 | [1.191, 3.264] | 0.00 | 0/10000 |
+| hybrid-inst_vs_solo-opus | 8 | 1.68 | [1.3377, 2.1172] | 2.08 | [1.6703, 2.6609] | 0.00 | 0/10000 |
+| hybrid-inst_vs_solo-opus@small | 2 | 1.66 | [1.6361, 1.9059] | 2.23 | [1.9658, 2.6256] | 0.00 | 0/10000 |
+| hybrid-inst_vs_solo-opus@medium | 3 | 1.32 | [1.1246, 1.3732] | 1.68 | [1.4323, 1.7073] | 0.00 | 0/10000 |
+| hybrid-inst_vs_solo-opus@large | 3 | 1.80 | [1.1929, 2.8419] | 2.21 | [1.4568, 3.6679] | 0.00 | 0/10000 |
+| solo-sonnet_vs_solo-opus | 8 | 0.58 | [0.4211, 0.8287] | 0.58 | [0.4211, 0.8287] | -0.15 | 0/10000 |
+| solo-sonnet_vs_solo-opus@small | 2 | 1.00 | [0.8373, 1.1861] | 1.00 | [0.8373, 1.1861] | -0.20 | 0/10000 |
+| solo-sonnet_vs_solo-opus@medium | 3 | 0.41 | [0.254, 0.6196] | 0.41 | [0.254, 0.6196] | 0.00 | 0/10000 |
+| solo-sonnet_vs_solo-opus@large | 3 | 0.73 | [0.4861, 1.6266] | 0.73 | [0.4861, 1.6266] | -0.29 | 360/10000 |
+<!-- /bench:table -->
+Every hybrid and every solo-opus run passed the hidden tests and the full suite; hybrid
+runs took 3.8–4.6× longer. Where the plugin does pay is work the conductor never has to
+re-read — research, log analysis, digests — see [`docs/POC-PLAYBOOK.md`](docs/POC-PLAYBOOK.md).
+Protocol, tasks, per-run records, judge scores and the deviations log:
+[`docs/BENCHMARK.md`](docs/BENCHMARK.md). The earlier n = 1 ADK measurement stays in
+[`docs/AB-RESULTS.md`](docs/AB-RESULTS.md) as history.
 
-→ **−27% vs solo@high, −64% vs solo@max, at equal quality** — and the cheap Gemini work isn't even counted. Savings scale with task size; tiny one-off tasks are cheaper to just run on Claude. Full A/B: [`docs/AB-RESULTS.md`](docs/AB-RESULTS.md).
-
-> **Note on cost figures:** numbers are **estimates** — token counts are approximated and rates live in [`prices.json`](prices.json). **Set your real Vertex rates there before quoting any figure.**
+> **Note on cost figures:** the Claude side is Claude Code's own list-price `total_cost_usd`
+> (it matched the billing export's unit prices); the Gemini side is priced from the
+> wrapper's `AGY_USAGE` tokens, which agy reports as a lower bound. Rates live in
+> [`prices.json`](prices.json) — check them against your own bill before quoting a figure.
 
 ## 🚀 Install
 

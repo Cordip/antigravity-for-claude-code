@@ -2,32 +2,32 @@
 
 ## Per arm (all tasks)
 
-| arm | runs | pass | cost-of-pass $ | median $ among passes (min–max) | Claude $ | Gemini $ | wall med s | turns med | delegations med (0-runs) | denials med | warm starts | caps hit |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| hybrid-forced | 1 | 1/1 | 1.34 | 1.34 (1.34–1.34) | 1.06 | 0.28 | 478.80 | 19 | 2 (0) | 2 | 0 | 0 |
-| hybrid-inst | 1 | 1/1 | 1.41 | 1.41 (1.41–1.41) | 1.05 | 0.36 | 594.70 | 23 | 1 (0) | 2 | 0 | 0 |
-| solo-opus | 1 | 1/1 | 0.93 | 0.93 (0.93–0.93) | 0.93 | 0.00 | 241.90 | 15 | 0 (1) | 0 | 0 | 0 |
-| solo-sonnet | 1 | 1/1 | 0.72 | 0.72 (0.72–0.72) | 0.72 | 0.00 | 339.60 | 14 | 0 (1) | 1 | 0 | 0 |
+| arm | runs | pass | cost-of-pass $ (deck) | cost-of-pass $ (billed rates) | median $ among passes (min–max) | Claude $ | Gemini $ deck / billed | wall med s | turns med | delegations med (0-runs) | denials med | warm starts | caps hit |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| hybrid-forced | 1 | 1/1 | 1.34 | 1.62 | 1.34 (1.34–1.34) | 1.06 | 0.28 / 0.56 | 478.80 | 19 | 2 (0) | 2 | 0 | 0 |
+| hybrid-inst | 1 | 1/1 | 1.41 | 1.77 | 1.41 (1.41–1.41) | 1.05 | 0.36 / 0.72 | 594.70 | 23 | 1 (0) | 2 | 0 | 0 |
+| solo-opus | 1 | 1/1 | 0.93 | 0.93 | 0.93 (0.93–0.93) | 0.93 | 0.00 / 0.00 | 241.90 | 15 | 0 (1) | 0 | 0 | 0 |
+| solo-sonnet | 1 | 1/1 | 0.72 | 0.72 | 0.72 (0.72–0.72) | 0.72 | 0.00 / 0.00 | 339.60 | 14 | 0 (1) | 1 | 0 | 0 |
 
 ## Per arm × size class
 
-| arm | size | runs | pass | cost-of-pass $ | median $ among passes | wall med s |
-|---|---|---|---|---|---|---|
-| hybrid-forced | small | 1 | 1/1 | 1.34 | 1.34 | 478.80 |
-| hybrid-inst | small | 1 | 1/1 | 1.41 | 1.41 | 594.70 |
-| solo-opus | small | 1 | 1/1 | 0.93 | 0.93 | 241.90 |
-| solo-sonnet | small | 1 | 1/1 | 0.72 | 0.72 | 339.60 |
+| arm | size | runs | pass | cost-of-pass $ (deck) | cost-of-pass $ (billed rates) | median $ among passes | wall med s |
+|---|---|---|---|---|---|---|---|
+| hybrid-forced | small | 1 | 1/1 | 1.34 | 1.62 | 1.34 | 478.80 |
+| hybrid-inst | small | 1 | 1/1 | 1.41 | 1.77 | 1.41 | 594.70 |
+| solo-opus | small | 1 | 1/1 | 0.93 | 0.93 | 0.93 | 241.90 |
+| solo-sonnet | small | 1 | 1/1 | 0.72 | 0.72 | 0.72 | 339.60 |
 
 ## Paired ratios (cost-of-pass, arm ÷ reference; task-level bootstrap)
 
-| comparison | tasks | ratio | 95% CI | pass-rate diff | undefined draws |
-|---|---|---|---|---|---|
-| hybrid-forced_vs_solo-opus | 1 | 1.44 | [1.4439, 1.4439] | 0.00 | 0/10000 |
-| hybrid-forced_vs_solo-opus@small | 1 | 1.44 | [1.4439, 1.4439] | 0.00 | 0/10000 |
-| hybrid-inst_vs_solo-opus | 1 | 1.51 | [1.5136, 1.5136] | 0.00 | 0/10000 |
-| hybrid-inst_vs_solo-opus@small | 1 | 1.51 | [1.5136, 1.5136] | 0.00 | 0/10000 |
-| solo-sonnet_vs_solo-opus | 1 | 0.78 | [0.7756, 0.7756] | 0.00 | 0/10000 |
-| solo-sonnet_vs_solo-opus@small | 1 | 0.78 | [0.7756, 0.7756] | 0.00 | 0/10000 |
+| comparison | tasks | ratio (deck) | 95% CI | ratio (billed rates) | 95% CI | pass-rate diff | undefined draws |
+|---|---|---|---|---|---|---|---|
+| hybrid-forced_vs_solo-opus | 1 | 1.44 | [1.4439, 1.4439] | 1.75 | [1.7453, 1.7453] | 0.00 | 0/10000 |
+| hybrid-forced_vs_solo-opus@small | 1 | 1.44 | [1.4439, 1.4439] | 1.75 | [1.7453, 1.7453] | 0.00 | 0/10000 |
+| hybrid-inst_vs_solo-opus | 1 | 1.51 | [1.5136, 1.5136] | 1.90 | [1.9014, 1.9014] | 0.00 | 0/10000 |
+| hybrid-inst_vs_solo-opus@small | 1 | 1.51 | [1.5136, 1.5136] | 1.90 | [1.9014, 1.9014] | 0.00 | 0/10000 |
+| solo-sonnet_vs_solo-opus | 1 | 0.78 | [0.7756, 0.7756] | 0.78 | [0.7756, 0.7756] | 0.00 | 0/10000 |
+| solo-sonnet_vs_solo-opus@small | 1 | 0.78 | [0.7756, 0.7756] | 0.78 | [0.7756, 0.7756] | 0.00 | 0/10000 |
 
 ## Judges (mean 1–5; author and empty-patch anchors included)
 
