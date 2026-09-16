@@ -245,3 +245,46 @@ def reconcile(result: dict, transcript: dict, tolerance: float = 0.02) -> dict:
         if rel > tolerance and max(rv, tv) > 1000:
             ok = False
     return {"ok": ok, "fields": diffs}
+
+
+LONG_CONTEXT_THRESHOLD = 200_000
+LONG_CONTEXT_MULT_IN = 2.0    # published 1M-context pricing: input (incl. cache) x2 above 200k
+LONG_CONTEXT_MULT_OUT = 1.5   # output x1.5 above 200k
+
+
+def long_context_estimate(path: str, prices: Prices) -> dict:
+    """List price recomputed per request with the long-context multipliers applied to every
+    request whose context (input + cache write + cache read) exceeds 200k tokens. Claude
+    Code's own total_cost_usd may or may not apply them; the billing export is the arbiter,
+    this is the upper-bound estimate reported beside it."""
+    out = {"usd_long_context_est": 0.0, "requests": 0, "requests_over_200k": 0, "ctx_tokens_over_200k_share": None}
+    if not os.path.isfile(path):
+        return out
+    seen = set(); tot_ctx = 0; big_ctx = 0; usd = 0.0
+    for rec in _iter_lines(path):
+        msg = rec.get("message")
+        if not isinstance(msg, dict) or msg.get("role") != "assistant":
+            continue
+        u = msg.get("usage")
+        req = rec.get("requestId") or msg.get("id")
+        if not isinstance(u, dict) or req in seen:
+            continue
+        seen.add(req)
+        inp = int(u.get("input_tokens") or 0); outp = int(u.get("output_tokens") or 0)
+        cc = int(u.get("cache_creation_input_tokens") or 0); cr = int(u.get("cache_read_input_tokens") or 0)
+        ctx = inp + cc + cr
+        base, _ = prices.price_claude(msg.get("model") or "", inp, outp, cc, cr)
+        if base is None:
+            continue
+        out["requests"] += 1; tot_ctx += ctx
+        if ctx > LONG_CONTEXT_THRESHOLD:
+            out["requests_over_200k"] += 1; big_ctx += ctx
+            key = prices.claude_key(msg.get("model") or "")
+            d = prices.data[key]; pin, pout = float(d["in"]), float(d["out"])
+            usd += (inp * pin * LONG_CONTEXT_MULT_IN + cc * pin * prices.cache_write_mult * LONG_CONTEXT_MULT_IN
+                    + cr * pin * prices.cache_read_mult * LONG_CONTEXT_MULT_IN + outp * pout * LONG_CONTEXT_MULT_OUT) / 1e6
+        else:
+            usd += base
+    out["usd_long_context_est"] = round(usd, 6)
+    out["ctx_tokens_over_200k_share"] = round(big_ctx / tot_ctx, 4) if tot_ctx else None
+    return out

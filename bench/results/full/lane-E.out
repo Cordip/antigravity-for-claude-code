@@ -1,0 +1,4 @@
+lane E start (gap 300s)
+lane E -> caddy-7888__solo-sonnet__r3 (attempt 1)
+lane E: caddy-7888__solo-sonnet__r3 done pass=True $0.5823750000000001 in 167s
+lane E -> cli-attach__hybrid-forced__r2 (attempt 2)

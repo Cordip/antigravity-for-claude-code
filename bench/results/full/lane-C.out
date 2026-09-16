@@ -56,3 +56,5 @@ lane C: zoekt-1105__hybrid-forced__r2 done pass=True $12.094723499999997 in 6995
 lane C -> cli-attach__hybrid-inst__r2 (attempt 1)
 lane C: cli-attach__hybrid-inst__r2 interrupted by machine sleep (1217s asleep); will retry
 lane C -> cli-attach__hybrid-inst__r2 (attempt 2)
+lane C: cli-attach__hybrid-inst__r2 done pass=True $40.53310725000001 in 7472s
+STOP present; lane C exits

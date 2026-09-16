@@ -190,6 +190,17 @@ class ClaudeUsage(unittest.TestCase):
         path = _write(os.path.join(self.tmp, "nf.jsonl"), "\n".join(json.dumps(l) for l in lines) + "\n")
         self.assertEqual(claude_usage.summarize_transcript(path)["wrapper_not_found"], 2)
 
+    def test_long_context_estimate_applies_multipliers_above_200k(self):
+        """Requests above 200k context are priced at 2x input / 1.5x output; below, base price."""
+        small = {"type": "assistant", "requestId": "r1", "message": {"role": "assistant", "model": "claude-opus-5", "usage": {"input_tokens": 1000, "output_tokens": 1000, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0}, "content": []}}
+        big = {"type": "assistant", "requestId": "r2", "message": {"role": "assistant", "model": "claude-opus-5", "usage": {"input_tokens": 1000, "output_tokens": 1000, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 300000}, "content": []}}
+        path = _write(os.path.join(self.tmp, "lc.jsonl"), json.dumps(small) + "\n" + json.dumps(big) + "\n")
+        lc = claude_usage.long_context_estimate(path, self.p)
+        base_small = (1000 * 5 + 1000 * 25) / 1e6
+        base_big = (1000 * 5 * 2 + 300000 * 5 * 0.1 * 2 + 1000 * 25 * 1.5) / 1e6
+        self.assertEqual(lc["requests"], 2); self.assertEqual(lc["requests_over_200k"], 1)
+        self.assertAlmostEqual(lc["usd_long_context_est"], base_small + base_big, places=6)
+
     def test_reconcile_flags_a_real_mismatch_only(self):
         res = {"usage": {"input_tokens": 100000, "output_tokens": 1000, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0}}
         ok = claude_usage.reconcile(res, {"input": 100500, "output": 1000, "cache_creation": 0, "cache_read": 0})

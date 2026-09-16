@@ -440,6 +440,7 @@ def score_run(run_dir: str, repo_dir: str, task: dict, task_dir: str, repo_cfg: 
                 tsum["tool_calls"][name] = tsum["tool_calls"].get(name, 0) + n
             agy_calls.extend(sub.get("agy_calls") or [])
     recomputed, price_flags = claude_usage.recompute_list_price(result.get("model_usage") or {}, prices)
+    lc = claude_usage.long_context_estimate(transcripts[0], prices) if transcripts else {}
     recon = claude_usage.reconcile(result, tsum) if tsum.get("present") else {"ok": None, "fields": {}}
     cost_gap = None
     if recomputed is not None and result.get("total_cost_usd"):
@@ -525,6 +526,7 @@ def score_run(run_dir: str, repo_dir: str, task: dict, task_dir: str, repo_cfg: 
             "usage": result.get("usage"), "model_usage": result.get("model_usage"),
             "list_price_usd_recomputed": None if recomputed is None else round(recomputed, 6),
             "recomputed_vs_reported_gap": cost_gap, "price_flags": price_flags,
+            "long_context": lc,
             "transcript": {k: tsum.get(k) for k in ("present", "turns", "input", "output", "cache_creation",
                                                      "cache_read", "first_turn_cache_read", "models",
                                                      "tool_calls", "web_tool_calls", "write_tool_calls",
@@ -618,6 +620,7 @@ def reaccount(run_dir: str, task: dict, arm: str, prices: Prices) -> dict:
         tsum = claude_usage.summarize_transcript(main_t[0])
         agy_calls = list(tsum.get("agy_calls") or [])
     recomputed, price_flags = claude_usage.recompute_list_price(result.get("model_usage") or {}, prices)
+    lc = claude_usage.long_context_estimate(transcripts[0], prices) if transcripts else {}
     claude_usd = float(result["total_cost_usd"]) if result.get("total_cost_usd") is not None else None
     source = "result.modelUsage"
     if claude_usd is None and tsum.get("present"):
@@ -653,7 +656,8 @@ def reaccount(run_dir: str, task: dict, arm: str, prices: Prices) -> dict:
     gemini_usd = agy.get("shadow_usd")
     rec["claude"].update({"total_cost_usd": claude_usd, "total_cost_usd_source": source, "subtype": subtype, "capped": capped,
                           "num_turns": result.get("num_turns") or (tsum.get("turns") if tsum.get("present") else None),
-                          "list_price_usd_recomputed": None if recomputed is None else round(recomputed, 6), "price_flags": price_flags})
+                          "list_price_usd_recomputed": None if recomputed is None else round(recomputed, 6), "price_flags": price_flags,
+                          "long_context": lc})
     rec["agy"] = agy
     rec["writes"] = writes
     o.update({"vet_ok": vet_ok, "vet_mode": "relative" if base_vet is not None else "absolute", "vet_new_findings": vet_new[:20],

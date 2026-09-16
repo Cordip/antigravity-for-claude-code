@@ -68,6 +68,9 @@ def arm_summary(runs: List[dict]) -> dict:
         "tampered": sum(1 for r in ok if r.get("outcome", {}).get("hidden_test_tampered")),
         "usage_reconciles": sum(1 for r in ok if r.get("claude", {}).get("usage_reconciles")),
         "slept_runs": sum(1 for r in ok if (r.get("suspended_s") or 0) > 30),
+        "claude_usd_long_context_est": round(sum((r.get("claude", {}).get("long_context") or {}).get("usd_long_context_est") or (r["cost"].get("claude_usd") or 0) for r in ok), 4),
+        "runs_with_200k_requests": sum(1 for r in ok if ((r.get("claude", {}).get("long_context") or {}).get("requests_over_200k") or 0) > 0),
+        "tree_pass": sum(1 for r in ok if r.get("outcome", {}).get("tree_pass")),
         "flaky_retry_passes": sum(1 for r in ok if ((r.get("outcome", {}).get("full_suite") or {}).get("flaky_retry") or {}).get("all_passed_on_retry")),
         "violations": {v: sum(1 for r in excluded if v in r.get("violations", [])) for v in sorted({x for r in excluded for x in r.get("violations", [])})},
     }

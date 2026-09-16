@@ -84,3 +84,4 @@ lane D -> zoekt-1105__solo-sonnet__r3 (attempt 1)
 lane D: zoekt-1105__solo-sonnet__r3 done pass=True $2.7265968999999997 in 887s
 lane D -> k6-6169__hybrid-forced__r3 (attempt 1)
 lane D: k6-6169__hybrid-forced__r3 interrupted by machine sleep (1217s asleep); will retry
+STOP present; lane D exits
