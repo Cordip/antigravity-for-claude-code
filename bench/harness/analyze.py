@@ -88,6 +88,7 @@ def arm_summary(runs: List[dict]) -> dict:
         "cost_total_usd": total,
         "cost_of_pass_usd": round(total / len(passes), 4) if passes else None,
         "cost_of_pass_billed_usd": (round(sum(_cost_billed(r) or 0 for r in ok) / len(passes), 4) if passes else None),
+        "cost_of_pass_claude_only_usd": (round(sum(r["cost"].get("claude_usd") or 0 for r in ok) / len(passes), 4) if passes else None),
         "gemini_billed_usd": round(sum(billed_gemini_usd(r) for r in ok), 4),
         "cost_pass_median": _median(pass_costs), "cost_pass_min": round(min(pass_costs), 4) if pass_costs else None,
         "cost_pass_max": round(max(pass_costs), 4) if pass_costs else None,
@@ -277,14 +278,25 @@ def judge_summary(run_id: str, runs: List[dict]) -> dict:
 
 # ------------------------------------------------------------------ main ----
 
-def analyze(run_id: str, ref_arm: str = "solo-opus", boots: int = 10000, seed: int = 20260914) -> dict:
+def analyze(run_id: str, ref_arm: str = "solo-opus", boots: int = 10000, seed: int = 20260914,
+            include: Optional[str] = None) -> dict:
+    """`include` = "other-run-id:arm1,arm2" merges those arms' finished runs from another
+    run id (a follow-up study reuses the main run's reference arms; recorded in the aggregate)."""
     runs = load_runs(run_id)
+    if include:
+        other, arms_s = include.split(":", 1)
+        wanted = set(arms_s.split(","))
+        extra = [r for r in load_runs(other) if r["arm"] in wanted]
+        for r in extra:
+            r["_from_run"] = other
+        runs += extra
     arms = sorted({r["arm"] for r in runs})
     per_task = per_task_cost_of_pass(runs)
     per_task_billed = per_task_cost_of_pass(runs, _cost_billed)
+    per_task_claude = per_task_cost_of_pass(runs, lambda r: r["cost"].get("claude_usd"))
     tasks = sorted(per_task)
     agg = {"schema": "bench.aggregate/1", "run_id": run_id, "generated_at": __import__("common").now_iso(),
-           "n_runs": len(runs), "tasks": tasks, "arms": {}, "paired": {}, "by_size": {}, "judge": judge_summary(run_id, runs),
+           "n_runs": len(runs), "included_from": include, "tasks": tasks, "arms": {}, "paired": {}, "by_size": {}, "judge": judge_summary(run_id, runs),
            "versions": (runs[0].get("versions") if runs else {}), "prices_lock_sha256": (runs[0].get("prices_lock_sha256") if runs else None),
            "exclusions": [{"run_key": r["run_key"], "violations": r["violations"]} for r in runs if r.get("violations")]}
     agg["sensitivity_no_sleep"] = {}
@@ -296,6 +308,7 @@ def analyze(run_id: str, ref_arm: str = "solo-opus", boots: int = 10000, seed: i
         if arm != ref_arm and ref_arm in arms:
             agg["paired"]["%s_vs_%s" % (arm, ref_arm)] = bootstrap_ratio(per_task, arm, ref_arm, tasks, boots, seed)
             agg.setdefault("paired_billed", {})["%s_vs_%s" % (arm, ref_arm)] = bootstrap_ratio(per_task_billed, arm, ref_arm, tasks, boots, seed)
+            agg.setdefault("paired_claude_only", {})["%s_vs_%s" % (arm, ref_arm)] = bootstrap_ratio(per_task_claude, arm, ref_arm, tasks, boots, seed)
             for s in SIZES:
                 st = [t for t in tasks if any(a.get("size_class") == s for a in per_task[t].values())]
                 if st:
@@ -326,12 +339,12 @@ def render_block(agg: dict, kind: str) -> str:
                 L.append("| %s | %s | %d | %d/%d | %s | %s | %s | %s |" % (arm, s_, b["runs_ok"], b["pass"], b["runs_ok"], _f(b["cost_of_pass_usd"]),
                                                                        _f(b.get("cost_of_pass_billed_usd")), _f(b["cost_pass_median"]), _f(b["wall_median_s"])))
     elif kind == "paired":
-        L.append("| comparison | tasks | ratio (deck) | 95% CI | ratio (billed rates) | 95% CI | pass-rate diff | undefined draws |")
-        L.append("|---|---|---|---|---|---|---|---|")
-        pb = agg.get("paired_billed", {})
+        L.append("| comparison | tasks | ratio (deck) | 95% CI | ratio (billed rates) | 95% CI | ratio (Claude side only) | 95% CI | pass-rate diff | undefined draws |")
+        L.append("|---|---|---|---|---|---|---|---|---|---|")
+        pb = agg.get("paired_billed", {}); pc = agg.get("paired_claude_only", {})
         for k, p in agg["paired"].items():
-            b = pb.get(k, {})
-            L.append("| %s | %d | %s | %s | %s | %s | %s | %d/%d |" % (k, p["n_tasks"], _f(p["point"]), p["ci95"], _f(b.get("point")), b.get("ci95"), _f(p["pass_rate_diff"]), p["undefined_draws"], p["boot"]))
+            b = pb.get(k, {}); c = pc.get(k, {})
+            L.append("| %s | %d | %s | %s | %s | %s | %s | %s | %s | %d/%d |" % (k, p["n_tasks"], _f(p["point"]), p["ci95"], _f(b.get("point")), b.get("ci95"), _f(c.get("point")), c.get("ci95"), _f(p["pass_rate_diff"]), p["undefined_draws"], p["boot"]))
     elif kind == "judge":
         j = agg.get("judge", {})
         if not j.get("present"):

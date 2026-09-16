@@ -49,6 +49,25 @@
         "WebFetch",
         "WebSearch"
       ]
+    },
+    "hybrid-handoff": {
+      "conductor_alias": "opus",
+      "plugin": true,
+      "appendix": "hybrid-handoff-appendix.md",
+      "policy": "strict",
+      "disallowed_tools": [
+        "WebFetch",
+        "WebSearch",
+        "Edit",
+        "Write",
+        "MultiEdit",
+        "NotebookEdit",
+        "Read",
+        "Glob",
+        "Grep",
+        "Agent",
+        "Task"
+      ]
     }
   },
   "effort": "high",
@@ -71,5 +90,6 @@
   },
   "agy_timeout": "10m",
   "cold_gap_s": 300,
-  "_caps_note": "Set from the pilot on 2026-09-15 so that no cap binds in practice: observed small runs <= $1.41 / 23 turns / 10 min; medium solo $4.76 / 62 turns / 13 min and hybrid-forced killed at 60 min with $8.96 spent; large solo $12.68 / 109 turns / 30 min and hybrid-forced killed at 100 min with $20.60 spent. Identical across arms; a run that hits one counts as a failure."
+  "_caps_note": "Set from the pilot on 2026-09-15 so that no cap binds in practice: observed small runs <= $1.41 / 23 turns / 10 min; medium solo $4.76 / 62 turns / 13 min and hybrid-forced killed at 60 min with $8.96 spent; large solo $12.68 / 109 turns / 30 min and hybrid-forced killed at 100 min with $20.60 spent. Identical across arms; a run that hits one counts as a failure.",
+  "_handoff_note": "hybrid-handoff (added 2026-09-17, follow-up study): Claude hands the whole task to agy in one delegation and only verifies; it cannot read code (no Read/Glob/Grep, strict Bash policy: build/vet/test/gofmt and the wrapper only). At most one fix-up delegation. Measures the 'Gemini implements, Opus verifies' extreme."
 }

@@ -170,6 +170,8 @@ def invoke_claude(repo_dir: str, cfg_dir: str, run_raw: str, prompt: str, arm_cf
         # the agent found no agy-delegate and stopped). The plugin's own bin/ goes on PATH
         # here so the arm's only write path is always present.
         env["PATH"] = os.path.join(plugin_dir, "bin") + os.pathsep + env["PATH"]
+    if arm_cfg.get("policy") == "strict":
+        env["BENCH_POLICY"] = "strict"
     env.update({"CLAUDE_CONFIG_DIR": cfg_dir, "AGY_USAGE_LOG": os.path.join(run_raw, "agy_usage.log"),
                 "BENCH_TRACE_LOG": os.path.join(run_raw, "tool_trace.jsonl"), "BENCH_REPO_DIR": repo_dir,
                 "BENCH_PLUGIN": "1" if arm_cfg["plugin"] else "0"})

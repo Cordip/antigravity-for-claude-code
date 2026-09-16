@@ -224,5 +224,33 @@
   },
   "sed": {
     "_note": "read-only: -n plus print-only scripts; everything else blocked in gates._rule_sed"
-  }
+  },
+  "strict_blocked_heads": [
+    "cat",
+    "head",
+    "tail",
+    "grep",
+    "rg",
+    "find",
+    "tree",
+    "sed",
+    "less",
+    "ls",
+    "wc",
+    "nl",
+    "column",
+    "paste",
+    "comm",
+    "od",
+    "strings",
+    "stat",
+    "file",
+    "diff",
+    "jq",
+    "sort",
+    "uniq",
+    "cut",
+    "tr"
+  ],
+  "_strict_note": "BENCH_POLICY=strict (hybrid-handoff arm): the conductor may build/vet/test, run gofmt -l, read-only git status/diff --stat/log, cd, echo, and call the wrapper; every file-reading head is blocked so the verifier cannot become the implementer."
 }

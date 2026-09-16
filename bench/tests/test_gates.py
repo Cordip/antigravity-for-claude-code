@@ -152,3 +152,18 @@ class GateTable(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class StrictPolicy(unittest.TestCase):
+    def test_strict_blocks_reading_but_keeps_verification(self):
+        """The hand-off arm's conductor may build/test and delegate, never read files."""
+        os.environ["BENCH_POLICY"] = "strict"
+        try:
+            self.assertTrue(gates.decide("go build ./... && go vet ./... && go test ./...", plugin=True).allow)
+            self.assertTrue(gates.decide("gofmt -l .", plugin=True).allow)
+            self.assertTrue(gates.decide("agy-delegate --tier flash --yolo --dir . --timeout 120m 'whole task'", plugin=True).allow)
+            self.assertTrue(gates.decide("git status --porcelain", plugin=True).allow)
+            for cmd in ("cat go.mod", "sed -n 1,40p x.go", "grep -rn foo .", "ls internal", "head -20 x.go", "rg foo"):
+                self.assertFalse(gates.decide(cmd, plugin=True).allow, cmd)
+        finally:
+            del os.environ["BENCH_POLICY"]

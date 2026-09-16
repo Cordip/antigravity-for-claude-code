@@ -278,6 +278,8 @@ def _analyze(seg: str, plugin: bool, heads: List[str]) -> None:
         raise Block("call agy through agy-delegate, never directly")
     if base not in r["heads"]:
         raise Block("'%s' is not a verification command" % base)
+    if os.environ.get("BENCH_POLICY") == "strict" and base in r.get("strict_blocked_heads", []):
+        raise Block("'%s' is not available in the hand-off arm (build/test only)" % base)
     heads.append(base)
     # wrappers recurse
     if base == "timeout":
