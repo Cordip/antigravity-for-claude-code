@@ -244,6 +244,22 @@ def quota_probe(run_raw: str, name: str) -> None:
     write_text(os.path.join(run_raw, "quota_%s.json" % name), r.out or r.err)
 
 
+def on_ac_power() -> bool:
+    r = run(["pmset", "-g", "batt"], timeout=20)
+    return "AC Power" in r.out or r.rc != 0  # unknown -> do not block
+
+
+def wait_for_ac(max_s: float = 5.5 * 3600) -> float:
+    """Block while the machine runs on battery. Measured 2026-09-16: every run death of
+    this study happened at a wake from a sleep entered on battery (lid closed); a 2 h
+    hybrid attempt died that way at $24. New runs start only on mains power; running ones
+    are not touched. Returns the seconds waited."""
+    t0 = time.time()
+    while not on_ac_power() and time.time() - t0 < max_s:
+        time.sleep(60)
+    return round(time.time() - t0, 1)
+
+
 def run_once(task_id: str, arm: str, rep: int, run_id: str, plugin_dir: Optional[str] = None,
              lane: str = "A", attempt: int = 1, keep_checkout: bool = False,
              cap_overrides: Optional[dict] = None) -> dict:
@@ -268,6 +284,7 @@ def run_once(task_id: str, arm: str, rep: int, run_id: str, plugin_dir: Optional
     if os.path.exists(stop):
         raise SystemExit("STOP file present: %s" % stop)
 
+    waited_for_ac = wait_for_ac()
     prompt, prompt_meta = build_prompt(task_dir, arm_cfg)
     write_text(os.path.join(raw, "prompt_sent.md"), prompt)
     repo_dir = prepare_checkout(task, task_dir, run_key)
@@ -278,7 +295,7 @@ def run_once(task_id: str, arm: str, rep: int, run_id: str, plugin_dir: Optional
             "lane": lane, "started_at": now_iso(), "versions": versions, "conductor_alias": arm_cfg["conductor_alias"],
             "effort": arms["effort"], "executor": {"default_tier": "flash", "agy_timeout": arms["agy_timeout"]},
             "caps": caps, "prompt": prompt_meta, "repo_dir": repo_dir, "cfg_dir": cfg_dir,
-            "agy_project": agy_project}
+            "agy_project": agy_project, "waited_for_ac_s": waited_for_ac}
     write_json(os.path.join(raw, "meta.json"), meta)
     if arm_cfg["plugin"]:
         quota_probe(raw, "before")

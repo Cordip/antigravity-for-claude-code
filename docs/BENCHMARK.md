@@ -167,6 +167,11 @@ Results will appear here as `bench:table` blocks when the run completes.
   version of that rule and put back as the capped failures they are (`repairs` in
   `queue.json`); a cap is never treated as infrastructure. Note for the write-up: the
   turn cap binds for `solo-sonnet` (81 turns on a small task with a passing tree).
+- 2026-09-16 13:39Z — a 2 h `cli-attach__hybrid-inst__r2` attempt ($24.41) died at a wake
+  from a sleep entered on battery (lid closed), like every other run death so far. From
+  14:20Z no new item starts while the machine is on battery power (running items are not
+  touched); lanes C/D were replaced by E/F to pick the rule up. The waiting time is
+  recorded per run (`waited_for_ac_s`).
 
 ## Versions and provenance
 

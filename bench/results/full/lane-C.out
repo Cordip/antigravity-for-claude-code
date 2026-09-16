@@ -40,3 +40,19 @@ lane C: k6-6169__solo-sonnet__r2 done pass=True $8.8268491 in 1544s
 lane C -> cli-14136__solo-opus__r3 (attempt 1)
 lane C: cli-14136__solo-opus__r3 done pass=False $1.086825 in 4040s
 lane C -> k6-6169__hybrid-forced__r2 (attempt 1)
+lane C: k6-6169__hybrid-forced__r2 done pass=True $20.5331695 in 5558s
+lane C -> cli-14136__solo-opus__r3 (attempt 2)
+lane C: cli-14136__solo-opus__r3 done pass=True $4.7629800000000015 in 689s
+lane C -> cli-attach__hybrid-forced__r2 (attempt 1)
+lane C: cli-attach__hybrid-forced__r2 interrupted by machine sleep (249s asleep); will retry
+lane C -> caddy-7995__solo-opus__r3 (attempt 1)
+lane C: caddy-7995__solo-opus__r3 done pass=True $2.9633190000000003 in 453s
+lane C -> zoekt-1105__hybrid-forced__r1 (attempt 2)
+lane C: zoekt-1105__hybrid-forced__r1 done pass=True $13.187506749999999 in 6945s
+lane C -> k6-6169__solo-opus__r2 (attempt 1)
+lane C: k6-6169__solo-opus__r2 done pass=True $12.257616499999994 in 1585s
+lane C -> zoekt-1105__hybrid-forced__r2 (attempt 1)
+lane C: zoekt-1105__hybrid-forced__r2 done pass=True $12.094723499999997 in 6995s
+lane C -> cli-attach__hybrid-inst__r2 (attempt 1)
+lane C: cli-attach__hybrid-inst__r2 interrupted by machine sleep (1217s asleep); will retry
+lane C -> cli-attach__hybrid-inst__r2 (attempt 2)

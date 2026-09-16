@@ -252,11 +252,11 @@
       "arm": "hybrid-forced",
       "rep": 1,
       "size_class": "large",
-      "status": "pending",
-      "attempts": 1,
-      "lane": "A",
-      "started_at": "2026-09-15T03:57:02+00:00",
-      "ended_at": "2026-09-15T05:05:04+00:00",
+      "status": "done",
+      "attempts": 2,
+      "lane": "C",
+      "started_at": "2026-09-16T06:36:56+00:00",
+      "ended_at": "2026-09-16T08:32:40+00:00",
       "history": [
         {
           "attempt": 1,
@@ -267,6 +267,17 @@
           "error": "final message was an API error after a wake (reclassified post hoc 2026-09-16T01:25Z)",
           "pass": false,
           "total_usd": 1.4877089999999997,
+          "subtype": "success"
+        },
+        {
+          "attempt": 2,
+          "lane": "C",
+          "started_ts": 1789540616.146531,
+          "ended_ts": 1789547560.68083,
+          "class": "final",
+          "error": null,
+          "pass": true,
+          "total_usd": 13.187506749999999,
           "subtype": "success"
         }
       ]
@@ -656,11 +667,11 @@
       "arm": "hybrid-inst",
       "rep": 1,
       "size_class": "large",
-      "status": "pending",
-      "attempts": 1,
+      "status": "done",
+      "attempts": 2,
       "lane": "D",
-      "started_at": "2026-09-15T23:31:02+00:00",
-      "ended_at": "2026-09-16T00:39:30+00:00",
+      "started_at": "2026-09-16T07:42:22+00:00",
+      "ended_at": "2026-09-16T10:41:42+00:00",
       "history": [
         {
           "attempt": 1,
@@ -671,6 +682,17 @@
           "error": "final message was an API error after a wake (reclassified post hoc 2026-09-16T01:25Z)",
           "pass": false,
           "total_usd": 1.6335225,
+          "subtype": "success"
+        },
+        {
+          "attempt": 2,
+          "lane": "D",
+          "started_ts": 1789544542.659481,
+          "ended_ts": 1789555302.301941,
+          "class": "final",
+          "error": null,
+          "pass": true,
+          "total_usd": 48.16534349999999,
           "subtype": "success"
         }
       ]
@@ -809,11 +831,11 @@
       "arm": "solo-opus",
       "rep": 1,
       "size_class": "large",
-      "status": "pending",
-      "attempts": 1,
-      "lane": "B",
-      "started_at": "2026-09-15T07:37:13+00:00",
-      "ended_at": "2026-09-15T08:44:05+00:00",
+      "status": "done",
+      "attempts": 2,
+      "lane": "D",
+      "started_at": "2026-09-16T03:41:04+00:00",
+      "ended_at": "2026-09-16T04:08:09+00:00",
       "history": [
         {
           "attempt": 1,
@@ -824,6 +846,17 @@
           "error": "suite_failure_in_unrelated_package (reclassified post hoc 2026-09-15T22:55Z)",
           "pass": false,
           "total_usd": 12.602867750000001,
+          "subtype": "success"
+        },
+        {
+          "attempt": 2,
+          "lane": "D",
+          "started_ts": 1789530064.649706,
+          "ended_ts": 1789531689.629726,
+          "class": "final",
+          "error": null,
+          "pass": true,
+          "total_usd": 14.929325249999998,
           "subtype": "success"
         }
       ]
@@ -1313,12 +1346,24 @@
       "arm": "hybrid-inst",
       "rep": 2,
       "size_class": "medium",
-      "status": "running",
+      "status": "done",
       "attempts": 1,
       "lane": "D",
       "started_at": "2026-09-16T00:49:05+00:00",
-      "ended_at": null,
-      "history": []
+      "ended_at": "2026-09-16T01:57:47+00:00",
+      "history": [
+        {
+          "attempt": 1,
+          "lane": "D",
+          "started_ts": 1789519745.8269818,
+          "ended_ts": 1789523867.826119,
+          "class": "final",
+          "error": null,
+          "pass": true,
+          "total_usd": 12.208527,
+          "subtype": "success"
+        }
+      ]
     },
     {
       "task_id": "caddy-7913",
@@ -1373,11 +1418,11 @@
       "arm": "hybrid-inst",
       "rep": 2,
       "size_class": "large",
-      "status": "pending",
-      "attempts": 1,
+      "status": "done",
+      "attempts": 2,
       "lane": "D",
-      "started_at": "2026-09-15T19:58:57+00:00",
-      "ended_at": "2026-09-15T22:28:01+00:00",
+      "started_at": "2026-09-16T04:19:58+00:00",
+      "ended_at": "2026-09-16T07:35:49+00:00",
       "history": [
         {
           "attempt": 1,
@@ -1389,6 +1434,17 @@
           "pass": false,
           "total_usd": 24.084331749999997,
           "subtype": "success"
+        },
+        {
+          "attempt": 2,
+          "lane": "D",
+          "started_ts": 1789532398.4045131,
+          "ended_ts": 1789544149.8541598,
+          "class": "final",
+          "error": null,
+          "pass": true,
+          "total_usd": 33.7042255,
+          "subtype": "success"
         }
       ]
     },
@@ -1397,48 +1453,96 @@
       "arm": "hybrid-forced",
       "rep": 2,
       "size_class": "large",
-      "status": "running",
+      "status": "done",
       "attempts": 1,
       "lane": "C",
       "started_at": "2026-09-16T00:39:15+00:00",
-      "ended_at": null,
-      "history": []
+      "ended_at": "2026-09-16T02:11:53+00:00",
+      "history": [
+        {
+          "attempt": 1,
+          "lane": "C",
+          "started_ts": 1789519155.872448,
+          "ended_ts": 1789524713.630813,
+          "class": "final",
+          "error": null,
+          "pass": true,
+          "total_usd": 20.5331695,
+          "subtype": "success"
+        }
+      ]
     },
     {
       "task_id": "k6-6169",
       "arm": "solo-opus",
       "rep": 2,
       "size_class": "large",
-      "status": "pending",
-      "attempts": 0,
-      "lane": null,
-      "started_at": null,
-      "ended_at": null,
-      "history": []
+      "status": "done",
+      "attempts": 1,
+      "lane": "C",
+      "started_at": "2026-09-16T08:32:40+00:00",
+      "ended_at": "2026-09-16T08:59:05+00:00",
+      "history": [
+        {
+          "attempt": 1,
+          "lane": "C",
+          "started_ts": 1789547560.6863492,
+          "ended_ts": 1789549145.9170802,
+          "class": "final",
+          "error": null,
+          "pass": true,
+          "total_usd": 12.257616499999994,
+          "subtype": "success"
+        }
+      ]
     },
     {
       "task_id": "zoekt-1105",
       "arm": "hybrid-inst",
       "rep": 2,
       "size_class": "large",
-      "status": "pending",
-      "attempts": 0,
-      "lane": null,
-      "started_at": null,
-      "ended_at": null,
-      "history": []
+      "status": "done",
+      "attempts": 1,
+      "lane": "D",
+      "started_at": "2026-09-16T02:09:55+00:00",
+      "ended_at": "2026-09-16T03:41:04+00:00",
+      "history": [
+        {
+          "attempt": 1,
+          "lane": "D",
+          "started_ts": 1789524595.301733,
+          "ended_ts": 1789530064.646107,
+          "class": "final",
+          "error": null,
+          "pass": true,
+          "total_usd": 16.757959,
+          "subtype": "success"
+        }
+      ]
     },
     {
       "task_id": "zoekt-1105",
       "arm": "hybrid-forced",
       "rep": 2,
       "size_class": "large",
-      "status": "pending",
-      "attempts": 0,
-      "lane": null,
-      "started_at": null,
-      "ended_at": null,
-      "history": []
+      "status": "done",
+      "attempts": 1,
+      "lane": "C",
+      "started_at": "2026-09-16T08:59:05+00:00",
+      "ended_at": "2026-09-16T10:55:40+00:00",
+      "history": [
+        {
+          "attempt": 1,
+          "lane": "C",
+          "started_ts": 1789549145.9201899,
+          "ended_ts": 1789556140.512243,
+          "class": "final",
+          "error": null,
+          "pass": true,
+          "total_usd": 12.094723499999997,
+          "subtype": "success"
+        }
+      ]
     },
     {
       "task_id": "zoekt-1105",
@@ -1494,11 +1598,23 @@
       "rep": 2,
       "size_class": "large",
       "status": "pending",
-      "attempts": 0,
-      "lane": null,
-      "started_at": null,
-      "ended_at": null,
-      "history": []
+      "attempts": 1,
+      "lane": "C",
+      "started_at": "2026-09-16T02:23:22+00:00",
+      "ended_at": "2026-09-16T06:28:23+00:00",
+      "history": [
+        {
+          "attempt": 1,
+          "lane": "C",
+          "started_ts": 1789525402.505833,
+          "ended_ts": 1789540103.534713,
+          "class": "suspended",
+          "error": null,
+          "pass": false,
+          "total_usd": 60.627361,
+          "subtype": "killed_wall"
+        }
+      ]
     },
     {
       "task_id": "cli-attach",
@@ -1529,35 +1645,59 @@
       "arm": "solo-sonnet",
       "rep": 2,
       "size_class": "large",
-      "status": "pending",
-      "attempts": 0,
-      "lane": null,
-      "started_at": null,
-      "ended_at": null,
-      "history": []
+      "status": "done",
+      "attempts": 1,
+      "lane": "D",
+      "started_at": "2026-09-16T01:57:47+00:00",
+      "ended_at": "2026-09-16T02:09:55+00:00",
+      "history": [
+        {
+          "attempt": 1,
+          "lane": "D",
+          "started_ts": 1789523867.829219,
+          "ended_ts": 1789524595.2969549,
+          "class": "final",
+          "error": null,
+          "pass": false,
+          "total_usd": 2.289947,
+          "subtype": "success"
+        }
+      ]
     },
     {
       "task_id": "cli-attach",
       "arm": "hybrid-inst",
       "rep": 2,
       "size_class": "large",
-      "status": "pending",
-      "attempts": 0,
-      "lane": null,
-      "started_at": null,
-      "ended_at": null,
-      "history": []
+      "status": "running",
+      "attempts": 2,
+      "lane": "C",
+      "started_at": "2026-09-16T14:08:05+00:00",
+      "ended_at": "2026-09-16T13:39:38+00:00",
+      "history": [
+        {
+          "attempt": 1,
+          "lane": "C",
+          "started_ts": 1789556140.516186,
+          "ended_ts": 1789565978.788358,
+          "class": "suspended",
+          "error": null,
+          "pass": false,
+          "total_usd": 24.412180500000005,
+          "subtype": "success"
+        }
+      ]
     },
     {
       "task_id": "cli-14136",
       "arm": "solo-opus",
       "rep": 3,
       "size_class": "medium",
-      "status": "pending",
-      "attempts": 1,
+      "status": "done",
+      "attempts": 2,
       "lane": "C",
-      "started_at": "2026-09-15T23:31:55+00:00",
-      "ended_at": "2026-09-16T00:39:15+00:00",
+      "started_at": "2026-09-16T02:11:53+00:00",
+      "ended_at": "2026-09-16T02:23:22+00:00",
       "history": [
         {
           "attempt": 1,
@@ -1569,6 +1709,17 @@
           "pass": false,
           "total_usd": 1.086825,
           "subtype": "success"
+        },
+        {
+          "attempt": 2,
+          "lane": "C",
+          "started_ts": 1789524713.63768,
+          "ended_ts": 1789525402.502329,
+          "class": "final",
+          "error": null,
+          "pass": true,
+          "total_usd": 4.7629800000000015,
+          "subtype": "success"
         }
       ]
     },
@@ -1577,12 +1728,24 @@
       "arm": "solo-sonnet",
       "rep": 3,
       "size_class": "medium",
-      "status": "pending",
-      "attempts": 0,
-      "lane": null,
-      "started_at": null,
-      "ended_at": null,
-      "history": []
+      "status": "done",
+      "attempts": 1,
+      "lane": "D",
+      "started_at": "2026-09-16T04:08:09+00:00",
+      "ended_at": "2026-09-16T04:19:58+00:00",
+      "history": [
+        {
+          "attempt": 1,
+          "lane": "D",
+          "started_ts": 1789531689.6329012,
+          "ended_ts": 1789532398.4008331,
+          "class": "final",
+          "error": null,
+          "pass": true,
+          "total_usd": 2.4880057000000013,
+          "subtype": "success"
+        }
+      ]
     },
     {
       "task_id": "cli-14136",
@@ -1601,12 +1764,24 @@
       "arm": "hybrid-forced",
       "rep": 3,
       "size_class": "medium",
-      "status": "pending",
-      "attempts": 0,
-      "lane": null,
-      "started_at": null,
-      "ended_at": null,
-      "history": []
+      "status": "done",
+      "attempts": 1,
+      "lane": "D",
+      "started_at": "2026-09-16T11:07:13+00:00",
+      "ended_at": "2026-09-16T11:45:29+00:00",
+      "history": [
+        {
+          "attempt": 1,
+          "lane": "D",
+          "started_ts": 1789556833.8822231,
+          "ended_ts": 1789559129.5785449,
+          "class": "final",
+          "error": null,
+          "pass": true,
+          "total_usd": 6.2949645,
+          "subtype": "success"
+        }
+      ]
     },
     {
       "task_id": "caddy-7995",
@@ -1649,24 +1824,48 @@
       "arm": "hybrid-forced",
       "rep": 3,
       "size_class": "small",
-      "status": "pending",
-      "attempts": 0,
-      "lane": null,
-      "started_at": null,
-      "ended_at": null,
-      "history": []
+      "status": "done",
+      "attempts": 1,
+      "lane": "D",
+      "started_at": "2026-09-16T11:58:27+00:00",
+      "ended_at": "2026-09-16T12:17:32+00:00",
+      "history": [
+        {
+          "attempt": 1,
+          "lane": "D",
+          "started_ts": 1789559907.3116531,
+          "ended_ts": 1789561052.127727,
+          "class": "final",
+          "error": null,
+          "pass": true,
+          "total_usd": 3.44355375,
+          "subtype": "success"
+        }
+      ]
     },
     {
       "task_id": "caddy-7995",
       "arm": "solo-opus",
       "rep": 3,
       "size_class": "small",
-      "status": "pending",
-      "attempts": 0,
-      "lane": null,
-      "started_at": null,
-      "ended_at": null,
-      "history": []
+      "status": "done",
+      "attempts": 1,
+      "lane": "C",
+      "started_at": "2026-09-16T06:29:23+00:00",
+      "ended_at": "2026-09-16T06:36:56+00:00",
+      "history": [
+        {
+          "attempt": 1,
+          "lane": "C",
+          "started_ts": 1789540163.545347,
+          "ended_ts": 1789540616.1434891,
+          "class": "final",
+          "error": null,
+          "pass": true,
+          "total_usd": 2.9633190000000003,
+          "subtype": "success"
+        }
+      ]
     },
     {
       "task_id": "zoekt-1105",
@@ -1697,24 +1896,48 @@
       "arm": "solo-opus",
       "rep": 3,
       "size_class": "large",
-      "status": "pending",
-      "attempts": 0,
-      "lane": null,
-      "started_at": null,
-      "ended_at": null,
-      "history": []
+      "status": "done",
+      "attempts": 1,
+      "lane": "D",
+      "started_at": "2026-09-16T11:45:29+00:00",
+      "ended_at": "2026-09-16T11:58:27+00:00",
+      "history": [
+        {
+          "attempt": 1,
+          "lane": "D",
+          "started_ts": 1789559129.581999,
+          "ended_ts": 1789559907.307892,
+          "class": "final",
+          "error": null,
+          "pass": true,
+          "total_usd": 4.5087980000000005,
+          "subtype": "success"
+        }
+      ]
     },
     {
       "task_id": "zoekt-1105",
       "arm": "solo-sonnet",
       "rep": 3,
       "size_class": "large",
-      "status": "pending",
-      "attempts": 0,
-      "lane": null,
-      "started_at": null,
-      "ended_at": null,
-      "history": []
+      "status": "done",
+      "attempts": 1,
+      "lane": "D",
+      "started_at": "2026-09-16T12:17:32+00:00",
+      "ended_at": "2026-09-16T12:32:18+00:00",
+      "history": [
+        {
+          "attempt": 1,
+          "lane": "D",
+          "started_ts": 1789561052.130869,
+          "ended_ts": 1789561938.784144,
+          "class": "final",
+          "error": null,
+          "pass": true,
+          "total_usd": 2.7265968999999997,
+          "subtype": "success"
+        }
+      ]
     },
     {
       "task_id": "k6-6169",
@@ -1722,23 +1945,47 @@
       "rep": 3,
       "size_class": "large",
       "status": "pending",
-      "attempts": 0,
-      "lane": null,
-      "started_at": null,
-      "ended_at": null,
-      "history": []
+      "attempts": 1,
+      "lane": "D",
+      "started_at": "2026-09-16T12:32:18+00:00",
+      "ended_at": "2026-09-16T14:08:43+00:00",
+      "history": [
+        {
+          "attempt": 1,
+          "lane": "D",
+          "started_ts": 1789561938.7898839,
+          "ended_ts": 1789567723.396829,
+          "class": "suspended",
+          "error": null,
+          "pass": false,
+          "total_usd": 6.7406334999999995,
+          "subtype": "success"
+        }
+      ]
     },
     {
       "task_id": "k6-6169",
       "arm": "solo-opus",
       "rep": 3,
       "size_class": "large",
-      "status": "pending",
-      "attempts": 0,
-      "lane": null,
-      "started_at": null,
-      "ended_at": null,
-      "history": []
+      "status": "done",
+      "attempts": 1,
+      "lane": "D",
+      "started_at": "2026-09-16T10:41:42+00:00",
+      "ended_at": "2026-09-16T11:07:13+00:00",
+      "history": [
+        {
+          "attempt": 1,
+          "lane": "D",
+          "started_ts": 1789555302.30543,
+          "ended_ts": 1789556833.878649,
+          "class": "final",
+          "error": null,
+          "pass": true,
+          "total_usd": 11.407304999999997,
+          "subtype": "success"
+        }
+      ]
     },
     {
       "task_id": "k6-6169",
@@ -1769,12 +2016,24 @@
       "arm": "solo-opus",
       "rep": 3,
       "size_class": "medium",
-      "status": "pending",
-      "attempts": 0,
-      "lane": null,
-      "started_at": null,
-      "ended_at": null,
-      "history": []
+      "status": "done",
+      "attempts": 1,
+      "lane": "D",
+      "started_at": "2026-09-16T07:35:49+00:00",
+      "ended_at": "2026-09-16T07:42:22+00:00",
+      "history": [
+        {
+          "attempt": 1,
+          "lane": "D",
+          "started_ts": 1789544149.857068,
+          "ended_ts": 1789544542.656119,
+          "class": "final",
+          "error": null,
+          "pass": true,
+          "total_usd": 2.1942192499999997,
+          "subtype": "success"
+        }
+      ]
     },
     {
       "task_id": "caddy-7888",

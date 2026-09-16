@@ -57,3 +57,30 @@
 2026-09-16T00:39:30+00:00 lane D -> caddy-7995__solo-sonnet__r3 (attempt 1)
 2026-09-16T00:49:05+00:00 lane D: caddy-7995__solo-sonnet__r3 done pass=True $2.1337162000000003 in 576s
 2026-09-16T00:49:05+00:00 lane D -> caddy-7913__hybrid-inst__r2 (attempt 1)
+2026-09-16T01:57:47+00:00 lane D: caddy-7913__hybrid-inst__r2 done pass=True $12.208527 in 4122s
+2026-09-16T01:57:47+00:00 lane D -> cli-attach__solo-sonnet__r2 (attempt 1)
+2026-09-16T02:09:55+00:00 lane D: cli-attach__solo-sonnet__r2 done pass=False $2.289947 in 727s
+2026-09-16T02:09:55+00:00 lane D -> zoekt-1105__hybrid-inst__r2 (attempt 1)
+2026-09-16T03:41:04+00:00 lane D: zoekt-1105__hybrid-inst__r2 done pass=True $16.757959 in 5469s
+2026-09-16T03:41:04+00:00 lane D -> k6-6169__solo-opus__r1 (attempt 2)
+2026-09-16T04:08:09+00:00 lane D: k6-6169__solo-opus__r1 done pass=True $14.929325249999998 in 1625s
+2026-09-16T04:08:09+00:00 lane D -> cli-14136__solo-sonnet__r3 (attempt 1)
+2026-09-16T04:19:58+00:00 lane D: cli-14136__solo-sonnet__r3 done pass=True $2.4880057000000013 in 709s
+2026-09-16T04:19:58+00:00 lane D -> k6-6169__hybrid-inst__r2 (attempt 2)
+2026-09-16T07:35:49+00:00 lane D: k6-6169__hybrid-inst__r2 done pass=True $33.7042255 in 11751s
+2026-09-16T07:35:49+00:00 lane D -> caddy-7888__solo-opus__r3 (attempt 1)
+2026-09-16T07:42:22+00:00 lane D: caddy-7888__solo-opus__r3 done pass=True $2.1942192499999997 in 393s
+2026-09-16T07:42:22+00:00 lane D -> cli-attach__hybrid-inst__r1 (attempt 2)
+2026-09-16T10:41:42+00:00 lane D: cli-attach__hybrid-inst__r1 done pass=True $48.16534349999999 in 10760s
+2026-09-16T10:41:42+00:00 lane D -> k6-6169__solo-opus__r3 (attempt 1)
+2026-09-16T11:07:13+00:00 lane D: k6-6169__solo-opus__r3 done pass=True $11.407304999999997 in 1532s
+2026-09-16T11:07:13+00:00 lane D -> cli-14136__hybrid-forced__r3 (attempt 1)
+2026-09-16T11:45:29+00:00 lane D: cli-14136__hybrid-forced__r3 done pass=True $6.2949645 in 2296s
+2026-09-16T11:45:29+00:00 lane D -> zoekt-1105__solo-opus__r3 (attempt 1)
+2026-09-16T11:58:27+00:00 lane D: zoekt-1105__solo-opus__r3 done pass=True $4.5087980000000005 in 778s
+2026-09-16T11:58:27+00:00 lane D -> caddy-7995__hybrid-forced__r3 (attempt 1)
+2026-09-16T12:17:32+00:00 lane D: caddy-7995__hybrid-forced__r3 done pass=True $3.44355375 in 1145s
+2026-09-16T12:17:32+00:00 lane D -> zoekt-1105__solo-sonnet__r3 (attempt 1)
+2026-09-16T12:32:18+00:00 lane D: zoekt-1105__solo-sonnet__r3 done pass=True $2.7265968999999997 in 887s
+2026-09-16T12:32:18+00:00 lane D -> k6-6169__hybrid-forced__r3 (attempt 1)
+2026-09-16T14:08:43+00:00 lane D: k6-6169__hybrid-forced__r3 interrupted by machine sleep (1217s asleep); will retry

@@ -40,3 +40,19 @@
 2026-09-15T23:31:55+00:00 lane C -> cli-14136__solo-opus__r3 (attempt 1)
 2026-09-16T00:39:15+00:00 lane C: cli-14136__solo-opus__r3 done pass=False $1.086825 in 4040s
 2026-09-16T00:39:15+00:00 lane C -> k6-6169__hybrid-forced__r2 (attempt 1)
+2026-09-16T02:11:53+00:00 lane C: k6-6169__hybrid-forced__r2 done pass=True $20.5331695 in 5558s
+2026-09-16T02:11:53+00:00 lane C -> cli-14136__solo-opus__r3 (attempt 2)
+2026-09-16T02:23:22+00:00 lane C: cli-14136__solo-opus__r3 done pass=True $4.7629800000000015 in 689s
+2026-09-16T02:23:22+00:00 lane C -> cli-attach__hybrid-forced__r2 (attempt 1)
+2026-09-16T06:28:23+00:00 lane C: cli-attach__hybrid-forced__r2 interrupted by machine sleep (249s asleep); will retry
+2026-09-16T06:29:23+00:00 lane C -> caddy-7995__solo-opus__r3 (attempt 1)
+2026-09-16T06:36:56+00:00 lane C: caddy-7995__solo-opus__r3 done pass=True $2.9633190000000003 in 453s
+2026-09-16T06:36:56+00:00 lane C -> zoekt-1105__hybrid-forced__r1 (attempt 2)
+2026-09-16T08:32:40+00:00 lane C: zoekt-1105__hybrid-forced__r1 done pass=True $13.187506749999999 in 6945s
+2026-09-16T08:32:40+00:00 lane C -> k6-6169__solo-opus__r2 (attempt 1)
+2026-09-16T08:59:05+00:00 lane C: k6-6169__solo-opus__r2 done pass=True $12.257616499999994 in 1585s
+2026-09-16T08:59:05+00:00 lane C -> zoekt-1105__hybrid-forced__r2 (attempt 1)
+2026-09-16T10:55:40+00:00 lane C: zoekt-1105__hybrid-forced__r2 done pass=True $12.094723499999997 in 6995s
+2026-09-16T10:55:40+00:00 lane C -> cli-attach__hybrid-inst__r2 (attempt 1)
+2026-09-16T13:39:38+00:00 lane C: cli-attach__hybrid-inst__r2 interrupted by machine sleep (1217s asleep); will retry
+2026-09-16T14:08:05+00:00 lane C -> cli-attach__hybrid-inst__r2 (attempt 2)

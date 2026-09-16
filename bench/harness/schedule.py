@@ -196,9 +196,19 @@ def lane(run_id: str, lane_id: str, plugin_dir: str, gap_s: Optional[float] = No
                 it["status"] = "pending"
                 say("lane %s reclaimed interrupted item %s (attempt %d)" % (lane_id, key, it["attempts"]))
         write_json(queue_path(run_id), q)
+    on_batt_logged = False
     while True:
         if os.path.exists(stop) or os.path.exists(stop_now):
             say("STOP present; lane %s exits" % lane_id); return
+        # no new item on battery power: the study's run deaths all followed sleeps entered
+        # on battery (lid closed); running items are left alone
+        import run as run_mod
+        if not run_mod.on_ac_power():
+            if not on_batt_logged:
+                say("lane %s: on battery power; not starting new items until mains power returns" % lane_id); on_batt_logged = True
+            time.sleep(60); continue
+        if on_batt_logged:
+            say("lane %s: mains power back" % lane_id); on_batt_logged = False
         with Locked(run_id):
             q = read_json(queue_path(run_id))
             items = q["items"]

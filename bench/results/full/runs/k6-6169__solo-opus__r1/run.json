@@ -6,16 +6,17 @@
   "arm": "solo-opus",
   "rep": 1,
   "attempt": 1,
-  "lane": "B",
+  "lane": "D",
   "size_class": "large",
   "status": "ok",
   "failure_class": null,
+  "env_failure": null,
   "violations": [],
-  "started_at": "2026-09-15T07:37:15+00:00",
-  "ended_at": "2026-09-15T08:04:09+00:00",
-  "agent_wall_s": 1614.1,
-  "agent_active_s": 1614.1,
-  "suspended_s": 0.0,
+  "started_at": "2026-09-16T03:41:06+00:00",
+  "ended_at": "2026-09-16T04:06:59+00:00",
+  "agent_wall_s": 1552.9,
+  "agent_active_s": 1495.1,
+  "suspended_s": 57.8,
   "versions": {
     "claude": "2.1.272 (Claude Code)",
     "claude_bin": "/Users/linyuting/.local/share/claude/versions/2.1.272",
@@ -40,7 +41,8 @@
   "caps": {
     "max_budget_usd": 75,
     "max_turns": 250,
-    "wall_s": 14400
+    "wall_s": 14400,
+    "overridden": true
   },
   "prompt": {
     "task_sha256": "664c2b05c5caff13caabdb8e8928635ee08409836dd6c5bff427c6007b36423a",
@@ -49,23 +51,23 @@
     "sent_sha256": "664c2b05c5caff13caabdb8e8928635ee08409836dd6c5bff427c6007b36423a"
   },
   "claude": {
-    "session_id": "4ea1ff3c-57bc-439f-819f-c0d6368121c6",
+    "session_id": "7d66fab1-b0c1-4023-9e91-0e66b07d6c03",
     "subtype": "success",
     "is_error": false,
-    "num_turns": 116,
+    "num_turns": 127,
     "num_turns_source": "result",
-    "duration_ms": 1613718,
-    "duration_api_ms": 954192,
-    "total_cost_usd": 12.602867750000001,
+    "duration_ms": 1494724,
+    "duration_api_ms": 975691,
+    "total_cost_usd": 14.929325249999998,
     "total_cost_usd_source": "result.modelUsage",
     "capped": false,
     "usage": {
-      "input_tokens": 214,
-      "cache_creation_input_tokens": 279369,
-      "cache_read_input_tokens": 18283321,
-      "output_tokens": 68485,
+      "input_tokens": 230,
+      "cache_creation_input_tokens": 518283,
+      "cache_read_input_tokens": 19561931,
+      "output_tokens": 76239,
       "output_tokens_details": {
-        "thinking_tokens": 24231
+        "thinking_tokens": 30480
       },
       "server_tool_use": {
         "web_search_requests": 0,
@@ -74,7 +76,7 @@
       "service_tier": "standard",
       "cache_creation": {
         "ephemeral_1h_input_tokens": 0,
-        "ephemeral_5m_input_tokens": 279369
+        "ephemeral_5m_input_tokens": 518283
       },
       "inference_geo": "",
       "iterations": [],
@@ -83,11 +85,11 @@
     "model_usage": {
       "claude-haiku-4-5@20251001": {
         "inputTokens": 1811,
-        "outputTokens": 29,
+        "outputTokens": 31,
         "cacheReadInputTokens": 0,
         "cacheCreationInputTokens": 0,
         "webSearchRequests": 0,
-        "costUSD": 0.001956,
+        "costUSD": 0.001966,
         "contextWindow": 200000,
         "maxOutputTokens": 32000,
         "thinkingTokens": 0,
@@ -96,47 +98,47 @@
         "costBasis": "list"
       },
       "claude-opus-5[1m]": {
-        "inputTokens": 214,
-        "outputTokens": 68485,
-        "cacheReadInputTokens": 18283321,
-        "cacheCreationInputTokens": 279369,
+        "inputTokens": 230,
+        "outputTokens": 76239,
+        "cacheReadInputTokens": 19561931,
+        "cacheCreationInputTokens": 518283,
         "webSearchRequests": 0,
-        "costUSD": 12.600911750000002,
+        "costUSD": 14.927359249999999,
         "contextWindow": 1000000,
         "maxOutputTokens": 64000,
-        "thinkingTokens": 24231,
+        "thinkingTokens": 30480,
         "canonicalModel": "claude-opus-5",
         "provider": "vertex",
         "costBasis": "list"
       }
     },
-    "list_price_usd_recomputed": 12.600912,
-    "recomputed_vs_reported_gap": -0.0002,
+    "list_price_usd_recomputed": 14.927359,
+    "recomputed_vs_reported_gap": -0.0001,
     "price_flags": [
       "no_claude_rate_for:claude-haiku-4-5@20251001"
     ],
     "transcript": {
       "present": true,
-      "turns": 107,
-      "input": 214,
-      "output": 68485,
-      "cache_creation": 279369,
-      "cache_read": 18283321,
+      "turns": 115,
+      "input": 230,
+      "output": 76239,
+      "cache_creation": 518283,
+      "cache_read": 19561931,
       "first_turn_cache_read": 0,
       "models": {
         "claude-opus-5": {
-          "turns": 107,
-          "input": 214,
-          "output": 68485,
-          "cache_creation": 279369,
-          "cache_read": 18283321
+          "turns": 115,
+          "input": 230,
+          "output": 76239,
+          "cache_creation": 518283,
+          "cache_read": 19561931
         }
       },
       "tool_calls": {
-        "Bash": 54,
-        "Read": 22,
-        "Write": 12,
-        "Edit": 27
+        "Bash": 68,
+        "Read": 19,
+        "Write": 10,
+        "Edit": 29
       },
       "web_tool_calls": 0,
       "write_tool_calls": 39,
@@ -146,31 +148,32 @@
     "usage_reconciles": true,
     "usage_reconciliation": {
       "input": {
-        "result": 214,
-        "transcript": 214,
+        "result": 230,
+        "transcript": 230,
         "rel": 0.0
       },
       "output": {
-        "result": 68485,
-        "transcript": 68485,
+        "result": 76239,
+        "transcript": 76239,
         "rel": 0.0
       },
       "cache_creation": {
-        "result": 279369,
-        "transcript": 279369,
+        "result": 518283,
+        "transcript": 518283,
         "rel": 0.0
       },
       "cache_read": {
-        "result": 18283321,
-        "transcript": 18283321,
+        "result": 19561931,
+        "transcript": 19561931,
         "rel": 0.0
       }
     },
-    "permission_denials": 3,
+    "permission_denials": 2,
     "denied_tools": {
-      "Bash:cd": 3
+      "Bash:cd": 1,
+      "Bash:go": 1
     },
-    "result_head": "`k6 cloud run --local-execution` now goes through the v6 + provisioning APIs. All the listed test files pass, and the changes are uncommitted in the working tree.\n\n## What was added\n\n**`internal/cloudapi/provisioning`** — the new package that owns the flow:\n- `client.go` — `NewClient(logger, token, host, version, stackID, timeout)`; wraps the cloud SDK (with `X-Stack-Id` as a default header, since",
+    "result_head": "Done. `k6 cloud run --local-execution` now runs on the v6 + provisioning APIs.\n\n**New package `internal/cloudapi/provisioning`** (plus `internal/cloudapi/clientcfg` for the shared retry knobs, and `internal/cloudapi/provisioning/test` — `provtest` — as the fake server):\n- `client.go` — SDK-backed client pinning `X-Stack-Id`, owning a v6 client for the load-test/test-run endpoints.\n- `errors.go` — ",
     "errors": []
   },
   "agy": {
@@ -207,17 +210,17 @@
     "executor_write_steps": 0
   },
   "writes": {
-    "claude_tool": 37,
+    "claude_tool": 39,
     "claude_bash": 0,
     "agy": 0,
     "toolchain_gomod": 0,
     "between_calls": 0,
-    "events": 236,
+    "events": 278,
     "gate_blocks": 1,
     "blocked_heads": {
       "cd": 1
     },
-    "gate_allows": 53,
+    "gate_allows": 67,
     "pairing": "tool_use_id",
     "claude_bash_commands": [],
     "claude_bash_files": [],
@@ -225,21 +228,23 @@
     "claude_tool_files": [
       "internal/cloudapi/clientcfg/clientcfg.go",
       "internal/cloudapi/v6/client.go",
+      "cloudapi/config.go",
       "internal/cloudapi/v6/api.go",
       "internal/cloudapi/provisioning/doc.go",
       "internal/cloudapi/provisioning/errors.go",
       "internal/cloudapi/provisioning/http_client.go",
-      "internal/cloudapi/provisioning/runtime_config.go",
       "internal/cloudapi/provisioning/client.go",
       "internal/cloudapi/provisioning/api.go",
       "internal/cloudapi/provisioning/notify.go",
       "internal/cloudapi/provisioning/provision.go",
       "internal/cloudapi/provisioning/test/server.go",
-      "cloudapi/config.go",
       "output/cloud/expv2/metrics_client.go",
       "output/cloud/expv2/output.go",
       "internal/output/cloud/output.go",
-      "internal/cmd/outputs_cloud.go"
+      "internal/cmd/outputs_cloud.go",
+      "internal/cmd/outputs_cloud_local.go",
+      "internal/cmd/cloud_run.go",
+      "internal/cmd/root.go"
     ]
   },
   "outcome": {
@@ -255,121 +260,109 @@
       "pass": true,
       "rc": 0,
       "timed_out": false,
-      "seconds": 4.1,
+      "seconds": 4.5,
       "passed_tests": 178,
       "failed_tests": [],
       "failed_packages": [],
       "build_failed_packages": [],
       "packages": 7,
-      "stderr_tail": ""
+      "stderr_tail": "",
+      "flaky_retry": null,
+      "failed_tests_before_retry": null,
+      "failed_packages_before_retry": null,
+      "unrelated_failed_packages": null,
+      "unrelated_retry": null,
+      "env_failure": null
     },
     "full_suite": {
-      "pass": false,
-      "rc": 1,
+      "pass": true,
+      "rc": 0,
       "timed_out": false,
-      "seconds": 2387.5,
-      "passed_tests": 5990,
-      "failed_tests": [
-        "go.k6.io/k6/v2/internal/js/modules/k6/websockets.TestLockingUpWithAJustGeneralCancel"
-      ],
-      "failed_packages": [
-        "go.k6.io/k6/v2/internal/js/modules/k6/websockets"
-      ],
+      "seconds": 62.0,
+      "passed_tests": 5991,
+      "failed_tests": [],
+      "failed_packages": [],
       "build_failed_packages": [],
       "packages": 131,
       "stderr_tail": "",
-      "unrelated_failed_packages": {
-        "unrelated": [
-          "go.k6.io/k6/v2/internal/js/modules/k6/websockets"
-        ],
-        "related": [],
-        "touched": [
-          "go.k6.io/k6/v2/cloudapi",
-          "go.k6.io/k6/v2/internal/cloudapi/clientcfg",
-          "go.k6.io/k6/v2/internal/cloudapi/provisioning",
-          "go.k6.io/k6/v2/internal/cloudapi/provisioning/test",
-          "go.k6.io/k6/v2/internal/cloudapi/v6",
-          "go.k6.io/k6/v2/internal/cmd",
-          "go.k6.io/k6/v2/internal/output/cloud",
-          "go.k6.io/k6/v2/output/cloud/expv2"
-        ],
-        "computed_post_hoc": true
-      }
+      "flaky_retry": null,
+      "failed_tests_before_retry": null,
+      "failed_packages_before_retry": null,
+      "unrelated_failed_packages": null,
+      "unrelated_retry": null,
+      "env_failure": null
     },
     "hidden_pass": true,
-    "tree_pass": false,
-    "pass": false,
+    "tree_pass": true,
+    "pass": true,
     "hidden_test_tampered": false,
     "tampered_files": []
   },
   "diff": {
-    "files_touched": 17,
-    "code_added": 1313,
-    "code_removed": 80,
+    "files_touched": 19,
+    "code_added": 1486,
+    "code_removed": 124,
     "test_added": 0,
     "test_removed": 0,
     "doc_added": 0,
     "other_added": 0,
     "gomod_changed": false,
     "files_outside_author_set": [
-      "internal/cloudapi/provisioning/runtime_config.go"
+      "internal/cmd/cloud_run.go",
+      "internal/cmd/outputs_cloud_local.go",
+      "internal/cmd/root.go"
     ],
     "stray_binaries": [],
-    "patch_sha256": "0ef3674d937b39647c9d4bc99d0ff86c8df0d32cf52799068c4685c0b47b0cde"
+    "patch_sha256": "f963efed79bc12f824e2f6129cd41aee449c49a55282a1e09b3900af8b84c60f"
   },
   "diff_files": {
     "cloudapi/config.go": {
-      "added": 13,
+      "added": 18,
       "removed": 0,
       "class": "code"
     },
     "internal/cloudapi/clientcfg/clientcfg.go": {
-      "added": 13,
+      "added": 15,
       "removed": 0,
       "class": "code"
     },
     "internal/cloudapi/provisioning/api.go": {
-      "added": 230,
+      "added": 292,
       "removed": 0,
       "class": "code"
     },
     "internal/cloudapi/provisioning/client.go": {
-      "added": 90,
+      "added": 88,
       "removed": 0,
       "class": "code"
     },
     "internal/cloudapi/provisioning/doc.go": {
-      "added": 11,
+      "added": 14,
       "removed": 0,
       "class": "code"
     },
     "internal/cloudapi/provisioning/errors.go": {
-      "added": 62,
+      "added": 95,
       "removed": 0,
       "class": "code"
     },
     "internal/cloudapi/provisioning/http_client.go": {
-      "added": 142,
+      "added": 139,
       "removed": 0,
       "class": "code"
     },
     "internal/cloudapi/provisioning/notify.go": {
-      "added": 61,
+      "added": 92,
       "removed": 0,
       "class": "code"
     },
     "internal/cloudapi/provisioning/provision.go": {
-      "added": 112,
-      "removed": 0,
-      "class": "code"
-    },
-    "internal/cloudapi/provisioning/runtime_config.go": {
-      "added": 58,
+      "added": 123,
       "removed": 0,
       "class": "code"
     },
     "internal/cloudapi/provisioning/test/server.go": {
-      "added": 189,
+      "added": 191,
       "removed": 0,
       "class": "code"
     },
@@ -383,36 +376,48 @@
       "removed": 2,
       "class": "code"
     },
+    "internal/cmd/cloud_run.go": {
+      "added": 1,
+      "removed": 1,
+      "class": "code"
+    },
     "internal/cmd/outputs_cloud.go": {
-      "added": 104,
-      "removed": 54,
+      "added": 27,
+      "removed": 99,
+      "class": "code"
+    },
+    "internal/cmd/outputs_cloud_local.go": {
+      "added": 161,
+      "removed": 0,
+      "class": "code"
+    },
+    "internal/cmd/root.go": {
+      "added": 1,
+      "removed": 1,
       "class": "code"
     },
     "internal/output/cloud/output.go": {
-      "added": 107,
+      "added": 114,
       "removed": 2,
       "class": "code"
     },
     "output/cloud/expv2/metrics_client.go": {
-      "added": 31,
-      "removed": 21,
+      "added": 28,
+      "removed": 18,
       "class": "code"
     },
     "output/cloud/expv2/output.go": {
-      "added": 43,
+      "added": 40,
       "removed": 1,
       "class": "code"
     }
   },
   "cost": {
-    "claude_usd": 12.602867750000001,
+    "claude_usd": 14.929325249999998,
     "gemini_usd": 0.0,
-    "total_usd": 12.602867750000001
+    "total_usd": 14.929325249999998
   },
-  "notes": [
-    "post hoc (2026-09-15T22:55Z): full-suite failure confined to ['go.k6.io/k6/v2/internal/js/modules/k6/websockets'], which has no dependency on the agent's change; reclassified as an environment failure and rerun"
-  ],
+  "notes": [],
   "prices_lock_sha256": "606c43d82972168c3159fa1c45d6cf843d6e52a9cdcc0792cead13e3a71fbc2d",
-  "env_failure": "suite_failure_in_unrelated_package",
-  "scheduler_class": "infra"
+  "scheduler_class": "final"
 }
