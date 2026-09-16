@@ -405,9 +405,7 @@
     "gemini_usd": 0.0,
     "total_usd": 33.88966569999998
   },
-  "notes": [
-    "post hoc 2026-09-16T01:25Z: final message was an API error (); classified infra and rerun"
-  ],
+  "notes": [],
   "prices_lock_sha256": "606c43d82972168c3159fa1c45d6cf843d6e52a9cdcc0792cead13e3a71fbc2d",
-  "scheduler_class": "infra"
+  "scheduler_class": "final"
 }

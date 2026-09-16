@@ -124,6 +124,8 @@ class Scheduler(unittest.TestCase):
         self.assertEqual(schedule.classify(api_dead, None), "suspended")   # died of the network after a wake
         api_dead_awake = dict(api_dead, suspended_s=0.0)
         self.assertEqual(schedule.classify(api_dead_awake, None), "infra")   # same death without sleep: infrastructure
+        capped = {"suspended_s": 0.0, "claude": {"subtype": "error_max_turns", "is_error": True, "result_head": "", "errors": ["Reached maximum number of turns (80)"], "transcript": {"present": True, "tool_calls": {"Bash": 40}}, "total_cost_usd": 2.5}, "agy": {}}
+        self.assertEqual(schedule.classify(capped, None), "final")         # a cap is the arm's failure, never infrastructure
         self.assertEqual(schedule.classify(slept_ok, None), "final")      # completed after the wake: kept, flagged
         self.assertEqual(schedule.classify(slept_dead, None), "suspended")  # died of the sleep: rerun
 

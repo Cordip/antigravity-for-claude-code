@@ -161,7 +161,12 @@ Results will appear here as `bench:table` blocks when the run completes.
   message "API Error: getaddrinfo ENOTFOUND oauth2.googleapis.com" (Claude Code reports
   `subtype: success`, `is_error: true`), 0 files changed. A run whose final message is an
   API error is now classified `suspended` (after sleep) or `infra` (otherwise) and rerun;
-  this one was reclassified post hoc and requeued.
+  this one was reclassified post hoc and requeued, together with two other network deaths
+  (`cli-attach__hybrid-inst__r1`, `zoekt-1105__hybrid-forced__r1`, both "ENOTFOUND" with 0
+  files changed). Two Sonnet runs that had hit the turn cap were swept up by the first
+  version of that rule and put back as the capped failures they are (`repairs` in
+  `queue.json`); a cap is never treated as infrastructure. Note for the write-up: the
+  turn cap binds for `solo-sonnet` (81 turns on a small task with a passing tree).
 
 ## Versions and provenance
 

@@ -761,7 +761,7 @@
       "arm": "solo-sonnet",
       "rep": 1,
       "size_class": "large",
-      "status": "pending",
+      "status": "done",
       "attempts": 1,
       "lane": "C",
       "started_at": "2026-09-15T15:21:01+00:00",
@@ -772,8 +772,8 @@
           "lane": "C",
           "started_ts": 1789485661.900824,
           "ended_ts": 1789492650.7372952,
-          "class": "infra",
-          "error": "final message was an API error after a wake (reclassified post hoc 2026-09-16T01:25Z)",
+          "class": "final",
+          "error": null,
           "pass": false,
           "total_usd": 33.88966569999998,
           "subtype": "error_max_turns"
@@ -977,7 +977,7 @@
       "arm": "solo-sonnet",
       "rep": 2,
       "size_class": "small",
-      "status": "pending",
+      "status": "done",
       "attempts": 1,
       "lane": "D",
       "started_at": "2026-09-15T18:20:53+00:00",
@@ -988,8 +988,8 @@
           "lane": "D",
           "started_ts": 1789496453.265824,
           "ended_ts": 1789497199.979448,
-          "class": "infra",
-          "error": "final message was an API error after a wake (reclassified post hoc 2026-09-16T01:25Z)",
+          "class": "final",
+          "error": null,
           "pass": false,
           "total_usd": 2.5319848999999994,
           "subtype": "error_max_turns"
@@ -2012,6 +2012,14 @@
         "cli-attach__hybrid-inst__r1",
         "cli-attach__solo-sonnet__r1",
         "zoekt-1105__hybrid-forced__r1"
+      ]
+    },
+    {
+      "at": "2026-09-16T01:19:56+00:00",
+      "reason": "reverted: two error_max_turns runs had been swept up by the API-error rule (they are capped failures, the arm's own)",
+      "items": [
+        "caddy-7995__solo-sonnet__r2",
+        "cli-attach__solo-sonnet__r1"
       ]
     }
   ]

@@ -138,7 +138,10 @@ def classify(rec: Optional[dict], error: Optional[str]) -> str:
     # Claude Code reports subtype "success" with is_error=true when the final message is an
     # API error (measured: "API Error: getaddrinfo ENOTFOUND oauth2.googleapis.com" right
     # after a wake, 0 files changed). That is the network, not the arm.
-    api_death = bool(c.get("is_error")) and (str(c.get("result_head") or "").startswith("API Error") or bool(c.get("errors")))
+    errs_txt = " ".join(c.get("errors") or []).lower()
+    api_death = bool(c.get("is_error")) and c.get("subtype") not in ("error_max_turns", "error_max_budget_usd", "killed_wall") and (
+        str(c.get("result_head") or "").startswith("API Error")
+        or any(k in errs_txt for k in ("enotfound", "econnreset", "etimedout", "429", "529", "overloaded", "rate limit")))
     if api_death:
         return "suspended" if (rec.get("suspended_s") or 0) > 30 else "infra"
     if (rec.get("suspended_s") or 0) > 30:
