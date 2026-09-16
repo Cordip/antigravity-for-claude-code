@@ -50,5 +50,14 @@
   "notes": [
     "operator's other interactive Claude sessions were running on the same GCP project during the run; billing reconciliation gap is reported, not corrected",
     "agy pinned to a copy of the 1.2.3 binary in ~/.cache/agy-bench/bin (agy self-updates; 1.2.2 -> 1.2.3 happened during the pilot)"
-  ]
+  ],
+  "raw_archive": {
+    "file": "full-raw-transcripts.tgz (kept by the operator; offered as a release asset)",
+    "sha256": "79158b85e4d1894c5afb301255ed81ddf437415ddfde87af61065062c431e5fa",
+    "bytes": 23861620,
+    "contents": "results/full/runs/**/raw (transcripts, result.json, agy_usage.log, tool_trace.jsonl) and judge/raw"
+  },
+  "finished_at": "2026-09-16T18:21:00Z",
+  "counted_runs": 75,
+  "skipped_items": 21
 }
