@@ -38,6 +38,31 @@ def _cost(r: dict) -> Optional[float]:
     return r.get("cost", {}).get("total_usd")
 
 
+_BILLED = None
+
+
+def billed_gemini_usd(r: dict) -> float:
+    """Gemini side at the unit prices the billing export showed for this project (see
+    prices.lock.json `_observed_billing`); pro-tier tokens keep the deck rate (no Pro SKU
+    rows were observed in the run window)."""
+    global _BILLED
+    if _BILLED is None:
+        from common import PRICES_LOCK
+        _BILLED = (read_json(PRICES_LOCK).get("_observed_billing") or {}).get("gemini_flash_38") or {"in": 0.75, "out": 3.75, "cached_in": 0.075}
+    usd = 0.0
+    for tier, bt in (r.get("agy", {}).get("by_tier") or {}).items():
+        if tier in ("flash", "flash-lo") or tier.startswith("gemini_flash"):
+            usd += (bt.get("input", 0) * _BILLED["in"] + bt.get("output", 0) * _BILLED["out"] + bt.get("cache_read", 0) * _BILLED["cached_in"]) / 1e6
+        else:
+            usd += bt.get("usd", 0.0)
+    return usd
+
+
+def _cost_billed(r: dict) -> Optional[float]:
+    c = r.get("cost", {}).get("claude_usd")
+    return None if c is None else c + billed_gemini_usd(r)
+
+
 def arm_summary(runs: List[dict]) -> dict:
     ok = [r for r in runs if r.get("status") == "ok" and not r.get("violations")]
     excluded = [r for r in runs if r.get("violations")]
@@ -51,6 +76,8 @@ def arm_summary(runs: List[dict]) -> dict:
         "hidden_pass": sum(1 for r in ok if r.get("outcome", {}).get("hidden_pass")),
         "cost_total_usd": total,
         "cost_of_pass_usd": round(total / len(passes), 4) if passes else None,
+        "cost_of_pass_billed_usd": (round(sum(_cost_billed(r) or 0 for r in ok) / len(passes), 4) if passes else None),
+        "gemini_billed_usd": round(sum(billed_gemini_usd(r) for r in ok), 4),
         "cost_pass_median": _median(pass_costs), "cost_pass_min": round(min(pass_costs), 4) if pass_costs else None,
         "cost_pass_max": round(max(pass_costs), 4) if pass_costs else None,
         "cost_all_median": _median(costs),
@@ -76,15 +103,16 @@ def arm_summary(runs: List[dict]) -> dict:
     }
 
 
-def per_task_cost_of_pass(runs: List[dict]) -> Dict[str, Dict[str, dict]]:
+def per_task_cost_of_pass(runs: List[dict], costf=None) -> Dict[str, Dict[str, dict]]:
     """task -> arm -> {cost, passes, n}."""
+    costf = costf or _cost
     out: Dict[str, Dict[str, dict]] = {}
     for r in runs:
         if r.get("status") != "ok" or r.get("violations"):
             continue
         t = out.setdefault(r["task_id"], {})
         a = t.setdefault(r["arm"], {"cost": 0.0, "passes": 0, "n": 0, "size_class": r.get("size_class")})
-        a["cost"] += _cost(r) or 0.0
+        a["cost"] += costf(r) or 0.0
         a["passes"] += 1 if r.get("outcome", {}).get("pass") else 0
         a["n"] += 1
     return out
@@ -240,6 +268,7 @@ def analyze(run_id: str, ref_arm: str = "solo-opus", boots: int = 10000, seed: i
     runs = load_runs(run_id)
     arms = sorted({r["arm"] for r in runs})
     per_task = per_task_cost_of_pass(runs)
+    per_task_billed = per_task_cost_of_pass(runs, _cost_billed)
     tasks = sorted(per_task)
     agg = {"schema": "bench.aggregate/1", "run_id": run_id, "generated_at": __import__("common").now_iso(),
            "n_runs": len(runs), "tasks": tasks, "arms": {}, "paired": {}, "by_size": {}, "judge": judge_summary(run_id, runs),
@@ -253,10 +282,12 @@ def analyze(run_id: str, ref_arm: str = "solo-opus", boots: int = 10000, seed: i
                                        for s in SIZES if any(r.get("size_class") == s for r in runs if r["arm"] == arm)}
         if arm != ref_arm and ref_arm in arms:
             agg["paired"]["%s_vs_%s" % (arm, ref_arm)] = bootstrap_ratio(per_task, arm, ref_arm, tasks, boots, seed)
+            agg.setdefault("paired_billed", {})["%s_vs_%s" % (arm, ref_arm)] = bootstrap_ratio(per_task_billed, arm, ref_arm, tasks, boots, seed)
             for s in SIZES:
                 st = [t for t in tasks if any(a.get("size_class") == s for a in per_task[t].values())]
                 if st:
                     agg["paired"]["%s_vs_%s@%s" % (arm, ref_arm, s)] = bootstrap_ratio(per_task, arm, ref_arm, st, boots, seed)
+                    agg["paired_billed"]["%s_vs_%s@%s" % (arm, ref_arm, s)] = bootstrap_ratio(per_task_billed, arm, ref_arm, st, boots, seed)
     out_dir = os.path.join(RESULTS_DIR, run_id)
     write_json(os.path.join(out_dir, "aggregate.json"), agg)
     write_text(os.path.join(out_dir, "tables.md"), render_tables(agg))
@@ -267,25 +298,27 @@ def render_block(agg: dict, kind: str) -> str:
     """One markdown table per kind; the doc guard regenerates quoted blocks with this."""
     L: List[str] = []
     if kind == "arms":
-        L.append("| arm | runs | pass | cost-of-pass $ | median $ among passes (min–max) | Claude $ | Gemini $ | wall med s | turns med | delegations med (0-runs) | denials med | warm starts | caps hit |")
-        L.append("|---|---|---|---|---|---|---|---|---|---|---|---|---|")
+        L.append("| arm | runs | pass | cost-of-pass $ (deck) | cost-of-pass $ (billed rates) | median $ among passes (min–max) | Claude $ | Gemini $ deck / billed | wall med s | turns med | delegations med (0-runs) | denials med | warm starts | caps hit |")
+        L.append("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
         for arm, a in agg["arms"].items():
-            L.append("| %s | %d | %d/%d | %s | %s (%s–%s) | %.2f | %.2f | %s | %s | %s (%d) | %s | %d | %d |" % (
-                arm, a["runs_ok"], a["pass"], a["runs_ok"], _f(a["cost_of_pass_usd"]), _f(a["cost_pass_median"]), _f(a["cost_pass_min"]),
-                _f(a["cost_pass_max"]), a["claude_usd"], a["gemini_usd"], _f(a["wall_median_s"]), _f(a["turns_median"]),
+            L.append("| %s | %d | %d/%d | %s | %s | %s (%s–%s) | %.2f | %.2f / %.2f | %s | %s | %s (%d) | %s | %d | %d |" % (
+                arm, a["runs_ok"], a["pass"], a["runs_ok"], _f(a["cost_of_pass_usd"]), _f(a.get("cost_of_pass_billed_usd")), _f(a["cost_pass_median"]), _f(a["cost_pass_min"]),
+                _f(a["cost_pass_max"]), a["claude_usd"], a["gemini_usd"], a.get("gemini_billed_usd") or 0.0, _f(a["wall_median_s"]), _f(a["turns_median"]),
                 _f(a["delegations_median"]), a["delegations_zero_runs"], _f(a["denials_median"]), a["warm_starts"], a["caps_hit"]))
     elif kind == "size":
-        L.append("| arm | size | runs | pass | cost-of-pass $ | median $ among passes | wall med s |")
-        L.append("|---|---|---|---|---|---|---|")
+        L.append("| arm | size | runs | pass | cost-of-pass $ (deck) | cost-of-pass $ (billed rates) | median $ among passes | wall med s |")
+        L.append("|---|---|---|---|---|---|---|---|")
         for arm, a in agg["arms"].items():
             for s_, b in a.get("by_size", {}).items():
-                L.append("| %s | %s | %d | %d/%d | %s | %s | %s |" % (arm, s_, b["runs_ok"], b["pass"], b["runs_ok"], _f(b["cost_of_pass_usd"]),
-                                                                  _f(b["cost_pass_median"]), _f(b["wall_median_s"])))
+                L.append("| %s | %s | %d | %d/%d | %s | %s | %s | %s |" % (arm, s_, b["runs_ok"], b["pass"], b["runs_ok"], _f(b["cost_of_pass_usd"]),
+                                                                       _f(b.get("cost_of_pass_billed_usd")), _f(b["cost_pass_median"]), _f(b["wall_median_s"])))
     elif kind == "paired":
-        L.append("| comparison | tasks | ratio | 95% CI | pass-rate diff | undefined draws |")
-        L.append("|---|---|---|---|---|---|")
+        L.append("| comparison | tasks | ratio (deck) | 95% CI | ratio (billed rates) | 95% CI | pass-rate diff | undefined draws |")
+        L.append("|---|---|---|---|---|---|---|---|")
+        pb = agg.get("paired_billed", {})
         for k, p in agg["paired"].items():
-            L.append("| %s | %d | %s | %s | %s | %d/%d |" % (k, p["n_tasks"], _f(p["point"]), p["ci95"], _f(p["pass_rate_diff"]), p["undefined_draws"], p["boot"]))
+            b = pb.get(k, {})
+            L.append("| %s | %d | %s | %s | %s | %s | %s | %d/%d |" % (k, p["n_tasks"], _f(p["point"]), p["ci95"], _f(b.get("point")), b.get("ci95"), _f(p["pass_rate_diff"]), p["undefined_draws"], p["boot"]))
     elif kind == "judge":
         j = agg.get("judge", {})
         if not j.get("present"):

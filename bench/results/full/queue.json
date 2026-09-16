@@ -25,11 +25,11 @@
       "arm": "hybrid-forced",
       "rep": 2,
       "size_class": "large",
-      "status": "running",
+      "status": "done",
       "attempts": 2,
       "lane": "E",
       "started_at": "2026-09-16T16:17:55+00:00",
-      "ended_at": "2026-09-16T06:28:23+00:00",
+      "ended_at": "2026-09-16T18:17:31+00:00",
       "history": [
         {
           "attempt": 1,
@@ -41,6 +41,17 @@
           "pass": false,
           "total_usd": 60.627361,
           "subtype": "killed_wall"
+        },
+        {
+          "attempt": 2,
+          "lane": "E",
+          "started_ts": 1789575475.4294772,
+          "ended_ts": 1789582651.564666,
+          "class": "final",
+          "error": null,
+          "pass": true,
+          "total_usd": 26.958000000000002,
+          "subtype": "success"
         }
       ]
     },

@@ -1,8 +1,8 @@
 {
   "schema": "bench.aggregate/1",
   "run_id": "full",
-  "generated_at": "2026-09-16T17:22:55+00:00",
-  "n_runs": 75,
+  "generated_at": "2026-09-16T18:24:27+00:00",
+  "n_runs": 76,
   "tasks": [
     "caddy-7877",
     "caddy-7888",
@@ -15,38 +15,39 @@
   ],
   "arms": {
     "hybrid-forced": {
-      "n": 18,
-      "runs_ok": 15,
-      "excluded": 3,
-      "pass": 14,
-      "pass_rate": 0.9333,
-      "hidden_pass": 14,
-      "cost_total_usd": 115.9819,
-      "cost_of_pass_usd": 8.2844,
-      "cost_pass_median": 6.4684,
+      "n": 19,
+      "runs_ok": 17,
+      "excluded": 2,
+      "pass": 16,
+      "pass_rate": 0.9412,
+      "hidden_pass": 16,
+      "cost_total_usd": 180.9655,
+      "cost_of_pass_usd": 11.3103,
+      "cost_of_pass_billed_usd": 14.8693,
+      "gemini_billed_usd": 113.8876,
+      "cost_pass_median": 6.7395,
       "cost_pass_min": 0.7374,
-      "cost_pass_max": 24.8746,
-      "cost_all_median": 6.6417,
-      "claude_usd": 82.612,
-      "gemini_usd": 33.3699,
-      "wall_median_s": 2254.0,
-      "turns_median": 34,
+      "cost_pass_max": 38.0256,
+      "cost_all_median": 6.7406,
+      "claude_usd": 124.0217,
+      "gemini_usd": 56.9438,
+      "wall_median_s": 2649.2,
+      "turns_median": 38,
       "delegations_median": 4,
       "delegations_zero_runs": 0,
-      "agy_writes_runs": 15,
+      "agy_writes_runs": 17,
       "claude_bash_writes": 0,
       "denials_median": 3,
       "warm_starts": 0,
       "caps_hit": 0,
       "tampered": 0,
-      "usage_reconciles": 15,
+      "usage_reconciles": 16,
       "slept_runs": 2,
-      "claude_usd_long_context_est": 97.682,
-      "runs_with_200k_requests": 2,
-      "tree_pass": 14,
+      "claude_usd_long_context_est": 165.8151,
+      "runs_with_200k_requests": 4,
+      "tree_pass": 16,
       "flaky_retry_passes": 0,
       "violations": {
-        "claude_side_write_in_forced_arm": 1,
         "executor_web_access": 2
       },
       "by_size": {
@@ -59,6 +60,8 @@
           "hidden_pass": 5,
           "cost_total_usd": 12.0126,
           "cost_of_pass_usd": 2.4025,
+          "cost_of_pass_billed_usd": 3.2577,
+          "gemini_billed_usd": 8.5518,
           "cost_pass_median": 2.933,
           "cost_pass_min": 0.7374,
           "cost_pass_max": 4.0617,
@@ -92,6 +95,8 @@
           "hidden_pass": 6,
           "cost_total_usd": 39.7262,
           "cost_of_pass_usd": 6.621,
+          "cost_of_pass_billed_usd": 8.7476,
+          "gemini_billed_usd": 25.5189,
           "cost_pass_median": 6.7395,
           "cost_pass_min": 1.3322,
           "cost_pass_max": 11.0524,
@@ -119,38 +124,39 @@
           }
         },
         "large": {
-          "n": 6,
-          "runs_ok": 4,
-          "excluded": 2,
-          "pass": 3,
-          "pass_rate": 0.75,
-          "hidden_pass": 3,
-          "cost_total_usd": 64.2431,
-          "cost_of_pass_usd": 21.4144,
-          "cost_pass_median": 20.5332,
+          "n": 7,
+          "runs_ok": 6,
+          "excluded": 1,
+          "pass": 5,
+          "pass_rate": 0.8333,
+          "hidden_pass": 5,
+          "cost_total_usd": 129.2267,
+          "cost_of_pass_usd": 25.8453,
+          "cost_of_pass_billed_usd": 33.827,
+          "gemini_billed_usd": 79.8169,
+          "cost_pass_median": 24.8746,
           "cost_pass_min": 12.0947,
-          "cost_pass_max": 24.8746,
-          "cost_all_median": 16.3139,
-          "claude_usd": 47.9086,
-          "gemini_usd": 16.3345,
-          "wall_median_s": 6200.55,
-          "turns_median": 71.0,
+          "cost_pass_max": 38.0256,
+          "cost_all_median": 22.7039,
+          "claude_usd": 89.3182,
+          "gemini_usd": 39.9085,
+          "wall_median_s": 6950.7,
+          "turns_median": 76.0,
           "delegations_median": 14.0,
           "delegations_zero_runs": 0,
-          "agy_writes_runs": 4,
+          "agy_writes_runs": 6,
           "claude_bash_writes": 0,
-          "denials_median": 5.5,
+          "denials_median": 5.0,
           "warm_starts": 0,
           "caps_hit": 0,
           "tampered": 0,
-          "usage_reconciles": 4,
+          "usage_reconciles": 5,
           "slept_runs": 2,
-          "claude_usd_long_context_est": 62.9974,
-          "runs_with_200k_requests": 2,
-          "tree_pass": 3,
+          "claude_usd_long_context_est": 131.1305,
+          "runs_with_200k_requests": 4,
+          "tree_pass": 5,
           "flaky_retry_passes": 0,
           "violations": {
-            "claude_side_write_in_forced_arm": 1,
             "executor_web_access": 1
           }
         }
@@ -165,6 +171,8 @@
       "hidden_pass": 16,
       "cost_total_usd": 220.3838,
       "cost_of_pass_usd": 13.774,
+      "cost_of_pass_billed_usd": 17.0618,
+      "gemini_billed_usd": 119.6553,
       "cost_pass_median": 6.1391,
       "cost_pass_min": 1.0605,
       "cost_pass_max": 48.1653,
@@ -198,6 +206,8 @@
           "hidden_pass": 4,
           "cost_total_usd": 13.1401,
           "cost_of_pass_usd": 3.285,
+          "cost_of_pass_billed_usd": 4.4206,
+          "gemini_billed_usd": 9.0847,
           "cost_pass_median": 3.1798,
           "cost_pass_min": 1.0605,
           "cost_pass_max": 5.7201,
@@ -231,6 +241,8 @@
           "hidden_pass": 6,
           "cost_total_usd": 35.0587,
           "cost_of_pass_usd": 5.8431,
+          "cost_of_pass_billed_usd": 7.4069,
+          "gemini_billed_usd": 19.8118,
           "cost_pass_median": 5.8953,
           "cost_pass_min": 2.1854,
           "cost_pass_max": 12.2085,
@@ -264,6 +276,8 @@
           "hidden_pass": 6,
           "cost_total_usd": 172.185,
           "cost_of_pass_usd": 28.6975,
+          "cost_of_pass_billed_usd": 35.1442,
+          "gemini_billed_usd": 90.7589,
           "cost_pass_median": 28.1104,
           "cost_pass_min": 10.5077,
           "cost_pass_max": 48.1653,
@@ -299,6 +313,8 @@
       "hidden_pass": 21,
       "cost_total_usd": 172.5496,
       "cost_of_pass_usd": 8.2166,
+      "cost_of_pass_billed_usd": 8.2166,
+      "gemini_billed_usd": 0.0,
       "cost_pass_median": 4.3153,
       "cost_pass_min": 0.6521,
       "cost_pass_max": 40.9225,
@@ -332,6 +348,8 @@
           "hidden_pass": 5,
           "cost_total_usd": 9.9226,
           "cost_of_pass_usd": 1.9845,
+          "cost_of_pass_billed_usd": 1.9845,
+          "gemini_billed_usd": 0.0,
           "cost_pass_median": 2.171,
           "cost_pass_min": 0.6521,
           "cost_pass_max": 3.3309,
@@ -365,6 +383,8 @@
           "hidden_pass": 8,
           "cost_total_usd": 35.2872,
           "cost_of_pass_usd": 4.4109,
+          "cost_of_pass_billed_usd": 4.4109,
+          "gemini_billed_usd": 0.0,
           "cost_pass_median": 4.0746,
           "cost_pass_min": 1.7874,
           "cost_pass_max": 9.3262,
@@ -398,6 +418,8 @@
           "hidden_pass": 8,
           "cost_total_usd": 127.3397,
           "cost_of_pass_usd": 15.9175,
+          "cost_of_pass_billed_usd": 15.9175,
+          "gemini_billed_usd": 0.0,
           "cost_pass_median": 11.8325,
           "cost_pass_min": 4.3153,
           "cost_pass_max": 40.9225,
@@ -433,6 +455,8 @@
       "hidden_pass": 18,
       "cost_total_usd": 80.5006,
       "cost_of_pass_usd": 4.7353,
+      "cost_of_pass_billed_usd": 4.7353,
+      "gemini_billed_usd": 0.0,
       "cost_pass_median": 2.2753,
       "cost_pass_min": 0.4593,
       "cost_pass_max": 8.8268,
@@ -466,6 +490,8 @@
           "hidden_pass": 5,
           "cost_total_usd": 7.9139,
           "cost_of_pass_usd": 1.9785,
+          "cost_of_pass_billed_usd": 1.9785,
+          "gemini_billed_usd": 0.0,
           "cost_pass_median": 1.3248,
           "cost_pass_min": 0.5986,
           "cost_pass_max": 2.1337,
@@ -499,6 +525,8 @@
           "hidden_pass": 8,
           "cost_total_usd": 14.5081,
           "cost_of_pass_usd": 1.8135,
+          "cost_of_pass_billed_usd": 1.8135,
+          "gemini_billed_usd": 0.0,
           "cost_pass_median": 2.457,
           "cost_pass_min": 0.4593,
           "cost_pass_max": 2.9531,
@@ -532,6 +560,8 @@
           "hidden_pass": 5,
           "cost_total_usd": 58.0786,
           "cost_of_pass_usd": 11.6157,
+          "cost_of_pass_billed_usd": 11.6157,
+          "gemini_billed_usd": 0.0,
           "cost_pass_median": 2.7266,
           "cost_pass_min": 2.2092,
           "cost_pass_max": 8.8268,
@@ -563,16 +593,16 @@
     "hybrid-forced_vs_solo-opus": {
       "arm": "hybrid-forced",
       "ref": "solo-opus",
-      "n_tasks": 7,
-      "point": 1.603,
+      "n_tasks": 8,
+      "point": 1.3765,
       "ci95": [
-        1.2233,
-        2.0827
+        1.0356,
+        1.8983
       ],
       "boot": 10000,
       "undefined_draws": 0,
       "seed": 20260914,
-      "pass_rate_diff": -0.0667,
+      "pass_rate_diff": -0.0588,
       "per_task": [
         {
           "task_id": "caddy-7877",
@@ -603,6 +633,12 @@
           "arm_cop": 6.8347940833333345,
           "ref_cop": 4.304048250000001,
           "size_class": "medium"
+        },
+        {
+          "task_id": "cli-attach",
+          "arm_cop": 32.491785750000005,
+          "ref_cop": 37.177185124999994,
+          "size_class": "large"
         },
         {
           "task_id": "k6-6169",
@@ -683,17 +719,23 @@
     "hybrid-forced_vs_solo-opus@large": {
       "arm": "hybrid-forced",
       "ref": "solo-opus",
-      "n_tasks": 2,
-      "point": 2.4249,
+      "n_tasks": 3,
+      "point": 1.6237,
       "ci95": [
-        2.0268,
-        2.5213
+        0.874,
+        2.5493
       ],
       "boot": 10000,
       "undefined_draws": 0,
       "seed": 20260914,
-      "pass_rate_diff": -0.25,
+      "pass_rate_diff": -0.1667,
       "per_task": [
+        {
+          "task_id": "cli-attach",
+          "arm_cop": 32.491785750000005,
+          "ref_cop": 37.177185124999994,
+          "size_class": "large"
+        },
         {
           "task_id": "k6-6169",
           "arm_cop": 26.074201875,
@@ -1032,7 +1074,7 @@
   "by_size": {},
   "judge": {
     "present": true,
-    "records_ok": 164,
+    "records_ok": 165,
     "records_failed": 0,
     "by_arm": {
       "solo-opus": {
@@ -1081,14 +1123,14 @@
       },
       "hybrid-forced": {
         "claude": {
-          "n": 17,
-          "mean": 3.784,
-          "consistency": 3.941,
-          "edge_cases": 3.765,
-          "scope": 3.941,
-          "readability": 3.882,
-          "robustness": 3.824,
-          "maintainability": 3.353
+          "n": 18,
+          "mean": 3.713,
+          "consistency": 3.889,
+          "edge_cases": 3.722,
+          "scope": 3.833,
+          "readability": 3.778,
+          "robustness": 3.778,
+          "maintainability": 3.278
         },
         "gemini": {
           "n": 17,
@@ -1204,7 +1246,7 @@
       "within1_pct": 0.598
     },
     "judge_vs_pass_pointbiserial": {
-      "claude": 0.3408,
+      "claude": 0.3127,
       "gemini": 0.2031
     }
   },
@@ -1226,12 +1268,6 @@
       ]
     },
     {
-      "run_key": "cli-attach__hybrid-forced__r1",
-      "violations": [
-        "claude_side_write_in_forced_arm"
-      ]
-    },
-    {
       "run_key": "zoekt-1105__hybrid-forced__r1",
       "violations": [
         "executor_web_access"
@@ -1240,38 +1276,39 @@
   ],
   "sensitivity_no_sleep": {
     "hybrid-forced": {
-      "n": 16,
-      "runs_ok": 13,
-      "excluded": 3,
-      "pass": 13,
+      "n": 17,
+      "runs_ok": 15,
+      "excluded": 2,
+      "pass": 15,
       "pass_rate": 1.0,
-      "hidden_pass": 13,
-      "cost_total_usd": 88.7081,
-      "cost_of_pass_usd": 6.8237,
-      "cost_pass_median": 6.295,
+      "hidden_pass": 15,
+      "cost_total_usd": 153.6917,
+      "cost_of_pass_usd": 10.2461,
+      "cost_of_pass_billed_usd": 13.6271,
+      "gemini_billed_usd": 101.4291,
+      "cost_pass_median": 6.6417,
       "cost_pass_min": 0.7374,
-      "cost_pass_max": 24.8746,
-      "cost_all_median": 6.295,
-      "claude_usd": 61.5675,
-      "gemini_usd": 27.1406,
-      "wall_median_s": 2113.9,
-      "turns_median": 33,
+      "cost_pass_max": 38.0256,
+      "cost_all_median": 6.6417,
+      "claude_usd": 102.9771,
+      "gemini_usd": 50.7145,
+      "wall_median_s": 2254.0,
+      "turns_median": 34,
       "delegations_median": 4,
       "delegations_zero_runs": 0,
-      "agy_writes_runs": 13,
+      "agy_writes_runs": 15,
       "claude_bash_writes": 0,
-      "denials_median": 2,
+      "denials_median": 3,
       "warm_starts": 0,
       "caps_hit": 0,
       "tampered": 0,
-      "usage_reconciles": 13,
+      "usage_reconciles": 14,
       "slept_runs": 0,
-      "claude_usd_long_context_est": 72.1826,
-      "runs_with_200k_requests": 1,
-      "tree_pass": 13,
+      "claude_usd_long_context_est": 140.3158,
+      "runs_with_200k_requests": 3,
+      "tree_pass": 15,
       "flaky_retry_passes": 0,
       "violations": {
-        "claude_side_write_in_forced_arm": 1,
         "executor_web_access": 2
       }
     },
@@ -1284,6 +1321,8 @@
       "hidden_pass": 14,
       "cost_total_usd": 191.4173,
       "cost_of_pass_usd": 13.6727,
+      "cost_of_pass_billed_usd": 16.8835,
+      "gemini_billed_usd": 98.3037,
       "cost_pass_median": 5.9221,
       "cost_pass_min": 1.0605,
       "cost_pass_max": 48.1653,
@@ -1317,6 +1356,8 @@
       "hidden_pass": 20,
       "cost_total_usd": 157.6203,
       "cost_of_pass_usd": 7.881,
+      "cost_of_pass_billed_usd": 7.881,
+      "gemini_billed_usd": 0.0,
       "cost_pass_median": 4.2947,
       "cost_pass_min": 0.6521,
       "cost_pass_max": 40.9225,
@@ -1350,6 +1391,8 @@
       "hidden_pass": 18,
       "cost_total_usd": 80.5006,
       "cost_of_pass_usd": 4.7353,
+      "cost_of_pass_billed_usd": 4.7353,
+      "gemini_billed_usd": 0.0,
       "cost_pass_median": 2.2753,
       "cost_pass_min": 0.4593,
       "cost_pass_max": 8.8268,
@@ -1373,6 +1416,200 @@
       "tree_pass": 18,
       "flaky_retry_passes": 0,
       "violations": {}
+    }
+  },
+  "paired_billed": {
+    "hybrid-forced_vs_solo-opus": {
+      "arm": "hybrid-forced",
+      "ref": "solo-opus",
+      "n_tasks": 8,
+      "point": 1.8097,
+      "ci95": [
+        1.3986,
+        2.4364
+      ],
+      "boot": 10000,
+      "undefined_draws": 0,
+      "seed": 20260914,
+      "pass_rate_diff": -0.0588,
+      "per_task": [
+        {
+          "task_id": "caddy-7877",
+          "arm_cop": 0.90761725,
+          "ref_cop": 0.7287248749999999,
+          "size_class": "small"
+        },
+        {
+          "task_id": "caddy-7888",
+          "arm_cop": 1.82135055,
+          "ref_cop": 2.024355083333333,
+          "size_class": "medium"
+        },
+        {
+          "task_id": "caddy-7913",
+          "arm_cop": 11.992110625,
+          "ref_cop": 8.151014374999999,
+          "size_class": "medium"
+        },
+        {
+          "task_id": "caddy-7995",
+          "arm_cop": 4.824420966666666,
+          "ref_cop": 2.8217320000000004,
+          "size_class": "small"
+        },
+        {
+          "task_id": "cli-14136",
+          "arm_cop": 8.893350416666667,
+          "ref_cop": 4.304048250000001,
+          "size_class": "medium"
+        },
+        {
+          "task_id": "cli-attach",
+          "arm_cop": 44.27874452500001,
+          "ref_cop": 37.177185124999994,
+          "size_class": "large"
+        },
+        {
+          "task_id": "k6-6169",
+          "arm_cop": 32.460002599999996,
+          "ref_cop": 12.864748916666663,
+          "size_class": "large"
+        },
+        {
+          "task_id": "zoekt-1105",
+          "arm_cop": 15.657661649999998,
+          "ref_cop": 4.797041083333334,
+          "size_class": "large"
+        }
+      ]
+    },
+    "hybrid-inst_vs_solo-opus": {
+      "arm": "hybrid-inst",
+      "ref": "solo-opus",
+      "n_tasks": 8,
+      "point": 2.0765,
+      "ci95": [
+        1.6703,
+        2.6609
+      ],
+      "boot": 10000,
+      "undefined_draws": 0,
+      "seed": 20260914,
+      "pass_rate_diff": 0.0,
+      "per_task": [
+        {
+          "task_id": "caddy-7877",
+          "arm_cop": 1.432538225,
+          "ref_cop": 0.7287248749999999,
+          "size_class": "small"
+        },
+        {
+          "task_id": "caddy-7888",
+          "arm_cop": 3.26941065,
+          "ref_cop": 2.024355083333333,
+          "size_class": "medium"
+        },
+        {
+          "task_id": "caddy-7913",
+          "arm_cop": 11.6743034,
+          "ref_cop": 8.151014374999999,
+          "size_class": "medium"
+        },
+        {
+          "task_id": "caddy-7995",
+          "arm_cop": 7.408684575,
+          "ref_cop": 2.8217320000000004,
+          "size_class": "small"
+        },
+        {
+          "task_id": "cli-14136",
+          "arm_cop": 7.276874925,
+          "ref_cop": 4.304048250000001,
+          "size_class": "medium"
+        },
+        {
+          "task_id": "cli-attach",
+          "arm_cop": 54.161323875,
+          "ref_cop": 37.177185124999994,
+          "size_class": "large"
+        },
+        {
+          "task_id": "k6-6169",
+          "arm_cop": 33.6762699,
+          "ref_cop": 12.864748916666663,
+          "size_class": "large"
+        },
+        {
+          "task_id": "zoekt-1105",
+          "arm_cop": 17.59486535,
+          "ref_cop": 4.797041083333334,
+          "size_class": "large"
+        }
+      ]
+    },
+    "solo-sonnet_vs_solo-opus": {
+      "arm": "solo-sonnet",
+      "ref": "solo-opus",
+      "n_tasks": 8,
+      "point": 0.5763,
+      "ci95": [
+        0.4211,
+        0.8287
+      ],
+      "boot": 10000,
+      "undefined_draws": 0,
+      "seed": 20260914,
+      "pass_rate_diff": -0.15,
+      "per_task": [
+        {
+          "task_id": "caddy-7877",
+          "arm_cop": 0.61013465,
+          "ref_cop": 0.7287248749999999,
+          "size_class": "small"
+        },
+        {
+          "task_id": "caddy-7888",
+          "arm_cop": 0.5142594000000001,
+          "ref_cop": 2.024355083333333,
+          "size_class": "medium"
+        },
+        {
+          "task_id": "caddy-7913",
+          "arm_cop": 2.4824815500000006,
+          "ref_cop": 8.151014374999999,
+          "size_class": "medium"
+        },
+        {
+          "task_id": "caddy-7995",
+          "arm_cop": 3.3468019,
+          "ref_cop": 2.8217320000000004,
+          "size_class": "small"
+        },
+        {
+          "task_id": "cli-14136",
+          "arm_cop": 2.6667906,
+          "ref_cop": 4.304048250000001,
+          "size_class": "medium"
+        },
+        {
+          "task_id": "cli-attach",
+          "arm_cop": null,
+          "ref_cop": 37.177185124999994,
+          "size_class": "large"
+        },
+        {
+          "task_id": "k6-6169",
+          "arm_cop": 7.34397075,
+          "ref_cop": 12.864748916666663,
+          "size_class": "large"
+        },
+        {
+          "task_id": "zoekt-1105",
+          "arm_cop": 2.403690666666667,
+          "ref_cop": 4.797041083333334,
+          "size_class": "large"
+        }
+      ]
     }
   }
 }

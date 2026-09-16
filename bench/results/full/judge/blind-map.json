@@ -410,6 +410,56 @@
       "task_id": "k6-6169",
       "source": "run:k6-6169__solo-sonnet__r2",
       "diff_sha256": "74105cd26a9752c433d8457468d2a1677c0f545db7807c3a545d9e96c2d7cebc"
+    },
+    "c-eac31c": {
+      "task_id": "cli-attach",
+      "source": "null",
+      "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "c-625750": {
+      "task_id": "cli-attach",
+      "source": "run:cli-attach__solo-sonnet__r2",
+      "diff_sha256": "293282da9363a551df2a1eb5996373b73b1fd7c282826d9c2ceb8b2f4e79ed1b"
+    },
+    "c-263903": {
+      "task_id": "cli-attach",
+      "source": "author",
+      "diff_sha256": "84ebced84bb8a59da549c4dbccb3189de41b3c51fb48f50f669303c3c3f2da6e"
+    },
+    "c-3c50d2": {
+      "task_id": "cli-attach",
+      "source": "run:cli-attach__solo-sonnet__r1",
+      "diff_sha256": "3a18fb7f59f996505ce4147bd8e44f50c21de4e33ddac1fc5ac8b40bda78657a"
+    },
+    "c-14d33a": {
+      "task_id": "cli-attach",
+      "source": "run:cli-attach__hybrid-forced__r1",
+      "diff_sha256": "02f9df077643b9ac5dafd665b5ea8f4b6c8e3e306f1b54698b11a08608a56195"
+    },
+    "c-a84f6c": {
+      "task_id": "cli-attach",
+      "source": "run:cli-attach__solo-opus__r2",
+      "diff_sha256": "66ecfab22641acf50875763668717567ca4a6970aff4f0cbd201fb8675064734"
+    },
+    "c-a34fef": {
+      "task_id": "cli-attach",
+      "source": "run:cli-attach__solo-opus__r1",
+      "diff_sha256": "4069f344f72750d53d052e9c41920fb6122d64d80f41f045dd802ee694b6c9c4"
+    },
+    "c-5a3957": {
+      "task_id": "cli-attach",
+      "source": "run:cli-attach__hybrid-inst__r2",
+      "diff_sha256": "3e45718285051b2f12e5630ed84084d349e1d7307ae59b797cb2fedfa02a4220"
+    },
+    "c-b07125": {
+      "task_id": "cli-attach",
+      "source": "run:cli-attach__hybrid-forced__r2",
+      "diff_sha256": "f4de3f84c62c7bc7bab43981a41f8285c247eec5f19cc2be5f2e3a74eddac17e"
+    },
+    "c-167a90": {
+      "task_id": "cli-attach",
+      "source": "run:cli-attach__hybrid-inst__r1",
+      "diff_sha256": "9f3f515e869bc4090a6f9613a7d5f928cbbc402b84539af35a48f160357bc42b"
     }
   }
 }

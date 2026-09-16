@@ -2,46 +2,46 @@
 
 ## Per arm (all tasks)
 
-| arm | runs | pass | cost-of-pass $ | median $ among passes (min–max) | Claude $ | Gemini $ | wall med s | turns med | delegations med (0-runs) | denials med | warm starts | caps hit |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| hybrid-forced | 15 | 14/15 | 8.28 | 6.47 (0.74–24.87) | 82.61 | 33.37 | 2254.00 | 34 | 4 (0) | 3 | 0 | 0 |
-| hybrid-inst | 16 | 16/16 | 13.77 | 6.14 (1.06–48.17) | 153.33 | 67.05 | 2974.25 | 59.50 | 4.00 (0) | 4.50 | 3 | 0 |
-| solo-opus | 21 | 21/21 | 8.22 | 4.32 (0.65–40.92) | 172.55 | 0.00 | 653.10 | 63 | 0 (21) | 2 | 0 | 0 |
-| solo-sonnet | 20 | 17/20 | 4.74 | 2.28 (0.46–8.83) | 80.50 | 0.00 | 676.40 | 69.00 | 0.00 (20) | 3.00 | 0 | 2 |
+| arm | runs | pass | cost-of-pass $ (deck) | cost-of-pass $ (billed rates) | median $ among passes (min–max) | Claude $ | Gemini $ deck / billed | wall med s | turns med | delegations med (0-runs) | denials med | warm starts | caps hit |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| hybrid-forced | 17 | 16/17 | 11.31 | 14.87 | 6.74 (0.74–38.03) | 124.02 | 56.94 / 113.89 | 2649.20 | 38 | 4 (0) | 3 | 0 | 0 |
+| hybrid-inst | 16 | 16/16 | 13.77 | 17.06 | 6.14 (1.06–48.17) | 153.33 | 67.05 / 119.66 | 2974.25 | 59.50 | 4.00 (0) | 4.50 | 3 | 0 |
+| solo-opus | 21 | 21/21 | 8.22 | 8.22 | 4.32 (0.65–40.92) | 172.55 | 0.00 / 0.00 | 653.10 | 63 | 0 (21) | 2 | 0 | 0 |
+| solo-sonnet | 20 | 17/20 | 4.74 | 4.74 | 2.28 (0.46–8.83) | 80.50 | 0.00 / 0.00 | 676.40 | 69.00 | 0.00 (20) | 3.00 | 0 | 2 |
 
 ## Per arm × size class
 
-| arm | size | runs | pass | cost-of-pass $ | median $ among passes | wall med s |
-|---|---|---|---|---|---|---|
-| hybrid-forced | small | 5 | 5/5 | 2.40 | 2.93 | 924.40 |
-| hybrid-forced | medium | 6 | 6/6 | 6.62 | 6.74 | 2451.60 |
-| hybrid-forced | large | 4 | 3/4 | 21.41 | 20.53 | 6200.55 |
-| hybrid-inst | small | 4 | 4/4 | 3.29 | 3.18 | 969.15 |
-| hybrid-inst | medium | 6 | 6/6 | 5.84 | 5.90 | 2074.60 |
-| hybrid-inst | large | 6 | 6/6 | 28.70 | 28.11 | 6580.00 |
-| solo-opus | small | 5 | 5/5 | 1.98 | 2.17 | 399.40 |
-| solo-opus | medium | 8 | 8/8 | 4.41 | 4.07 | 576.35 |
-| solo-opus | large | 8 | 8/8 | 15.92 | 11.83 | 1487.95 |
-| solo-sonnet | small | 5 | 4/5 | 1.98 | 1.32 | 485.10 |
-| solo-sonnet | medium | 8 | 8/8 | 1.81 | 2.46 | 630.70 |
-| solo-sonnet | large | 7 | 5/7 | 11.62 | 2.73 | 870.90 |
+| arm | size | runs | pass | cost-of-pass $ (deck) | cost-of-pass $ (billed rates) | median $ among passes | wall med s |
+|---|---|---|---|---|---|---|---|
+| hybrid-forced | small | 5 | 5/5 | 2.40 | 3.26 | 2.93 | 924.40 |
+| hybrid-forced | medium | 6 | 6/6 | 6.62 | 8.75 | 6.74 | 2451.60 |
+| hybrid-forced | large | 6 | 5/6 | 25.85 | 33.83 | 24.87 | 6950.70 |
+| hybrid-inst | small | 4 | 4/4 | 3.29 | 4.42 | 3.18 | 969.15 |
+| hybrid-inst | medium | 6 | 6/6 | 5.84 | 7.41 | 5.90 | 2074.60 |
+| hybrid-inst | large | 6 | 6/6 | 28.70 | 35.14 | 28.11 | 6580.00 |
+| solo-opus | small | 5 | 5/5 | 1.98 | 1.98 | 2.17 | 399.40 |
+| solo-opus | medium | 8 | 8/8 | 4.41 | 4.41 | 4.07 | 576.35 |
+| solo-opus | large | 8 | 8/8 | 15.92 | 15.92 | 11.83 | 1487.95 |
+| solo-sonnet | small | 5 | 4/5 | 1.98 | 1.98 | 1.32 | 485.10 |
+| solo-sonnet | medium | 8 | 8/8 | 1.81 | 1.81 | 2.46 | 630.70 |
+| solo-sonnet | large | 7 | 5/7 | 11.62 | 11.62 | 2.73 | 870.90 |
 
 ## Paired ratios (cost-of-pass, arm ÷ reference; task-level bootstrap)
 
-| comparison | tasks | ratio | 95% CI | pass-rate diff | undefined draws |
-|---|---|---|---|---|---|
-| hybrid-forced_vs_solo-opus | 7 | 1.60 | [1.2233, 2.0827] | -0.07 | 0/10000 |
-| hybrid-forced_vs_solo-opus@small | 2 | 1.21 | [1.0802, 1.2331] | 0.00 | 0/10000 |
-| hybrid-forced_vs_solo-opus@medium | 3 | 1.50 | [0.6581, 1.7067] | 0.00 | 0/10000 |
-| hybrid-forced_vs_solo-opus@large | 2 | 2.42 | [2.0268, 2.5213] | -0.25 | 0/10000 |
-| hybrid-inst_vs_solo-opus | 8 | 1.68 | [1.3377, 2.1172] | 0.00 | 0/10000 |
-| hybrid-inst_vs_solo-opus@small | 2 | 1.66 | [1.6361, 1.9059] | 0.00 | 0/10000 |
-| hybrid-inst_vs_solo-opus@medium | 3 | 1.32 | [1.1246, 1.3732] | 0.00 | 0/10000 |
-| hybrid-inst_vs_solo-opus@large | 3 | 1.80 | [1.1929, 2.8419] | 0.00 | 0/10000 |
-| solo-sonnet_vs_solo-opus | 8 | 0.58 | [0.4211, 0.8287] | -0.15 | 0/10000 |
-| solo-sonnet_vs_solo-opus@small | 2 | 1.00 | [0.8373, 1.1861] | -0.20 | 0/10000 |
-| solo-sonnet_vs_solo-opus@medium | 3 | 0.41 | [0.254, 0.6196] | 0.00 | 0/10000 |
-| solo-sonnet_vs_solo-opus@large | 3 | 0.73 | [0.4861, 1.6266] | -0.29 | 360/10000 |
+| comparison | tasks | ratio (deck) | 95% CI | ratio (billed rates) | 95% CI | pass-rate diff | undefined draws |
+|---|---|---|---|---|---|---|---|
+| hybrid-forced_vs_solo-opus | 8 | 1.38 | [1.0356, 1.8983] | 1.81 | [1.3986, 2.4364] | -0.06 | 0/10000 |
+| hybrid-forced_vs_solo-opus@small | 2 | 1.21 | [1.0802, 1.2331] | — | None | 0.00 | 0/10000 |
+| hybrid-forced_vs_solo-opus@medium | 3 | 1.50 | [0.6581, 1.7067] | — | None | 0.00 | 0/10000 |
+| hybrid-forced_vs_solo-opus@large | 3 | 1.62 | [0.874, 2.5493] | — | None | -0.17 | 0/10000 |
+| hybrid-inst_vs_solo-opus | 8 | 1.68 | [1.3377, 2.1172] | 2.08 | [1.6703, 2.6609] | 0.00 | 0/10000 |
+| hybrid-inst_vs_solo-opus@small | 2 | 1.66 | [1.6361, 1.9059] | — | None | 0.00 | 0/10000 |
+| hybrid-inst_vs_solo-opus@medium | 3 | 1.32 | [1.1246, 1.3732] | — | None | 0.00 | 0/10000 |
+| hybrid-inst_vs_solo-opus@large | 3 | 1.80 | [1.1929, 2.8419] | — | None | 0.00 | 0/10000 |
+| solo-sonnet_vs_solo-opus | 8 | 0.58 | [0.4211, 0.8287] | 0.58 | [0.4211, 0.8287] | -0.15 | 0/10000 |
+| solo-sonnet_vs_solo-opus@small | 2 | 1.00 | [0.8373, 1.1861] | — | None | -0.20 | 0/10000 |
+| solo-sonnet_vs_solo-opus@medium | 3 | 0.41 | [0.254, 0.6196] | — | None | 0.00 | 0/10000 |
+| solo-sonnet_vs_solo-opus@large | 3 | 0.73 | [0.4861, 1.6266] | — | None | -0.29 | 360/10000 |
 
 ## Judges (mean 1–5; author and empty-patch anchors included)
 
@@ -51,7 +51,7 @@
 | solo-opus | gemini | 19 | 4.74 | 4.74 | 4.63 | 4.79 | 4.95 | 4.58 | 4.74 |
 | solo-sonnet | claude | 18 | 3.81 | 4.00 | 3.56 | 4.06 | 4.00 | 3.67 | 3.56 |
 | solo-sonnet | gemini | 18 | 4.40 | 4.67 | 4.00 | 4.28 | 4.78 | 4.33 | 4.33 |
-| hybrid-forced | claude | 17 | 3.78 | 3.94 | 3.77 | 3.94 | 3.88 | 3.82 | 3.35 |
+| hybrid-forced | claude | 18 | 3.71 | 3.89 | 3.72 | 3.83 | 3.78 | 3.78 | 3.28 |
 | hybrid-forced | gemini | 17 | 4.64 | 4.82 | 4.41 | 4.59 | 4.76 | 4.71 | 4.53 |
 | author | gemini | 7 | 4.38 | 4.71 | 4.00 | 4.43 | 4.86 | 4.14 | 4.14 |
 | author | claude | 7 | 3.83 | 4.14 | 3.86 | 3.57 | 3.86 | 3.86 | 3.71 |
@@ -60,9 +60,8 @@
 | null | gemini | 7 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |
 | null | claude | 7 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |
 
-anchors: {"author_rank_by_task": {"claude": {"caddy-7877": "3/10", "caddy-7888": "9/12", "caddy-7913": "8/10", "caddy-7995": "9/13", "cli-14136": "4/13", "k6-6169": "8/12", "zoekt-1105": "9/12"}, "gemini": {"caddy-7877": "2/10", "caddy-7888": "11/12", "caddy-7913": "8/10", "caddy-7995": "6/13", "cli-14136": "11/13", "k6-6169": "7/12", "zoekt-1105": "11/12"}}, "null_max_by_judge": {"claude": 1.0, "gemini": 1.0}, "null_mean_by_judge": {"claude": 1.0, "gemini": 1.0}}; agreement: {"n_candidates_both": 82, "spearman_mean": 0.353, "within1_pct": 0.598}; judge-vs-pass: {"claude": 0.3408, "gemini": 0.2031}; failed judge calls: 0
+anchors: {"author_rank_by_task": {"claude": {"caddy-7877": "3/10", "caddy-7888": "9/12", "caddy-7913": "8/10", "caddy-7995": "9/13", "cli-14136": "4/13", "k6-6169": "8/12", "zoekt-1105": "9/12"}, "gemini": {"caddy-7877": "2/10", "caddy-7888": "11/12", "caddy-7913": "8/10", "caddy-7995": "6/13", "cli-14136": "11/13", "k6-6169": "7/12", "zoekt-1105": "11/12"}}, "null_max_by_judge": {"claude": 1.0, "gemini": 1.0}, "null_mean_by_judge": {"claude": 1.0, "gemini": 1.0}}; agreement: {"n_candidates_both": 82, "spearman_mean": 0.353, "within1_pct": 0.598}; judge-vs-pass: {"claude": 0.3127, "gemini": 0.2031}; failed judge calls: 0
 
 ## Exclusions
 - caddy-7888__hybrid-forced__r1: executor_web_access
-- cli-attach__hybrid-forced__r1: claude_side_write_in_forced_arm
 - zoekt-1105__hybrid-forced__r1: executor_web_access

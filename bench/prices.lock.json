@@ -66,5 +66,28 @@
     "source_sha256": "9d1285beb79b8766eee6baf33af12eff77881cea1364d4caa7529f43dcad8372",
     "locked_at": "2026-09-14",
     "note": "Frozen copy used by bench/harness for every price in a run; a run records this file's sha256. Re-lock deliberately, never silently."
+  },
+  "_observed_billing": {
+    "source": "data-agent-bq.billing_export.gcp_billing_export_v1_01F395_17E646_FF0C82, SKU cost / usage.amount over 2026-09-15 01:43Z .. 2026-09-16 19:21Z (Vertex, region global)",
+    "note": "Unit prices actually billed on this project during the run. Gemini 3.8 Flash is billed at the non-promotional rates (2x this deck's gemini_flash); Claude Opus 5 matches the deck in both context tiers (no long-context premium on the bill); Claude Sonnet 5 is billed at 2/10, not the deck's 3/15 (Claude Code's own costUSD already used 2/10). Tables labelled 'billed rates' use these numbers; the pre-registered tables use the deck.",
+    "gemini_flash_38": {
+      "in": 1.5,
+      "out": 7.5,
+      "cached_in": 0.15
+    },
+    "claude_opus": {
+      "in": 5.0,
+      "out": 25.0,
+      "cache_write": 6.25,
+      "cache_read": 0.5,
+      "long_context_premium_observed": false
+    },
+    "claude_sonnet": {
+      "in": 2.0,
+      "out": 10.0,
+      "cache_write": 2.5,
+      "cache_read": 0.2,
+      "long_context_premium_observed": false
+    }
   }
 }
