@@ -211,7 +211,7 @@ def pearson(xs: List[float], ys: List[float]) -> Optional[float]:
     return round(sum((x - mx) * (y - my) for x, y in zip(xs, ys)) / math.sqrt(sxx * syy), 4)
 
 
-def judge_summary(run_id: str, runs: List[dict], include_run: Optional[str] = None) -> dict:
+def judge_summary(run_id: str, runs: List[dict], include_runs: Optional[List[str]] = None) -> dict:
     jdir = os.path.join(RESULTS_DIR, run_id, "judge")
     bm_path = os.path.join(jdir, "blind-map.json")
     if not os.path.isfile(bm_path):
@@ -219,7 +219,7 @@ def judge_summary(run_id: str, runs: List[dict], include_run: Optional[str] = No
     blind = dict(read_json(bm_path)["candidates"])
     run_by_key = {r["run_key"]: r for r in runs}
     recs = [read_json(p) for p in glob.glob(os.path.join(jdir, "*", "*__*.json"))]
-    if include_run:
+    for include_run in (include_runs or []):
         # judge records of the reference arms live with their own run; bring in only the
         # run-sourced candidates (anchors come from this run's own judging)
         ib = os.path.join(RESULTS_DIR, include_run, "judge", "blind-map.json")
@@ -231,6 +231,7 @@ def judge_summary(run_id: str, runs: List[dict], include_run: Optional[str] = No
     recs = [r for r in recs if r.get("status") == "ok"]
     by_arm: Dict[str, Dict[str, dict]] = {}
     per_cand: Dict[str, Dict[str, float]] = {}  # cid -> judge -> mean
+    task_acc: Dict[str, Dict[str, Dict[str, List[float]]]] = {}  # task -> arm -> judge -> candidate means
     author_ranks: Dict[str, Dict[str, int]] = {}
     null_means: Dict[str, List[float]] = {}
     fails = sum(1 for p in glob.glob(os.path.join(jdir, "*", "*__*.json")) if read_json(p).get("status") != "ok")
@@ -245,6 +246,7 @@ def judge_summary(run_id: str, runs: List[dict], include_run: Optional[str] = No
         for a in AXES:
             d[a] += r["scores"][a]
         per_cand.setdefault(r["candidate_id"], {})[r["judge"]] = r["mean"]
+        task_acc.setdefault(r["task_id"], {}).setdefault(arm, {}).setdefault(r["judge"], []).append(r["mean"])
         if src == "null":
             null_means.setdefault(r["judge"], []).append(r["mean"])
     for arm, js in by_arm.items():
@@ -277,7 +279,7 @@ def judge_summary(run_id: str, runs: List[dict], include_run: Optional[str] = No
             if src.startswith("run:") and j in js and src[4:] in run_by_key:
                 pairs.append((js[j], 1.0 if run_by_key[src[4:]].get("outcome", {}).get("pass") else 0.0))
         pb[j] = pearson([p[0] for p in pairs], [p[1] for p in pairs]) if len(pairs) >= 3 else None
-    return {"present": True, "records_ok": len(recs), "records_failed": fails, "by_arm": by_arm,
+    return {"present": True, "records_ok": len(recs), "records_failed": fails, "task_means": {t: {a: {j: round(sum(v) / len(v), 4) for j, v in js.items()} for a, js in arms_.items()} for t, arms_ in task_acc.items()}, "by_arm": by_arm,
             "anchors": {"null_mean_by_judge": {j: round(statistics.mean(v), 3) for j, v in null_means.items()},
                         "null_max_by_judge": {j: max(v) for j, v in null_means.items()},
                         "author_rank_by_task": author_ranks},
@@ -285,28 +287,63 @@ def judge_summary(run_id: str, runs: List[dict], include_run: Optional[str] = No
             "judge_vs_pass_pointbiserial": pb}
 
 
+def judge_paired_diff(task_means: Dict[str, Dict[str, Dict[str, float]]], arm: str, ref: str, tasks: List[str],
+                      boots: int, seed: int) -> Dict[str, dict]:
+    """Per judge: mean over tasks of (arm's task mean − ref's task mean), tasks resampled with replacement."""
+    out: Dict[str, dict] = {}
+    for j in ("claude", "gemini"):
+        ts = [t for t in tasks if j in task_means.get(t, {}).get(arm, {}) and j in task_means.get(t, {}).get(ref, {})]
+        if not ts:
+            continue
+        diffs = {t: task_means[t][arm][j] - task_means[t][ref][j] for t in ts}
+        rng = random.Random(seed)
+        bs = []
+        for _ in range(boots):
+            sample = [rng.choice(ts) for _ in ts]
+            bs.append(sum(diffs[t] for t in sample) / len(sample))
+        bs.sort()
+        out[j] = {"point": round(sum(diffs.values()) / len(ts), 3),
+                  "ci95": [round(bs[int(0.025 * boots)], 3), round(bs[min(boots - 1, int(0.975 * boots))], 3)], "n_tasks": len(ts)}
+    return out
+
+
+def _parse_include(include: Optional[str]) -> List[tuple]:
+    """"run:arm1,arm2;run2:arm3" -> [("run", {"arm1", "arm2"}), ("run2", {"arm3"})]."""
+    specs = []
+    for part in (include or "").split(";"):
+        part = part.strip()
+        if not part:
+            continue
+        other, arms_s = part.split(":", 1)
+        specs.append((other, {a for a in arms_s.split(",") if a}))
+    return specs
+
+
 # ------------------------------------------------------------------ main ----
 
 def analyze(run_id: str, ref_arm: str = "solo-opus", boots: int = 10000, seed: int = 20260914,
-            include: Optional[str] = None) -> dict:
-    """`include` = "other-run-id:arm1,arm2" merges those arms' finished runs from another
-    run id (a follow-up study reuses the main run's reference arms; recorded in the aggregate)."""
+            include: Optional[str] = None, also_ref: Optional[str] = None) -> dict:
+    """`include` = "other-run-id:arm1,arm2[;another-run:arm3]" merges those arms' finished
+    runs from other run ids (a follow-up study reuses earlier reference arms; recorded in the
+    aggregate). `also_ref` = "arm[,arm]" adds paired comparisons of this run's own arms
+    against those arms besides `ref_arm`."""
     runs = load_runs(run_id)
-    if include:
-        other, arms_s = include.split(":", 1)
-        wanted = set(arms_s.split(","))
+    native_arms = sorted({r["arm"] for r in runs})
+    specs = _parse_include(include)
+    for other, wanted in specs:
         extra = [r for r in load_runs(other) if r["arm"] in wanted]
         for r in extra:
             r["_from_run"] = other
         runs += extra
     arms = sorted({r["arm"] for r in runs})
+    refs = [ref_arm] + [a for a in (also_ref or "").split(",") if a and a != ref_arm]
     per_task = per_task_cost_of_pass(runs)
     per_task_billed = per_task_cost_of_pass(runs, _cost_billed)
     per_task_claude = per_task_cost_of_pass(runs, lambda r: r["cost"].get("claude_usd"))
     tasks = sorted(per_task)
     agg = {"schema": "bench.aggregate/1", "run_id": run_id, "generated_at": __import__("common").now_iso(),
            "n_runs": len(runs), "included_from": include, "tasks": tasks, "arms": {}, "paired": {}, "by_size": {},
-           "judge": judge_summary(run_id, runs, include.split(":", 1)[0] if include else None),
+           "judge": judge_summary(run_id, runs, [o for o, _ in specs]),
            "versions": (runs[0].get("versions") if runs else {}), "prices_lock_sha256": (runs[0].get("prices_lock_sha256") if runs else None),
            "exclusions": [{"run_key": r["run_key"], "violations": r["violations"]} for r in runs if r.get("violations")]}
     agg["sensitivity_no_sleep"] = {}
@@ -315,16 +352,29 @@ def analyze(run_id: str, ref_arm: str = "solo-opus", boots: int = 10000, seed: i
         agg["sensitivity_no_sleep"][arm] = arm_summary([r for r in runs if r["arm"] == arm and (r.get("suspended_s") or 0) <= 30])
         agg["arms"][arm]["by_size"] = {s: arm_summary([r for r in runs if r["arm"] == arm and r.get("size_class") == s])
                                        for s in SIZES if any(r.get("size_class") == s for r in runs if r["arm"] == arm)}
-        if arm != ref_arm and ref_arm in arms:
-            agg["paired"]["%s_vs_%s" % (arm, ref_arm)] = bootstrap_ratio(per_task, arm, ref_arm, tasks, boots, seed)
-            agg.setdefault("paired_billed", {})["%s_vs_%s" % (arm, ref_arm)] = bootstrap_ratio(per_task_billed, arm, ref_arm, tasks, boots, seed)
-            agg.setdefault("paired_claude_only", {})["%s_vs_%s" % (arm, ref_arm)] = bootstrap_ratio(per_task_claude, arm, ref_arm, tasks, boots, seed)
+        for ref in refs:
+            if arm == ref or ref not in arms or (ref != ref_arm and arm not in native_arms):
+                continue
+            agg["paired"]["%s_vs_%s" % (arm, ref)] = bootstrap_ratio(per_task, arm, ref, tasks, boots, seed)
+            agg.setdefault("paired_billed", {})["%s_vs_%s" % (arm, ref)] = bootstrap_ratio(per_task_billed, arm, ref, tasks, boots, seed)
+            agg.setdefault("paired_claude_only", {})["%s_vs_%s" % (arm, ref)] = bootstrap_ratio(per_task_claude, arm, ref, tasks, boots, seed)
             for s in SIZES:
                 st = [t for t in tasks if any(a.get("size_class") == s for a in per_task[t].values())]
                 if st:
-                    agg["paired"]["%s_vs_%s@%s" % (arm, ref_arm, s)] = bootstrap_ratio(per_task, arm, ref_arm, st, boots, seed)
-                    agg["paired_billed"]["%s_vs_%s@%s" % (arm, ref_arm, s)] = bootstrap_ratio(per_task_billed, arm, ref_arm, st, boots, seed)
-                    agg["paired_claude_only"]["%s_vs_%s@%s" % (arm, ref_arm, s)] = bootstrap_ratio(per_task_claude, arm, ref_arm, st, boots, seed)
+                    agg["paired"]["%s_vs_%s@%s" % (arm, ref, s)] = bootstrap_ratio(per_task, arm, ref, st, boots, seed)
+                    agg["paired_billed"]["%s_vs_%s@%s" % (arm, ref, s)] = bootstrap_ratio(per_task_billed, arm, ref, st, boots, seed)
+                    agg["paired_claude_only"]["%s_vs_%s@%s" % (arm, ref, s)] = bootstrap_ratio(per_task_claude, arm, ref, st, boots, seed)
+    tm = agg["judge"].get("task_means") if agg["judge"].get("present") else None
+    if tm:
+        pd: Dict[str, dict] = {}
+        for ref in refs:
+            for arm in arms:
+                if arm == ref or ref not in arms or (ref != ref_arm and arm not in native_arms):
+                    continue
+                d = judge_paired_diff(tm, arm, ref, tasks, boots, seed)
+                if d:
+                    pd["%s_vs_%s" % (arm, ref)] = d
+        agg["judge"]["paired_diff"] = pd
     out_dir = os.path.join(RESULTS_DIR, run_id)
     write_json(os.path.join(out_dir, "aggregate.json"), agg)
     write_text(os.path.join(out_dir, "tables.md"), render_tables(agg))
@@ -370,6 +420,11 @@ def render_block(agg: dict, kind: str) -> str:
             L.append("anchors: %s; agreement: %s; judge-vs-pass: %s; failed judge calls: %d" % (
                 json.dumps(j["anchors"], sort_keys=True), json.dumps(j["agreement"], sort_keys=True),
                 json.dumps(j["judge_vs_pass_pointbiserial"], sort_keys=True), j["records_failed"]))
+            if j.get("paired_diff"):
+                L.append("")
+                L.append("paired judge difference (arm − reference; mean of per-task means; task bootstrap 95% CI): " + "; ".join(
+                    "%s: %s" % (k, ", ".join("%s %+.2f [%+.2f, %+.2f] (n=%d)" % (jn, v["point"], v["ci95"][0], v["ci95"][1], v["n_tasks"]) for jn, v in d.items()))
+                    for k, d in j["paired_diff"].items()))
     else:
         raise ValueError("unknown table kind %r" % kind)
     return "\n".join(L) + "\n"

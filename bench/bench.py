@@ -49,7 +49,10 @@ def main(argv=None) -> int:
     j = sub.add_parser("judge"); j.add_argument("--run-id", required=True); j.add_argument("--task"); j.add_argument("--judges", default="claude,gemini")
     j.add_argument("--plugin-dir"); j.add_argument("--seed", type=int, default=20260914); j.add_argument("--force", action="store_true")
     an = sub.add_parser("analyze"); an.add_argument("--run-id", required=True); an.add_argument("--ref", default="solo-opus")
-    an.add_argument("--boot", type=int, default=10000); an.add_argument("--seed", type=int, default=20260914); an.add_argument("--include")
+    an.add_argument("--boot", type=int, default=10000); an.add_argument("--seed", type=int, default=20260914); an.add_argument("--include"); an.add_argument("--also-ref")
+    po = sub.add_parser("postrun"); po.add_argument("--run-id", required=True); po.add_argument("--plugin-dir", required=True)
+    po.add_argument("--include"); po.add_argument("--also-ref"); po.add_argument("--ref", default="solo-opus")
+    po.add_argument("--judges", default="claude,gemini"); po.add_argument("--poll-s", type=int, default=300)
     b = sub.add_parser("billing"); b.add_argument("--run-id", required=True); b.add_argument("--table"); b.add_argument("--slack-h", type=float, default=3.0)
     ra = sub.add_parser("reaccount"); ra.add_argument("--run-id", required=True)
     qb = sub.add_parser("queue"); qb.add_argument("--run-id", required=True); qb.add_argument("--arms", default="solo-opus,solo-sonnet,hybrid-inst,hybrid-forced")
@@ -103,9 +106,12 @@ def main(argv=None) -> int:
             recs = judge_mod.judge_task(a.run_id, t, a.judges.split(","), a.plugin_dir, a.seed, a.force)
             print(t, "judged:", sum(1 for r in recs if r.get("status") == "ok"), "ok /", len(recs))
         return 0
+    if a.cmd == "postrun":
+        import postrun as pr_mod
+        return pr_mod.postrun(a.run_id, a.plugin_dir, a.include, a.also_ref, a.ref, a.judges.split(","), a.poll_s)
     if a.cmd == "analyze":
         import analyze as an_mod
-        agg = an_mod.analyze(a.run_id, a.ref, a.boot, a.seed, a.include)
+        agg = an_mod.analyze(a.run_id, a.ref, a.boot, a.seed, a.include, a.also_ref)
         print(open(os.path.join(HERE, "results", a.run_id, "tables.md")).read())
         return 0
     if a.cmd == "billing":

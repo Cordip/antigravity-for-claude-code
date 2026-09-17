@@ -8,6 +8,7 @@ import unittest
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(os.path.dirname(HERE), "harness"))
 import agy_usage  # noqa: E402
+import analyze  # noqa: E402
 import claude_usage  # noqa: E402
 import common  # noqa: E402
 import score  # noqa: E402
@@ -353,6 +354,29 @@ class Scoring(unittest.TestCase):
         path = _write(os.path.join(self.tmp, "t.jsonl"), "\n".join(json.dumps(e) for e in ev) + "\n")
         w = score.attribute_writes(path)
         self.assertEqual(w["pairing"], "sequence"); self.assertEqual(w["agy"], 1)
+
+    def test_parse_include_specs(self):
+        """Several reference runs merge from one flag; an empty spec merges nothing."""
+        self.assertEqual(analyze._parse_include("full:solo-opus,solo-sonnet;handoff:hybrid-handoff"),
+                         [("full", {"solo-opus", "solo-sonnet"}), ("handoff", {"hybrid-handoff"})])
+        self.assertEqual(analyze._parse_include(None), [])
+
+    def test_judge_paired_diff_is_per_task_and_per_judge(self):
+        """A constant +0.5 per task gives point 0.5 with a degenerate CI; a judge missing on the reference is not reported."""
+        tm = {"t1": {"a": {"claude": 4.0, "gemini": 4.5}, "b": {"claude": 3.5}},
+              "t2": {"a": {"claude": 3.0, "gemini": 4.0}, "b": {"claude": 2.5}},
+              "t3": {"a": {"claude": 4.5}, "b": {"claude": 4.0}}}
+        d = analyze.judge_paired_diff(tm, "a", "b", ["t1", "t2", "t3"], 200, 1)
+        self.assertEqual(d["claude"]["point"], 0.5); self.assertEqual(d["claude"]["ci95"], [0.5, 0.5]); self.assertEqual(d["claude"]["n_tasks"], 3)
+        self.assertNotIn("gemini", d)
+
+    def test_judge_block_paired_line_only_when_present(self):
+        """Older aggregates have no paired judge differences and must render exactly as before."""
+        row = {"n": 1, "mean": 4.0, **{a: 4.0 for a in analyze.AXES}}
+        agg = {"judge": {"present": True, "by_arm": {"a": {"claude": row}}, "anchors": {}, "agreement": {}, "judge_vs_pass_pointbiserial": {}, "records_failed": 0}}
+        self.assertNotIn("paired judge difference", analyze.render_block(agg, "judge"))
+        agg["judge"]["paired_diff"] = {"a_vs_b": {"claude": {"point": 0.5, "ci95": [0.1, 0.9], "n_tasks": 3}}}
+        self.assertIn("a_vs_b: claude +0.50 [+0.10, +0.90] (n=3)", analyze.render_block(agg, "judge"))
 
     def test_size_class_boundaries(self):
         self.assertEqual(common.size_class(99), "small"); self.assertEqual(common.size_class(100), "medium")

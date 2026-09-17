@@ -1,0 +1,213 @@
+{
+  "run_id": "handoff-review",
+  "seed": 20260914,
+  "arms": [
+    "hybrid-handoff-review"
+  ],
+  "reps": 2,
+  "tasks": [
+    "caddy-7877",
+    "caddy-7888",
+    "caddy-7913",
+    "caddy-7995",
+    "cli-14136",
+    "cli-attach",
+    "k6-6169",
+    "zoekt-1105"
+  ],
+  "created_at": "2026-09-17T23:19:02+00:00",
+  "items": [
+    {
+      "task_id": "caddy-7888",
+      "arm": "hybrid-handoff-review",
+      "rep": 1,
+      "size_class": "medium",
+      "status": "pending",
+      "attempts": 0,
+      "lane": null,
+      "started_at": null,
+      "ended_at": null,
+      "history": []
+    },
+    {
+      "task_id": "caddy-7877",
+      "arm": "hybrid-handoff-review",
+      "rep": 1,
+      "size_class": "small",
+      "status": "pending",
+      "attempts": 0,
+      "lane": null,
+      "started_at": null,
+      "ended_at": null,
+      "history": []
+    },
+    {
+      "task_id": "zoekt-1105",
+      "arm": "hybrid-handoff-review",
+      "rep": 1,
+      "size_class": "large",
+      "status": "pending",
+      "attempts": 0,
+      "lane": null,
+      "started_at": null,
+      "ended_at": null,
+      "history": []
+    },
+    {
+      "task_id": "caddy-7913",
+      "arm": "hybrid-handoff-review",
+      "rep": 1,
+      "size_class": "medium",
+      "status": "pending",
+      "attempts": 0,
+      "lane": null,
+      "started_at": null,
+      "ended_at": null,
+      "history": []
+    },
+    {
+      "task_id": "caddy-7995",
+      "arm": "hybrid-handoff-review",
+      "rep": 1,
+      "size_class": "small",
+      "status": "pending",
+      "attempts": 0,
+      "lane": null,
+      "started_at": null,
+      "ended_at": null,
+      "history": []
+    },
+    {
+      "task_id": "cli-14136",
+      "arm": "hybrid-handoff-review",
+      "rep": 1,
+      "size_class": "medium",
+      "status": "pending",
+      "attempts": 0,
+      "lane": null,
+      "started_at": null,
+      "ended_at": null,
+      "history": []
+    },
+    {
+      "task_id": "cli-attach",
+      "arm": "hybrid-handoff-review",
+      "rep": 1,
+      "size_class": "large",
+      "status": "pending",
+      "attempts": 0,
+      "lane": null,
+      "started_at": null,
+      "ended_at": null,
+      "history": []
+    },
+    {
+      "task_id": "k6-6169",
+      "arm": "hybrid-handoff-review",
+      "rep": 1,
+      "size_class": "large",
+      "status": "pending",
+      "attempts": 0,
+      "lane": null,
+      "started_at": null,
+      "ended_at": null,
+      "history": []
+    },
+    {
+      "task_id": "caddy-7877",
+      "arm": "hybrid-handoff-review",
+      "rep": 2,
+      "size_class": "small",
+      "status": "pending",
+      "attempts": 0,
+      "lane": null,
+      "started_at": null,
+      "ended_at": null,
+      "history": []
+    },
+    {
+      "task_id": "caddy-7995",
+      "arm": "hybrid-handoff-review",
+      "rep": 2,
+      "size_class": "small",
+      "status": "pending",
+      "attempts": 0,
+      "lane": null,
+      "started_at": null,
+      "ended_at": null,
+      "history": []
+    },
+    {
+      "task_id": "cli-14136",
+      "arm": "hybrid-handoff-review",
+      "rep": 2,
+      "size_class": "medium",
+      "status": "pending",
+      "attempts": 0,
+      "lane": null,
+      "started_at": null,
+      "ended_at": null,
+      "history": []
+    },
+    {
+      "task_id": "caddy-7888",
+      "arm": "hybrid-handoff-review",
+      "rep": 2,
+      "size_class": "medium",
+      "status": "pending",
+      "attempts": 0,
+      "lane": null,
+      "started_at": null,
+      "ended_at": null,
+      "history": []
+    },
+    {
+      "task_id": "caddy-7913",
+      "arm": "hybrid-handoff-review",
+      "rep": 2,
+      "size_class": "medium",
+      "status": "pending",
+      "attempts": 0,
+      "lane": null,
+      "started_at": null,
+      "ended_at": null,
+      "history": []
+    },
+    {
+      "task_id": "k6-6169",
+      "arm": "hybrid-handoff-review",
+      "rep": 2,
+      "size_class": "large",
+      "status": "pending",
+      "attempts": 0,
+      "lane": null,
+      "started_at": null,
+      "ended_at": null,
+      "history": []
+    },
+    {
+      "task_id": "zoekt-1105",
+      "arm": "hybrid-handoff-review",
+      "rep": 2,
+      "size_class": "large",
+      "status": "pending",
+      "attempts": 0,
+      "lane": null,
+      "started_at": null,
+      "ended_at": null,
+      "history": []
+    },
+    {
+      "task_id": "cli-attach",
+      "arm": "hybrid-handoff-review",
+      "rep": 2,
+      "size_class": "large",
+      "status": "pending",
+      "attempts": 0,
+      "lane": null,
+      "started_at": null,
+      "ended_at": null,
+      "history": []
+    }
+  ]
+}
