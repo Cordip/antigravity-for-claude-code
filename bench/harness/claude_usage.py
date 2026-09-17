@@ -206,8 +206,9 @@ def summarize_transcript(path: str, include_sidechains: bool = True) -> dict:
                     continue
                 c0 = block.get("content")
                 t0 = c0 if isinstance(c0, str) else " ".join(x.get("text", "") for x in c0 if isinstance(x, dict)) if isinstance(c0, list) else ""
-                if "moved to the background (id" in t0.lower() and not isinstance(rec.get("toolUseResult"), dict):
-                    s["bash_cap_backgrounds"] += 1
+                tur0 = rec.get("toolUseResult")
+                if "moved to the background (id" in t0.lower() or (isinstance(tur0, dict) and tur0.get("backgroundTaskId")):
+                    s["bash_cap_backgrounds"] += 1  # Claude Code: "Command did not complete within its N s timeout and was moved to the background"
                 tid = block.get("tool_use_id")
                 if tid not in pending:
                     continue
