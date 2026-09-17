@@ -148,7 +148,8 @@
       "web_tool_calls": 0,
       "write_tool_calls": 0,
       "sidechain_turns": 0,
-      "background_delegations": 0
+      "background_delegations": 0,
+      "bash_cap_backgrounds": 1
     },
     "warm_start": false,
     "usage_reconciles": true,
@@ -283,11 +284,12 @@
   },
   "writes": {
     "claude_tool": 0,
-    "claude_bash": 2,
-    "agy": 0,
+    "claude_bash": 0,
+    "agy": 2,
     "agy_background": 0,
     "toolchain_gomod": 0,
     "between_calls": 1,
+    "post_missing": 0,
     "events": 56,
     "gate_blocks": 6,
     "blocked_heads": {
@@ -299,18 +301,15 @@
     },
     "gate_allows": 15,
     "pairing": "tool_use_id",
-    "claude_bash_commands": [
-      "printf '%s\\n' '## Context' '`gh issue develop` creates or lists development branches linked to an issue; with' '`--checkout` it checks the linked branch out in the caller'\"'\"'s current working copy,' ",
-      "printf '%s\\n' 'Follow-up on the gh issue develop --worktree work you just did in this repo (changes are uncommitted in the working tree: pkg/cmd/issue/develop/develop.go, pkg/cmd/pr/checkout/checkout."
-    ],
-    "claude_bash_files": [
+    "claude_bash_commands": [],
+    "claude_bash_files": [],
+    "agy_files": [
       "pkg/cmd/issue/develop/develop.go",
       "pkg/cmd/pr/checkout/checkout.go",
       "pkg/cmd/pr/shared/worktree.go",
       "git/client.go",
       "git/client_test.go"
     ],
-    "agy_files": [],
     "claude_tool_files": []
   },
   "outcome": {
@@ -414,7 +413,9 @@
   "notes": [
     "reaccounted at 2026-09-17T04:33:41+00:00",
     "reaccounted at 2026-09-17T04:34:10+00:00",
-    "reaccounted at 2026-09-17T04:34:51+00:00"
+    "reaccounted at 2026-09-17T04:34:51+00:00",
+    "reaccounted at 2026-09-17T13:37:21+00:00",
+    "reaccounted at 2026-09-17T14:48:59+00:00"
   ],
   "prices_lock_sha256": "79eb1b3e8dd948a381a49ba3adbf3a035a38fe8041f0bc0e5aca854472ea5ffe",
   "scheduler_class": "final"

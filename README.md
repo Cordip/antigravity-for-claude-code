@@ -56,34 +56,63 @@ you → Claude Code (conduct: design / verify / review)
 
 ## 📊 Measured results
 
-**Delegating implementation to agy did not save money on our benchmark.** Eight merged
-pull requests from four public Go repositories (caddy, cli/cli, k6, zoekt; 52–2,242 lines,
-merged after the models' training cutoff) were replayed from the parent commit with the
-PR's tests restored before scoring; 75 runs, Claude Opus 5 as the conductor in every arm,
-agy on Gemini 3.8 Flash. Cost per *successful* task, paired on the same tasks (task-level
-bootstrap, 95% CI; "deck" is the pre-registered price list, "billed rates" the unit prices
-the GCP project actually charged):
+Eight merged pull requests from four public Go repositories (caddy, cli/cli, k6, zoekt;
+52–2,242 lines, merged after the models' training cutoff), replayed from the parent
+commit with the PR's tests restored before scoring; Claude Opus 5 as the conductor in
+every arm, agy on Gemini 3.8 Flash; 91 runs under two pre-registered protocols. The
+metric is cost per *successful* task, paired on the same tasks (task-level bootstrap,
+95% CI; "deck" is the pre-registered price list, "billed rates" the unit prices the GCP
+project actually charged).
+
+**Hand the whole task to agy and only verify: 0.58× the cost of Claude Code alone at
+16/16 passes — but rougher code.** In the follow-up arm (`hybrid-handoff`: Claude cannot
+read or edit files, delegates the requirement once, runs the tests, at most one fix-up),
+cost per passing task was 0.58× `solo-opus` (0.39–0.96) at the deck, **0.43× on large
+tasks** (0.26–0.67), a loss on small ones; the Claude side alone was 0.16×. The blinded
+Claude judge scored those patches 0.6 of 5 below the solo runs (dead code, duplicated
+helpers, extra options), past the protocol's non-inferiority margin, so the protocol
+records the saving as real at equal test outcomes and **not** as quality-neutral; the
+Gemini judge was within the margin. At the billed Gemini rates (twice the deck) the
+overall saving disappears (1.01×) and large tasks keep 0.77×. Wall-clock was 3.6× a solo
+run.
+
+<!-- bench:table run=handoff kind=paired -->
+| comparison | tasks | ratio (deck) | 95% CI | ratio (billed rates) | 95% CI | ratio (Claude side only) | 95% CI | pass-rate diff | undefined draws |
+|---|---|---|---|---|---|---|---|---|---|
+| hybrid-handoff_vs_solo-opus | 8 | 0.58 | [0.3919, 0.9586] | 1.01 | [0.6895, 1.5732] | 0.16 | [0.093, 0.3377] | 0.00 | 0/10000 |
+| hybrid-handoff_vs_solo-opus@small | 2 | 1.20 | [1.0956, 2.2677] | 1.90 | [1.759, 3.5632] | 0.49 | [0.4321, 0.9723] | 0.00 | 0/10000 |
+| hybrid-handoff_vs_solo-opus@medium | 3 | 0.99 | [0.7738, 1.1059] | 1.65 | [1.3091, 1.8562] | 0.32 | [0.2386, 0.3796] | 0.00 | 0/10000 |
+| hybrid-handoff_vs_solo-opus@large | 3 | 0.43 | [0.2577, 0.6746] | 0.77 | [0.4653, 1.2051] | 0.09 | [0.0501, 0.144] | 0.00 | 0/10000 |
+| solo-sonnet_vs_solo-opus | 8 | 0.58 | [0.4211, 0.8287] | 0.58 | [0.4211, 0.8287] | 0.58 | [0.4211, 0.8287] | -0.15 | 0/10000 |
+| solo-sonnet_vs_solo-opus@small | 2 | 1.00 | [0.8373, 1.1861] | 1.00 | [0.8373, 1.1861] | 1.00 | [0.8373, 1.1861] | -0.20 | 0/10000 |
+| solo-sonnet_vs_solo-opus@medium | 3 | 0.41 | [0.254, 0.6196] | 0.41 | [0.254, 0.6196] | 0.41 | [0.254, 0.6196] | 0.00 | 0/10000 |
+| solo-sonnet_vs_solo-opus@large | 3 | 0.73 | [0.4861, 1.6266] | 0.73 | [0.4861, 1.6266] | 0.73 | [0.4861, 1.6266] | -0.29 | 360/10000 |
+<!-- /bench:table -->
+
+**Delegating file by file did not save money.** With Claude reading the code, writing
+specifications and verifying (`hybrid-inst`, `hybrid-forced`), cost per passing task was
+1.33–1.68× `solo-opus` at equal test outcomes and 3.8–4.6× the wall-clock:
 
 <!-- bench:table run=full kind=paired -->
 | comparison | tasks | ratio (deck) | 95% CI | ratio (billed rates) | 95% CI | ratio (Claude side only) | 95% CI | pass-rate diff | undefined draws |
 |---|---|---|---|---|---|---|---|---|---|
 | hybrid-forced_vs_solo-opus | 8 | 1.33 | [1.0315, 1.7782] | 1.75 | [1.3913, 2.2794] | 0.91 | [0.6726, 1.2789] | 0.00 | 0/10000 |
-| hybrid-forced_vs_solo-opus@small | 2 | 1.21 | [1.0802, 1.2331] | 1.64 | [1.2455, 1.7097] | — | None | 0.00 | 0/10000 |
-| hybrid-forced_vs_solo-opus@medium | 3 | 1.50 | [0.6581, 1.7067] | 1.98 | [0.8997, 2.2242] | — | None | 0.00 | 0/10000 |
-| hybrid-forced_vs_solo-opus@large | 3 | 1.54 | [0.874, 2.5213] | 2.02 | [1.191, 3.264] | — | None | 0.00 | 0/10000 |
+| hybrid-forced_vs_solo-opus@small | 2 | 1.21 | [1.0802, 1.2331] | 1.64 | [1.2455, 1.7097] | 0.78 | [0.7564, 0.9149] | 0.00 | 0/10000 |
+| hybrid-forced_vs_solo-opus@medium | 3 | 1.50 | [0.6581, 1.7067] | 1.98 | [0.8997, 2.2242] | 1.02 | [0.4165, 1.1891] | 0.00 | 0/10000 |
+| hybrid-forced_vs_solo-opus@large | 3 | 1.54 | [0.874, 2.5213] | 2.02 | [1.191, 3.264] | 1.06 | [0.5569, 1.7786] | 0.00 | 0/10000 |
 | hybrid-inst_vs_solo-opus | 8 | 1.68 | [1.3377, 2.1172] | 2.08 | [1.6703, 2.6609] | 1.17 | [0.9701, 1.3194] | 0.00 | 0/10000 |
-| hybrid-inst_vs_solo-opus@small | 2 | 1.66 | [1.6361, 1.9059] | 2.23 | [1.9658, 2.6256] | — | None | 0.00 | 0/10000 |
-| hybrid-inst_vs_solo-opus@medium | 3 | 1.32 | [1.1246, 1.3732] | 1.68 | [1.4323, 1.7073] | — | None | 0.00 | 0/10000 |
-| hybrid-inst_vs_solo-opus@large | 3 | 1.80 | [1.1929, 2.8419] | 2.21 | [1.4568, 3.6679] | — | None | 0.00 | 0/10000 |
+| hybrid-inst_vs_solo-opus@small | 2 | 1.66 | [1.6361, 1.9059] | 2.23 | [1.9658, 2.6256] | 1.08 | [1.0831, 1.3064] | 0.00 | 0/10000 |
+| hybrid-inst_vs_solo-opus@medium | 3 | 1.32 | [1.1246, 1.3732] | 1.68 | [1.4323, 1.7073] | 0.93 | [0.7527, 1.0557] | 0.00 | 0/10000 |
+| hybrid-inst_vs_solo-opus@large | 3 | 1.80 | [1.1929, 2.8419] | 2.21 | [1.4568, 3.6679] | 1.26 | [0.929, 1.4948] | 0.00 | 0/10000 |
 | solo-sonnet_vs_solo-opus | 8 | 0.58 | [0.4211, 0.8287] | 0.58 | [0.4211, 0.8287] | 0.58 | [0.4211, 0.8287] | -0.15 | 0/10000 |
-| solo-sonnet_vs_solo-opus@small | 2 | 1.00 | [0.8373, 1.1861] | 1.00 | [0.8373, 1.1861] | — | None | -0.20 | 0/10000 |
-| solo-sonnet_vs_solo-opus@medium | 3 | 0.41 | [0.254, 0.6196] | 0.41 | [0.254, 0.6196] | — | None | 0.00 | 0/10000 |
-| solo-sonnet_vs_solo-opus@large | 3 | 0.73 | [0.4861, 1.6266] | 0.73 | [0.4861, 1.6266] | — | None | -0.29 | 360/10000 |
+| solo-sonnet_vs_solo-opus@small | 2 | 1.00 | [0.8373, 1.1861] | 1.00 | [0.8373, 1.1861] | 1.00 | [0.8373, 1.1861] | -0.20 | 0/10000 |
+| solo-sonnet_vs_solo-opus@medium | 3 | 0.41 | [0.254, 0.6196] | 0.41 | [0.254, 0.6196] | 0.41 | [0.254, 0.6196] | 0.00 | 0/10000 |
+| solo-sonnet_vs_solo-opus@large | 3 | 0.73 | [0.4861, 1.6266] | 0.73 | [0.4861, 1.6266] | 0.73 | [0.4861, 1.6266] | -0.29 | 360/10000 |
 <!-- /bench:table -->
-Every hybrid and every solo-opus run passed the hidden tests and the full suite; hybrid
-runs took 3.8–4.6× longer. Where the plugin does pay is work the conductor never has to
-re-read — research, log analysis, digests — see [`docs/POC-PLAYBOOK.md`](docs/POC-PLAYBOOK.md).
-Protocol, tasks, per-run records, judge scores and the deviations log:
+
+Where the plugin pays is work the conductor never has to re-read — the hand-off above,
+research, log analysis, digests — see [`docs/POC-PLAYBOOK.md`](docs/POC-PLAYBOOK.md).
+Protocols, tasks, per-run records, judge scores and the deviations logs:
 [`docs/BENCHMARK.md`](docs/BENCHMARK.md). The earlier n = 1 ADK measurement stays in
 [`docs/AB-RESULTS.md`](docs/AB-RESULTS.md) as history.
 

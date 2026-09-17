@@ -315,6 +315,36 @@ class Scoring(unittest.TestCase):
         self.assertEqual(score.attribute_writes(path, agy_background=True)["claude_bash"], 0)
         self.assertEqual(score.attribute_writes(path, agy_background=False)["claude_bash"], 1)
 
+    def test_piped_wrapper_write_is_agy(self):
+        """`printf … | agy-delegate …` has head printf; the gate's segment heads name the wrapper, so the change is agy's (measured: cli-14136 hand-off r1 was logged as two Claude writes)."""
+        ev = [
+            {"event": "gate", "decision": "allow", "heads": ["printf", "agy-delegate"], "tool_use_id": "p", "command": "printf '%s\\n' 'task' | agy-delegate --tier flash --yolo --dir ."},
+            {"event": "PreToolUse", "tool_name": "Bash", "tool_use_id": "p", "head": "printf", "fp": "f0", "files": []},
+            {"event": "PostToolUse", "tool_name": "Bash", "tool_use_id": "p", "head": "printf", "fp": "f1", "files": [["pkg/x.go", "abc"]]},
+        ]
+        path = _write(os.path.join(self.tmp, "pipe.jsonl"), "\n".join(json.dumps(e) for e in ev) + "\n")
+        w = score.attribute_writes(path)
+        self.assertEqual((w["agy"], w["claude_bash"]), (1, 0)); self.assertEqual(w["agy_files"], ["pkg/x.go"])
+
+    def test_missing_post_closes_the_open_call(self):
+        """Claude Code skips PostToolUse on an error result; the change first seen at the next PreToolUse belongs to the call that ran (measured: zoekt-1105 hand-off r1, five files, logged as nobody's), not to the gap — unless that call was blocked by the gate and never ran."""
+        ev = [
+            {"event": "gate", "decision": "allow", "heads": ["agy-delegate"], "tool_use_id": "a", "command": "agy-delegate --yolo 'x'"},
+            {"event": "PreToolUse", "tool_name": "Bash", "tool_use_id": "a", "head": "agy-delegate", "fp": "f0", "files": []},
+            {"event": "gate", "decision": "allow", "heads": ["git"], "tool_use_id": "b", "command": "git status --short"},
+            {"event": "PreToolUse", "tool_name": "Bash", "tool_use_id": "b", "head": "git", "fp": "f1", "files": [["a.go", "111"]]},
+            {"event": "PostToolUse", "tool_name": "Bash", "tool_use_id": "b", "head": "git", "fp": "f1", "files": [["a.go", "111"]]},
+            {"event": "gate", "decision": "block", "heads": ["tee"], "tool_use_id": "c", "command": "tee b.go"},
+            {"event": "PreToolUse", "tool_name": "Bash", "tool_use_id": "c", "head": "tee", "fp": "f1", "files": [["a.go", "111"]]},
+            {"event": "gate", "decision": "allow", "heads": ["go"], "tool_use_id": "d", "command": "go test ./..."},
+            {"event": "PreToolUse", "tool_name": "Bash", "tool_use_id": "d", "head": "go", "fp": "f2", "files": [["a.go", "111"], ["b.go", "222"]]},
+            {"event": "PostToolUse", "tool_name": "Bash", "tool_use_id": "d", "head": "go", "fp": "f2", "files": [["a.go", "111"], ["b.go", "222"]]},
+        ]
+        path = _write(os.path.join(self.tmp, "nopost.jsonl"), "\n".join(json.dumps(e) for e in ev) + "\n")
+        w = score.attribute_writes(path)
+        self.assertEqual((w["agy"], w["post_missing"], w["between_calls"], w["claude_bash"]), (1, 1, 1, 0))
+        self.assertEqual(w["agy_files"], ["a.go"])
+
     def test_write_attribution_falls_back_to_sequence(self):
         ev = [
             {"event": "PreToolUse", "tool_name": "Bash", "head": "agy-delegate", "fp": "f0"},

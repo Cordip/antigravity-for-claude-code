@@ -16,8 +16,9 @@ results on purpose.
 * **Arms** (`arms.json`) share one task prompt, one verification-only Bash policy
   (`policy/`, enforced by `hooks/bash-gate.py` in every arm), the same caps per size
   class, and differ only in: plugin loaded or not (`--plugin-dir`), whether Edit/Write
-  are available (`hybrid-forced` has neither), the prompt appendix (`prompts/`), and the
-  conductor model (`solo-sonnet`).
+  are available (`hybrid-forced` has neither; `hybrid-handoff` also has no Read/Glob/Grep
+  and a stricter gate), the prompt appendix (`prompts/`), and the conductor model
+  (`solo-sonnet`).
 * **Outcome** = the PR's test files are restored over whatever the agent left (blob-hash
   tamper check first), then `go build`, `go vet`, the hidden tests, the full suite,
   `gofmt -l`. `pass` needs all five.
@@ -37,8 +38,9 @@ results on purpose.
 ## Layout
 
 ```
-arms.json  prices.lock.json  PROTOCOL.md
-prompts/   task-template.md, hybrid-appendix.md, hybrid-forced-appendix.md, judge.md
+arms.json  prices.lock.json  PROTOCOL.md  PROTOCOL-handoff.md
+prompts/   task-template.md, hybrid-appendix.md, hybrid-forced-appendix.md,
+           hybrid-handoff-appendix.md, judge.md
 policy/    allow-common.txt, allow-plugin.txt, bash-gate-rules.json
 config/    settings.template.json   (rendered per run into an isolated CLAUDE_CONFIG_DIR)
 hooks/     bash-gate.py, tree-trace.sh

@@ -211,14 +211,23 @@ def pearson(xs: List[float], ys: List[float]) -> Optional[float]:
     return round(sum((x - mx) * (y - my) for x, y in zip(xs, ys)) / math.sqrt(sxx * syy), 4)
 
 
-def judge_summary(run_id: str, runs: List[dict]) -> dict:
+def judge_summary(run_id: str, runs: List[dict], include_run: Optional[str] = None) -> dict:
     jdir = os.path.join(RESULTS_DIR, run_id, "judge")
     bm_path = os.path.join(jdir, "blind-map.json")
     if not os.path.isfile(bm_path):
         return {"present": False}
-    blind = read_json(bm_path)["candidates"]
+    blind = dict(read_json(bm_path)["candidates"])
     run_by_key = {r["run_key"]: r for r in runs}
     recs = [read_json(p) for p in glob.glob(os.path.join(jdir, "*", "*__*.json"))]
+    if include_run:
+        # judge records of the reference arms live with their own run; bring in only the
+        # run-sourced candidates (anchors come from this run's own judging)
+        ib = os.path.join(RESULTS_DIR, include_run, "judge", "blind-map.json")
+        if os.path.isfile(ib):
+            iblind = read_json(ib)["candidates"]
+            keep = {cid for cid, v in iblind.items() if str(v.get("source", "")).startswith("run:") and v["source"][4:] in run_by_key}
+            blind.update({cid: iblind[cid] for cid in keep})
+            recs += [r for r in (read_json(p) for p in glob.glob(os.path.join(RESULTS_DIR, include_run, "judge", "*", "*__*.json"))) if r.get("candidate_id") in keep]
     recs = [r for r in recs if r.get("status") == "ok"]
     by_arm: Dict[str, Dict[str, dict]] = {}
     per_cand: Dict[str, Dict[str, float]] = {}  # cid -> judge -> mean
@@ -296,7 +305,8 @@ def analyze(run_id: str, ref_arm: str = "solo-opus", boots: int = 10000, seed: i
     per_task_claude = per_task_cost_of_pass(runs, lambda r: r["cost"].get("claude_usd"))
     tasks = sorted(per_task)
     agg = {"schema": "bench.aggregate/1", "run_id": run_id, "generated_at": __import__("common").now_iso(),
-           "n_runs": len(runs), "included_from": include, "tasks": tasks, "arms": {}, "paired": {}, "by_size": {}, "judge": judge_summary(run_id, runs),
+           "n_runs": len(runs), "included_from": include, "tasks": tasks, "arms": {}, "paired": {}, "by_size": {},
+           "judge": judge_summary(run_id, runs, include.split(":", 1)[0] if include else None),
            "versions": (runs[0].get("versions") if runs else {}), "prices_lock_sha256": (runs[0].get("prices_lock_sha256") if runs else None),
            "exclusions": [{"run_key": r["run_key"], "violations": r["violations"]} for r in runs if r.get("violations")]}
     agg["sensitivity_no_sleep"] = {}
@@ -314,6 +324,7 @@ def analyze(run_id: str, ref_arm: str = "solo-opus", boots: int = 10000, seed: i
                 if st:
                     agg["paired"]["%s_vs_%s@%s" % (arm, ref_arm, s)] = bootstrap_ratio(per_task, arm, ref_arm, st, boots, seed)
                     agg["paired_billed"]["%s_vs_%s@%s" % (arm, ref_arm, s)] = bootstrap_ratio(per_task_billed, arm, ref_arm, st, boots, seed)
+                    agg["paired_claude_only"]["%s_vs_%s@%s" % (arm, ref_arm, s)] = bootstrap_ratio(per_task_claude, arm, ref_arm, st, boots, seed)
     out_dir = os.path.join(RESULTS_DIR, run_id)
     write_json(os.path.join(out_dir, "aggregate.json"), agg)
     write_text(os.path.join(out_dir, "tables.md"), render_tables(agg))

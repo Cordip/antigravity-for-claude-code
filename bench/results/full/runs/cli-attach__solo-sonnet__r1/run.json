@@ -145,7 +145,8 @@
       "web_tool_calls": 0,
       "write_tool_calls": 84,
       "sidechain_turns": 0,
-      "background_delegations": 0
+      "background_delegations": 0,
+      "bash_cap_backgrounds": 0
     },
     "warm_start": false,
     "usage_reconciles": false,
@@ -226,11 +227,12 @@
   },
   "writes": {
     "claude_tool": 83,
-    "claude_bash": 0,
+    "claude_bash": 1,
     "agy": 0,
     "agy_background": 0,
     "toolchain_gomod": 0,
-    "between_calls": 1,
+    "between_calls": 0,
+    "post_missing": 1,
     "events": 630,
     "gate_blocks": 6,
     "blocked_heads": {
@@ -241,8 +243,12 @@
     },
     "gate_allows": 151,
     "pairing": "tool_use_id",
-    "claude_bash_commands": [],
-    "claude_bash_files": [],
+    "claude_bash_commands": [
+      "grep"
+    ],
+    "claude_bash_files": [
+      "api/queries_pr.go"
+    ],
     "agy_files": [],
     "claude_tool_files": [
       "internal/config/config.go",
@@ -416,7 +422,8 @@
   "notes": [
     "reaccounted at 2026-09-16T17:22:55+00:00",
     "reaccounted at 2026-09-16T17:24:10+00:00",
-    "reaccounted at 2026-09-16T18:21:51+00:00"
+    "reaccounted at 2026-09-16T18:21:51+00:00",
+    "reaccounted at 2026-09-17T14:49:00+00:00"
   ],
   "prices_lock_sha256": "606c43d82972168c3159fa1c45d6cf843d6e52a9cdcc0792cead13e3a71fbc2d",
   "scheduler_class": "final"

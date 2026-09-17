@@ -21,6 +21,22 @@ All notable changes to **Antigravity for Claude Code**. Format loosely follows
   (a quoted number can no longer drift from its record); the n = 1 ADK A/B stays in
   `docs/AB-RESULTS.md` as history. Full write-up, deviations log and per-run records:
   `docs/BENCHMARK.md`.
+- **The configuration that does save: hand the whole task over and only verify.** A
+  pre-registered follow-up (`bench/PROTOCOL-handoff.md`, tag `bench/protocol-handoff-v1`)
+  added `hybrid-handoff` — Claude with no file reading or editing, one delegation of the
+  whole requirement to agy, verification by running the tests — on the same eight tasks:
+  16/16 passes at **0.58× solo Opus 5 per passing task** (95% CI 0.39–0.96) at the deck,
+  0.43× on large tasks (0.26–0.67), a loss on small ones, the Claude side alone 0.16×;
+  1.01× at the billed Gemini rates; 3.6× the wall-clock. The blinded Claude judge rated
+  those patches 0.6 of 5 below solo (dead code, duplicated helpers; past the
+  pre-registered margin, the Gemini judge within it), so the protocol records the saving
+  as real at equal test outcomes and not as quality-neutral. README leads with it,
+  caveat included; the per-file result above stands. Checking these records found two gaps in write
+  attribution (a piped `printf … | agy-delegate` counted as a Claude write; Claude Code
+  fires no `PostToolUse` on an error result, so a wrapper call that exited non-zero after
+  writing went unattributed); both studies were re-accounted — write columns changed,
+  costs, passes and exclusions did not. `tests/check-bench-claims.py --fix` rewrites the
+  quoted tables from their aggregates.
 - **Two facts from the billing export worth acting on** (not changed here, recorded in
   `bench/prices.lock.json` `_observed_billing`): this Vertex project bills Gemini 3.8
   Flash at $1.50 / $7.50 / $0.15 per Mtok — twice `prices.json`'s promotional
@@ -31,7 +47,7 @@ All notable changes to **Antigravity for Claude Code**. Format loosely follows
   `agy --new-project` is issued there (measured: 450 s → 119 s for the same delegation);
   and under `--dangerously-skip-permissions` the executor may `search_web` for the
   upstream file or pull request (2 of 33 hybrid runs; excluded by the protocol).
-- Test suite: 343 checks plus a 46-check harness suite run as a child; five fixtures pin
+- Test suite: 343 checks plus a 49-check harness suite run as a child; five fixtures pin
   the doc-claims guard.
 
 ## 0.27.4

@@ -1,7 +1,7 @@
 {
   "schema": "bench.aggregate/1",
   "run_id": "full",
-  "generated_at": "2026-09-16T23:48:59+00:00",
+  "generated_at": "2026-09-17T14:49:02+00:00",
   "n_runs": 75,
   "included_from": null,
   "tasks": [
@@ -190,7 +190,7 @@
       "delegations_median": 4.0,
       "delegations_zero_runs": 0,
       "agy_writes_runs": 16,
-      "claude_bash_writes": 9,
+      "claude_bash_writes": 2,
       "denials_median": 4.5,
       "warm_starts": 3,
       "caps_hit": 0,
@@ -298,7 +298,7 @@
           "delegations_median": 16.0,
           "delegations_zero_runs": 0,
           "agy_writes_runs": 6,
-          "claude_bash_writes": 9,
+          "claude_bash_writes": 2,
           "denials_median": 5.5,
           "warm_starts": 1,
           "caps_hit": 0,
@@ -482,7 +482,7 @@
       "delegations_median": 0.0,
       "delegations_zero_runs": 20,
       "agy_writes_runs": 0,
-      "claude_bash_writes": 0,
+      "claude_bash_writes": 1,
       "denials_median": 3.0,
       "warm_starts": 0,
       "caps_hit": 2,
@@ -590,7 +590,7 @@
           "delegations_median": 0,
           "delegations_zero_runs": 7,
           "agy_writes_runs": 0,
-          "claude_bash_writes": 0,
+          "claude_bash_writes": 1,
           "denials_median": 4,
           "warm_starts": 0,
           "caps_hit": 1,
@@ -1355,7 +1355,7 @@
       "delegations_median": 4.0,
       "delegations_zero_runs": 0,
       "agy_writes_runs": 14,
-      "claude_bash_writes": 9,
+      "claude_bash_writes": 2,
       "denials_median": 4.0,
       "warm_starts": 3,
       "caps_hit": 0,
@@ -1427,7 +1427,7 @@
       "delegations_median": 0.0,
       "delegations_zero_runs": 20,
       "agy_writes_runs": 0,
-      "claude_bash_writes": 0,
+      "claude_bash_writes": 1,
       "denials_median": 3.0,
       "warm_starts": 0,
       "caps_hit": 2,
@@ -1988,6 +1988,102 @@
         }
       ]
     },
+    "hybrid-forced_vs_solo-opus@small": {
+      "arm": "hybrid-forced",
+      "ref": "solo-opus",
+      "n_tasks": 2,
+      "point": 0.7797,
+      "ci95": [
+        0.7564,
+        0.9149
+      ],
+      "boot": 10000,
+      "undefined_draws": 0,
+      "seed": 20260914,
+      "pass_rate_diff": 0.0,
+      "per_task": [
+        {
+          "task_id": "caddy-7877",
+          "arm_cop": 0.66670375,
+          "ref_cop": 0.7287248749999999,
+          "size_class": "small"
+        },
+        {
+          "task_id": "caddy-7995",
+          "arm_cop": 2.134432916666667,
+          "ref_cop": 2.8217320000000004,
+          "size_class": "small"
+        }
+      ]
+    },
+    "hybrid-forced_vs_solo-opus@medium": {
+      "arm": "hybrid-forced",
+      "ref": "solo-opus",
+      "n_tasks": 3,
+      "point": 1.0189,
+      "ci95": [
+        0.4165,
+        1.1891
+      ],
+      "boot": 10000,
+      "undefined_draws": 0,
+      "seed": 20260914,
+      "pass_rate_diff": 0.0,
+      "per_task": [
+        {
+          "task_id": "caddy-7888",
+          "arm_cop": 0.8431237500000001,
+          "ref_cop": 2.024355083333333,
+          "size_class": "medium"
+        },
+        {
+          "task_id": "caddy-7913",
+          "arm_cop": 5.897446749999999,
+          "ref_cop": 8.151014374999999,
+          "size_class": "medium"
+        },
+        {
+          "task_id": "cli-14136",
+          "arm_cop": 4.776238416666668,
+          "ref_cop": 4.304048250000001,
+          "size_class": "medium"
+        }
+      ]
+    },
+    "hybrid-forced_vs_solo-opus@large": {
+      "arm": "hybrid-forced",
+      "ref": "solo-opus",
+      "n_tasks": 3,
+      "point": 1.0589,
+      "ci95": [
+        0.5569,
+        1.7786
+      ],
+      "boot": 10000,
+      "undefined_draws": 0,
+      "seed": 20260914,
+      "pass_rate_diff": 0.0,
+      "per_task": [
+        {
+          "task_id": "cli-attach",
+          "arm_cop": 20.704827250000008,
+          "ref_cop": 37.177185124999994,
+          "size_class": "large"
+        },
+        {
+          "task_id": "k6-6169",
+          "arm_cop": 17.168063125000003,
+          "ref_cop": 12.864748916666663,
+          "size_class": "large"
+        },
+        {
+          "task_id": "zoekt-1105",
+          "arm_cop": 8.531785499999998,
+          "ref_cop": 4.797041083333334,
+          "size_class": "large"
+        }
+      ]
+    },
     "hybrid-inst_vs_solo-opus": {
       "arm": "hybrid-inst",
       "ref": "solo-opus",
@@ -2052,6 +2148,102 @@
         }
       ]
     },
+    "hybrid-inst_vs_solo-opus@small": {
+      "arm": "hybrid-inst",
+      "ref": "solo-opus",
+      "n_tasks": 2,
+      "point": 1.0831,
+      "ci95": [
+        1.0831,
+        1.3064
+      ],
+      "boot": 10000,
+      "undefined_draws": 0,
+      "seed": 20260914,
+      "pass_rate_diff": 0.0,
+      "per_task": [
+        {
+          "task_id": "caddy-7877",
+          "arm_cop": 0.951974,
+          "ref_cop": 0.7287248749999999,
+          "size_class": "small"
+        },
+        {
+          "task_id": "caddy-7995",
+          "arm_cop": 3.3469211249999993,
+          "ref_cop": 2.8217320000000004,
+          "size_class": "small"
+        }
+      ]
+    },
+    "hybrid-inst_vs_solo-opus@medium": {
+      "arm": "hybrid-inst",
+      "ref": "solo-opus",
+      "n_tasks": 3,
+      "point": 0.9306,
+      "ci95": [
+        0.7527,
+        1.0557
+      ],
+      "boot": 10000,
+      "undefined_draws": 0,
+      "seed": 20260914,
+      "pass_rate_diff": 0.0,
+      "per_task": [
+        {
+          "task_id": "caddy-7888",
+          "arm_cop": 1.63601775,
+          "ref_cop": 2.024355083333333,
+          "size_class": "medium"
+        },
+        {
+          "task_id": "caddy-7913",
+          "arm_cop": 6.1348935,
+          "ref_cop": 8.151014374999999,
+          "size_class": "medium"
+        },
+        {
+          "task_id": "cli-14136",
+          "arm_cop": 4.543794375000001,
+          "ref_cop": 4.304048250000001,
+          "size_class": "medium"
+        }
+      ]
+    },
+    "hybrid-inst_vs_solo-opus@large": {
+      "arm": "hybrid-inst",
+      "ref": "solo-opus",
+      "n_tasks": 3,
+      "point": 1.2576,
+      "ci95": [
+        0.929,
+        1.4948
+      ],
+      "boot": 10000,
+      "undefined_draws": 0,
+      "seed": 20260914,
+      "pass_rate_diff": 0.0,
+      "per_task": [
+        {
+          "task_id": "cli-attach",
+          "arm_cop": 34.537126875,
+          "ref_cop": 37.177185124999994,
+          "size_class": "large"
+        },
+        {
+          "task_id": "k6-6169",
+          "arm_cop": 18.34511075,
+          "ref_cop": 12.864748916666663,
+          "size_class": "large"
+        },
+        {
+          "task_id": "zoekt-1105",
+          "arm_cop": 7.170795124999999,
+          "ref_cop": 4.797041083333334,
+          "size_class": "large"
+        }
+      ]
+    },
     "solo-sonnet_vs_solo-opus": {
       "arm": "solo-sonnet",
       "ref": "solo-opus",
@@ -2096,6 +2288,102 @@
           "ref_cop": 4.304048250000001,
           "size_class": "medium"
         },
+        {
+          "task_id": "cli-attach",
+          "arm_cop": null,
+          "ref_cop": 37.177185124999994,
+          "size_class": "large"
+        },
+        {
+          "task_id": "k6-6169",
+          "arm_cop": 7.34397075,
+          "ref_cop": 12.864748916666663,
+          "size_class": "large"
+        },
+        {
+          "task_id": "zoekt-1105",
+          "arm_cop": 2.403690666666667,
+          "ref_cop": 4.797041083333334,
+          "size_class": "large"
+        }
+      ]
+    },
+    "solo-sonnet_vs_solo-opus@small": {
+      "arm": "solo-sonnet",
+      "ref": "solo-opus",
+      "n_tasks": 2,
+      "point": 0.9969,
+      "ci95": [
+        0.8373,
+        1.1861
+      ],
+      "boot": 10000,
+      "undefined_draws": 0,
+      "seed": 20260914,
+      "pass_rate_diff": -0.2,
+      "per_task": [
+        {
+          "task_id": "caddy-7877",
+          "arm_cop": 0.61013465,
+          "ref_cop": 0.7287248749999999,
+          "size_class": "small"
+        },
+        {
+          "task_id": "caddy-7995",
+          "arm_cop": 3.3468019,
+          "ref_cop": 2.8217320000000004,
+          "size_class": "small"
+        }
+      ]
+    },
+    "solo-sonnet_vs_solo-opus@medium": {
+      "arm": "solo-sonnet",
+      "ref": "solo-opus",
+      "n_tasks": 3,
+      "point": 0.4111,
+      "ci95": [
+        0.254,
+        0.6196
+      ],
+      "boot": 10000,
+      "undefined_draws": 0,
+      "seed": 20260914,
+      "pass_rate_diff": 0.0,
+      "per_task": [
+        {
+          "task_id": "caddy-7888",
+          "arm_cop": 0.5142594000000001,
+          "ref_cop": 2.024355083333333,
+          "size_class": "medium"
+        },
+        {
+          "task_id": "caddy-7913",
+          "arm_cop": 2.4824815500000006,
+          "ref_cop": 8.151014374999999,
+          "size_class": "medium"
+        },
+        {
+          "task_id": "cli-14136",
+          "arm_cop": 2.6667906,
+          "ref_cop": 4.304048250000001,
+          "size_class": "medium"
+        }
+      ]
+    },
+    "solo-sonnet_vs_solo-opus@large": {
+      "arm": "solo-sonnet",
+      "ref": "solo-opus",
+      "n_tasks": 3,
+      "point": 0.7297,
+      "ci95": [
+        0.4861,
+        1.6266
+      ],
+      "boot": 10000,
+      "undefined_draws": 360,
+      "seed": 20260914,
+      "pass_rate_diff": -0.2857,
+      "per_task": [
         {
           "task_id": "cli-attach",
           "arm_cop": null,

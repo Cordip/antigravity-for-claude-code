@@ -172,8 +172,8 @@ def attribute_writes(trace_path: str, agy_background: bool = False) -> dict:
     module tooling, not the agent); claude_bash: any other Bash change — the one that must
     be zero in hybrid-forced. File lists come from the hook when it recorded them.
     """
-    out = {"claude_tool": 0, "claude_bash": 0, "agy": 0, "agy_background": 0, "toolchain_gomod": 0, "between_calls": 0, "events": 0,
-           "gate_blocks": 0, "blocked_heads": {}, "gate_allows": 0, "pairing": "tool_use_id",
+    out = {"claude_tool": 0, "claude_bash": 0, "agy": 0, "agy_background": 0, "toolchain_gomod": 0, "between_calls": 0,
+           "post_missing": 0, "events": 0, "gate_blocks": 0, "blocked_heads": {}, "gate_allows": 0, "pairing": "tool_use_id",
            "claude_bash_commands": [], "claude_bash_files": [], "agy_files": [], "claude_tool_files": []}
     if not os.path.isfile(trace_path):
         out["pairing"] = "no_trace"
@@ -187,6 +187,8 @@ def attribute_writes(trace_path: str, agy_background: bool = False) -> dict:
                 continue
     out["events"] = len(events)
     gate_cmds: Dict[str, str] = {}
+    gate_heads: Dict[str, List[str]] = {}
+    gate_blocked: set = set()
     for ev in events:
         if ev.get("event") == "gate":
             if ev.get("decision") == "block":
@@ -197,41 +199,31 @@ def attribute_writes(trace_path: str, agy_background: bool = False) -> dict:
                 out["gate_allows"] += 1
             if ev.get("tool_use_id"):
                 gate_cmds[ev["tool_use_id"]] = str(ev.get("command", ""))
+                gate_heads[ev["tool_use_id"]] = [str(h) for h in (ev.get("heads") or [])]
+                if ev.get("decision") == "block":
+                    gate_blocked.add(ev["tool_use_id"])
     tree = [ev for ev in events if ev.get("event") in ("PreToolUse", "PostToolUse")]
     have_ids = all(ev.get("tool_use_id") for ev in tree) and bool(tree)
     if not have_ids:
         out["pairing"] = "sequence"
-    pending: Dict[str, dict] = {}
-    seq: List[dict] = []
-    last_post_fp: Optional[str] = None
-    for ev in tree:
-        if ev["event"] == "PreToolUse":
-            if last_post_fp is not None and ev.get("fp") and ev["fp"] != last_post_fp:
-                out["between_calls"] += 1
-            if have_ids:
-                pending[ev["tool_use_id"]] = ev
-            else:
-                seq.append(ev)
-            continue
-        pre = None
-        if have_ids:
-            pre = pending.pop(ev.get("tool_use_id"), None)
-        else:
-            for i in range(len(seq) - 1, -1, -1):
-                if seq[i].get("tool_name") == ev.get("tool_name"):
-                    pre = seq.pop(i)
-                    break
-        last_post_fp = ev.get("fp") or last_post_fp
-        if pre is None or not pre.get("fp") or not ev.get("fp") or pre["fp"] == ev["fp"]:
-            continue
-        tool = str(ev.get("tool_name") or "")
-        head = str(ev.get("head") or pre.get("head") or "")
-        base = os.path.basename(head)
-        if base.endswith(".sh"):
-            base = base[:-3]
-        changed = _changed_paths(pre, ev)
+
+    def _base(head: str) -> str:
+        b = os.path.basename(str(head or ""))
+        return b[:-3] if b.endswith(".sh") else b
+
+    def classify(pre: dict, post: dict) -> None:
+        """Attribute the change between two tree events to the call `pre` opened."""
+        tool = str(post.get("tool_name") or pre.get("tool_name") or "")
+        head = str(post.get("head") or pre.get("head") or "")
+        base = _base(head)
+        tid = pre.get("tool_use_id") or post.get("tool_use_id")
+        heads = [_base(h) for h in gate_heads.get(tid, [])]
+        changed = _changed_paths(pre, post)
         if tool == "Bash":
-            if base in AGY_HEADS:
+            if base in AGY_HEADS or any(h in AGY_HEADS for h in heads):
+                # the wrapper may not be the first word: `printf '%s\n' … | agy-delegate …`
+                # (measured in the hand-off arm) pipes the task text in; the gate records every
+                # segment's head, so the pipeline is the wrapper's call
                 out["agy"] += 1
                 if changed:
                     out["agy_files"].extend(p for p in changed if p not in out["agy_files"])
@@ -246,13 +238,51 @@ def attribute_writes(trace_path: str, agy_background: bool = False) -> dict:
                     out["agy_files"].extend(p for p in changed if p not in out["agy_files"])
             else:
                 out["claude_bash"] += 1
-                out["claude_bash_commands"].append(gate_cmds.get(ev.get("tool_use_id"), head)[:200])
+                out["claude_bash_commands"].append(gate_cmds.get(tid, head)[:200])
                 if changed:
                     out["claude_bash_files"].extend(p for p in changed if p not in out["claude_bash_files"])
         else:
             out["claude_tool"] += 1
             if changed:
                 out["claude_tool_files"].extend(p for p in changed if p not in out["claude_tool_files"])
+
+    pending: Dict[str, dict] = {}
+    seq: List[dict] = []
+    last_fp: Optional[str] = None    # the most recent fingerprint from either hook
+    open_pre: Optional[dict] = None  # the latest PreToolUse whose PostToolUse has not arrived
+    for ev in tree:
+        if ev["event"] == "PreToolUse":
+            if last_fp is not None and ev.get("fp") and ev["fp"] != last_fp:
+                if open_pre is not None and open_pre.get("tool_use_id") not in gate_blocked:
+                    # the previous call ran but its PostToolUse never fired — Claude Code skips
+                    # the hook when the tool result is an error (measured: a 20-minute
+                    # agy-delegate that exited non-zero after writing five files) — so the
+                    # change first shows up here and belongs to that call, not to the gap
+                    out["post_missing"] += 1
+                    classify(open_pre, ev)
+                else:
+                    out["between_calls"] += 1
+            last_fp = ev.get("fp") or last_fp
+            open_pre = ev
+            if have_ids:
+                pending[ev["tool_use_id"]] = ev
+            else:
+                seq.append(ev)
+            continue
+        pre = None
+        if have_ids:
+            pre = pending.pop(ev.get("tool_use_id"), None)
+        else:
+            for i in range(len(seq) - 1, -1, -1):
+                if seq[i].get("tool_name") == ev.get("tool_name"):
+                    pre = seq.pop(i)
+                    break
+        if pre is not None and pre is open_pre:
+            open_pre = None
+        last_fp = ev.get("fp") or last_fp
+        if pre is None or not pre.get("fp") or not ev.get("fp") or pre["fp"] == ev["fp"]:
+            continue
+        classify(pre, ev)
     return out
 
 
@@ -435,7 +465,7 @@ def score_run(run_dir: str, repo_dir: str, task: dict, task_dir: str, repo_cfg: 
         main_t = [t for t in transcripts if os.path.basename(t).startswith("main")] or transcripts[:1]
         tsum = claude_usage.summarize_transcript(main_t[0])
         agy_calls = list(tsum.get("agy_calls") or [])
-    writes = attribute_writes(os.path.join(raw, "tool_trace.jsonl"), bool(tsum.get("background_delegations")))
+    writes = attribute_writes(os.path.join(raw, "tool_trace.jsonl"), bool(tsum.get("background_delegations") or tsum.get("bash_cap_backgrounds")))
     if transcripts:
         for extra_t in transcripts:
             if extra_t == main_t[0]:
@@ -540,7 +570,7 @@ def score_run(run_dir: str, repo_dir: str, task: dict, task_dir: str, repo_cfg: 
             "transcript": {k: tsum.get(k) for k in ("present", "turns", "input", "output", "cache_creation",
                                                      "cache_read", "first_turn_cache_read", "models",
                                                      "tool_calls", "web_tool_calls", "write_tool_calls",
-                                                     "sidechain_turns")},
+                                                     "sidechain_turns", "background_delegations", "bash_cap_backgrounds")},
             "warm_start": bool(tsum.get("first_turn_cache_read")),
             "usage_reconciles": recon.get("ok"), "usage_reconciliation": recon.get("fields"),
             "permission_denials": len(result.get("permission_denials") or []),
@@ -647,8 +677,9 @@ def reaccount(run_dir: str, task: dict, arm: str, prices: Prices) -> dict:
     agy["trace_audit"] = audits
     agy["executor_web_access"] = any(a.get("web_steps", 0) > 0 for a in audits.values())
     agy["executor_write_steps"] = sum(a.get("write_steps", 0) for a in audits.values())
-    writes = attribute_writes(os.path.join(raw, "tool_trace.jsonl"), bool(tsum.get("background_delegations")))
+    writes = attribute_writes(os.path.join(raw, "tool_trace.jsonl"), bool(tsum.get("background_delegations") or tsum.get("bash_cap_backgrounds")))
     rec["claude"].setdefault("transcript", {})["background_delegations"] = tsum.get("background_delegations")
+    rec["claude"]["transcript"]["bash_cap_backgrounds"] = tsum.get("bash_cap_backgrounds")
     o = rec["outcome"]
     base_vet = task.get("verify", {}).get("vet_base_findings")
     vet_new = [f for f in vet_findings(o.get("vet_stderr_tail") or "") if f not in set(base_vet or [])]

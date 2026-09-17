@@ -48,6 +48,22 @@
   ],
   "queue_seed": 20260914,
   "notes": [
-    "mains-power gate on; sleep/network deaths rerun; same caps as run full"
-  ]
+    "mains-power gate on; sleep/network deaths rerun; same caps as run full",
+    "2026-09-17: write attribution corrected (piped wrapper; missing PostToolUse) and every record re-accounted; costs, passes and exclusions unchanged"
+  ],
+  "raw_archive": {
+    "file": "handoff-raw-transcripts.tgz (kept by the operator; offered as a release asset)",
+    "sha256": "267dc490bda5580eb8fd192b0dd2bbce53d2d774230c39245cf0c0793d11e927",
+    "bytes": 1610132,
+    "contents": "results/handoff/runs/**/raw (transcripts, result.json, agy_usage.log, tool_trace.jsonl) and judge/raw"
+  },
+  "finished_at": "2026-09-17T13:25:00+00:00",
+  "counted_runs": 16,
+  "skipped_items": 0,
+  "judging": {
+    "records": 64,
+    "failed": 0,
+    "usd": 22.7,
+    "finished_at": "2026-09-17T15:13:38Z"
+  }
 }

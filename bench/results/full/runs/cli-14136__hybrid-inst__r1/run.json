@@ -142,7 +142,8 @@
       "web_tool_calls": 0,
       "write_tool_calls": 13,
       "sidechain_turns": 0,
-      "background_delegations": 0
+      "background_delegations": 0,
+      "bash_cap_backgrounds": 0
     },
     "warm_start": false,
     "usage_reconciles": true,
@@ -297,10 +298,11 @@
   "writes": {
     "claude_tool": 12,
     "claude_bash": 0,
-    "agy": 2,
+    "agy": 3,
     "agy_background": 0,
     "toolchain_gomod": 0,
-    "between_calls": 1,
+    "between_calls": 0,
+    "post_missing": 1,
     "events": 102,
     "gate_blocks": 1,
     "blocked_heads": {
@@ -312,6 +314,8 @@
     "claude_bash_files": [],
     "agy_files": [
       "git/client.go",
+      "pkg/cmd/pr/checkout/checkout.go",
+      "pkg/cmd/pr/shared/worktree.go",
       "pkg/cmd/issue/develop/develop.go"
     ],
     "claude_tool_files": [
@@ -407,7 +411,8 @@
   "notes": [
     "reaccounted at 2026-09-16T17:22:55+00:00",
     "reaccounted at 2026-09-16T17:24:10+00:00",
-    "reaccounted at 2026-09-16T18:21:50+00:00"
+    "reaccounted at 2026-09-16T18:21:50+00:00",
+    "reaccounted at 2026-09-17T14:49:00+00:00"
   ],
   "prices_lock_sha256": "606c43d82972168c3159fa1c45d6cf843d6e52a9cdcc0792cead13e3a71fbc2d",
   "scheduler_class": "final",

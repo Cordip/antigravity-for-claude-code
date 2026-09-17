@@ -22,8 +22,10 @@ and to publish the answer either way.
   base commit and pass three times in a row at the merge commit.
 - **Arms**: `solo-opus` (reference), `solo-sonnet`, `hybrid-inst` (plugin loaded, prompt
   asks for delegation, Claude keeps its file tools), `hybrid-forced` (same, but Claude has
-  no Edit/Write; agy is the only way to change a file). One verification-only Bash
-  policy in every arm, identical caps per size class, identical prompts, cold starts.
+  no Edit/Write; agy is the only way to change a file); in a pre-registered follow-up,
+  `hybrid-handoff` (Claude has no file reading or editing at all: one delegation of the
+  whole task, verification by running the tests). One verification-only Bash policy in
+  every arm, identical caps per size class, identical prompts, cold starts.
 - **Outcome**: the PR's test files are restored over the agent's tree (tamper check first),
   then build, vet, hidden tests, full suite, gofmt. `pass` needs all of them.
 - **Cost**: Claude Code's list-price `modelUsage.costUSD` plus the Gemini side priced from
@@ -166,17 +168,17 @@ the upstream file or pull request (caddy-7888 r1, zoekt-1105 r1; both had passed
 | comparison | tasks | ratio (deck) | 95% CI | ratio (billed rates) | 95% CI | ratio (Claude side only) | 95% CI | pass-rate diff | undefined draws |
 |---|---|---|---|---|---|---|---|---|---|
 | hybrid-forced_vs_solo-opus | 8 | 1.33 | [1.0315, 1.7782] | 1.75 | [1.3913, 2.2794] | 0.91 | [0.6726, 1.2789] | 0.00 | 0/10000 |
-| hybrid-forced_vs_solo-opus@small | 2 | 1.21 | [1.0802, 1.2331] | 1.64 | [1.2455, 1.7097] | — | None | 0.00 | 0/10000 |
-| hybrid-forced_vs_solo-opus@medium | 3 | 1.50 | [0.6581, 1.7067] | 1.98 | [0.8997, 2.2242] | — | None | 0.00 | 0/10000 |
-| hybrid-forced_vs_solo-opus@large | 3 | 1.54 | [0.874, 2.5213] | 2.02 | [1.191, 3.264] | — | None | 0.00 | 0/10000 |
+| hybrid-forced_vs_solo-opus@small | 2 | 1.21 | [1.0802, 1.2331] | 1.64 | [1.2455, 1.7097] | 0.78 | [0.7564, 0.9149] | 0.00 | 0/10000 |
+| hybrid-forced_vs_solo-opus@medium | 3 | 1.50 | [0.6581, 1.7067] | 1.98 | [0.8997, 2.2242] | 1.02 | [0.4165, 1.1891] | 0.00 | 0/10000 |
+| hybrid-forced_vs_solo-opus@large | 3 | 1.54 | [0.874, 2.5213] | 2.02 | [1.191, 3.264] | 1.06 | [0.5569, 1.7786] | 0.00 | 0/10000 |
 | hybrid-inst_vs_solo-opus | 8 | 1.68 | [1.3377, 2.1172] | 2.08 | [1.6703, 2.6609] | 1.17 | [0.9701, 1.3194] | 0.00 | 0/10000 |
-| hybrid-inst_vs_solo-opus@small | 2 | 1.66 | [1.6361, 1.9059] | 2.23 | [1.9658, 2.6256] | — | None | 0.00 | 0/10000 |
-| hybrid-inst_vs_solo-opus@medium | 3 | 1.32 | [1.1246, 1.3732] | 1.68 | [1.4323, 1.7073] | — | None | 0.00 | 0/10000 |
-| hybrid-inst_vs_solo-opus@large | 3 | 1.80 | [1.1929, 2.8419] | 2.21 | [1.4568, 3.6679] | — | None | 0.00 | 0/10000 |
+| hybrid-inst_vs_solo-opus@small | 2 | 1.66 | [1.6361, 1.9059] | 2.23 | [1.9658, 2.6256] | 1.08 | [1.0831, 1.3064] | 0.00 | 0/10000 |
+| hybrid-inst_vs_solo-opus@medium | 3 | 1.32 | [1.1246, 1.3732] | 1.68 | [1.4323, 1.7073] | 0.93 | [0.7527, 1.0557] | 0.00 | 0/10000 |
+| hybrid-inst_vs_solo-opus@large | 3 | 1.80 | [1.1929, 2.8419] | 2.21 | [1.4568, 3.6679] | 1.26 | [0.929, 1.4948] | 0.00 | 0/10000 |
 | solo-sonnet_vs_solo-opus | 8 | 0.58 | [0.4211, 0.8287] | 0.58 | [0.4211, 0.8287] | 0.58 | [0.4211, 0.8287] | -0.15 | 0/10000 |
-| solo-sonnet_vs_solo-opus@small | 2 | 1.00 | [0.8373, 1.1861] | 1.00 | [0.8373, 1.1861] | — | None | -0.20 | 0/10000 |
-| solo-sonnet_vs_solo-opus@medium | 3 | 0.41 | [0.254, 0.6196] | 0.41 | [0.254, 0.6196] | — | None | 0.00 | 0/10000 |
-| solo-sonnet_vs_solo-opus@large | 3 | 0.73 | [0.4861, 1.6266] | 0.73 | [0.4861, 1.6266] | — | None | -0.29 | 360/10000 |
+| solo-sonnet_vs_solo-opus@small | 2 | 1.00 | [0.8373, 1.1861] | 1.00 | [0.8373, 1.1861] | 1.00 | [0.8373, 1.1861] | -0.20 | 0/10000 |
+| solo-sonnet_vs_solo-opus@medium | 3 | 0.41 | [0.254, 0.6196] | 0.41 | [0.254, 0.6196] | 0.41 | [0.254, 0.6196] | 0.00 | 0/10000 |
+| solo-sonnet_vs_solo-opus@large | 3 | 0.73 | [0.4861, 1.6266] | 0.73 | [0.4861, 1.6266] | 0.73 | [0.4861, 1.6266] | -0.29 | 360/10000 |
 <!-- /bench:table -->
 **Reading the numbers.**
 
@@ -236,9 +238,11 @@ run about $120.
 **What this means for the plugin.** The result is the one `docs/POC-PLAYBOOK.md` §0
 predicts for repository editing: delegation does not remove the reading and verifying the
 conductor must do to own the result, and here it added the executor's tokens and its
-latency on top. For implementation work, use Claude Code directly; the plugin's saving
-lives where the digest *is* the deliverable (research, log analysis, multi-source
-lookups). Two operational findings from the run belong in the plugin itself: `prices.json`
+latency on top. For per-file delegation on implementation work, use Claude Code directly; the
+plugin's saving lives where the digest *is* the deliverable (research, log analysis,
+multi-source lookups) and, as the follow-up below measures, where the conductor hands
+the whole task over and never reads the code — at a quality cost the follow-up also
+measures. Two operational findings from the run belong in the plugin itself: `prices.json`
 should carry the Vertex-billed Gemini and Sonnet 5 rates, and agy started in a directory
 it has never seen runs in its last project root until `agy --new-project` is issued there.
 
@@ -313,10 +317,144 @@ it has never seen runs in its last project root until `agy --new-project` is iss
   the hybrid arms span both versions. The copy is now read-only (`chmod a-w`). The
   follow-up hand-off arm runs on 1.2.4 throughout.
 
-## Follow-up: the hand-off arm (in progress)
+- 2026-09-17 15:00Z — write attribution corrected after the hand-off run exposed two gaps
+  (details in the hand-off log below); every record of this run was re-accounted. Write
+  columns of nine records changed (seven `hybrid-inst` shell-write events moved to agy;
+  twelve calls across the 75 runs had no `PostToolUse`); costs, passes and exclusions did
+  not, and no quoted number moved.
+
+## Follow-up: the hand-off arm (2026-09-16 23:53Z to 2026-09-17 13:26Z)
 
 Pre-registered in `bench/PROTOCOL-handoff.md` (tag `bench/protocol-handoff-v1`) after the
-main result; results will appear here as `bench:table` blocks for run `handoff`.
+main result, on the token decomposition's prediction that delegation can only save money
+if the conductor stops reading. `hybrid-handoff`: Claude Opus 5 with no `Read`, `Glob`,
+`Grep`, `Edit` or `Write`, Bash limited to build, vet, test and the wrapper (the gate
+blocks file-reading commands), one delegation of the whole requirement to agy
+(`--tier flash --timeout 120m`), verification by running the tests, at most one fix-up
+delegation. 16 runs (8 tasks × 2) under the main study's caps; the reference arms are the
+main run's `solo-opus` and `solo-sonnet` on the same tasks, merged by
+`bench.py analyze --run-id handoff --include full:solo-opus,solo-sonnet`.
+
+**Headline.** Handing the whole task to the executor and only verifying **passed 16/16
+and cost 0.58× `solo-opus` per passing task** (95% CI 0.39–0.96) at the pre-registered
+deck: **0.43× on large tasks** (0.26–0.67), parity on medium (0.99, 0.77–1.11), a loss on
+small (1.20, 1.10–2.27). The **Claude side alone was 0.16×** (0.09–0.34): for a user whose
+Gemini side is not metered per token, the conductor's bill drops by five sixths. At the
+Gemini unit prices this project was billed (twice the deck) the overall ratio is 1.01
+(0.69–1.57) and large tasks 0.77 (0.47–1.21): at those rates the saving is confined to
+large tasks and its interval includes 1. Wall-clock was 3.6× `solo-opus` (median 40 vs 11
+minutes). Against `solo-sonnet` ($4.74 per pass, 17/20) the hand-off arm is equal on total
+cost ($4.79) with 16/16 passes and an Opus-verified result; its Claude side is $1.32 per
+pass. **The blinded Claude judge, however, rated the hand-off patches 0.61 of 5 below
+`solo-opus` (3.42 vs 4.02), past the pre-registered 0.3 margin, on every one of the
+eight tasks; the Gemini judge was within the margin (4.52 vs 4.74). By the protocol's
+own rule H5 fails and H4 is therefore not claimed**: the arm is cheaper at equal test
+outcomes, and it is not quality-neutral.
+
+- **H4 (cost)** — supported at the deck: the overall interval excludes 1 and the point is
+  below 0.8; on large tasks alone the interval is 0.26–0.67. Not supported at billed rates
+  (1.01).
+- **H5 (quality)** — pass rate non-inferior (16/16 vs 21/21); judge means **not**
+  non-inferior under the Claude judge (3.42 vs 4.02, margin 0.3; below `solo-opus` on all
+  eight tasks, gap 0.55 small / 0.60 medium / 0.67 large) and within the margin under the
+  Gemini judge (4.52 vs 4.74; its gap is on large tasks only, 4.44 vs 4.94). H5 fails,
+  and with it the protocol withholds H4.
+- Mechanism: median 1.5 delegations per run (five runs needed three or four, more than the
+  appendix allows); Claude's turns fell to a median of 15.5 (`solo-opus`: 63); agy wrote
+  every changed file in every run (no Claude-side write); the conductor's spend is
+  verification, not reading.
+
+<!-- bench:table run=handoff kind=arms -->
+| arm | runs | pass | cost-of-pass $ (deck) | cost-of-pass $ (billed rates) | median $ among passes (min–max) | Claude $ | Gemini $ deck / billed | wall med s | turns med | delegations med (0-runs) | denials med | warm starts | caps hit |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| hybrid-handoff | 16 | 16/16 | 4.79 | 8.26 | 3.87 (1.55–12.48) | 21.11 | 55.52 / 111.03 | 2382.95 | 15.50 | 1.50 (0) | 6.00 | 2 | 0 |
+| solo-opus | 21 | 21/21 | 8.22 | 8.22 | 4.32 (0.65–40.92) | 172.55 | 0.00 / 0.00 | 653.10 | 63 | 0 (21) | 2 | 0 | 0 |
+| solo-sonnet | 20 | 17/20 | 4.74 | 4.74 | 2.28 (0.46–8.83) | 80.50 | 0.00 / 0.00 | 676.40 | 69.00 | 0.00 (20) | 3.00 | 0 | 2 |
+<!-- /bench:table -->
+<!-- bench:table run=handoff kind=size -->
+| arm | size | runs | pass | cost-of-pass $ (deck) | cost-of-pass $ (billed rates) | median $ among passes | wall med s |
+|---|---|---|---|---|---|---|---|
+| hybrid-handoff | small | 4 | 4/4 | 2.37 | 3.78 | 2.13 | 968.00 |
+| hybrid-handoff | medium | 6 | 6/6 | 4.35 | 7.27 | 4.47 | 2430.10 |
+| hybrid-handoff | large | 6 | 6/6 | 6.84 | 12.23 | 7.35 | 4696.80 |
+| solo-opus | small | 5 | 5/5 | 1.98 | 1.98 | 2.17 | 399.40 |
+| solo-opus | medium | 8 | 8/8 | 4.41 | 4.41 | 4.07 | 576.35 |
+| solo-opus | large | 8 | 8/8 | 15.92 | 15.92 | 11.83 | 1487.95 |
+| solo-sonnet | small | 5 | 4/5 | 1.98 | 1.98 | 1.32 | 485.10 |
+| solo-sonnet | medium | 8 | 8/8 | 1.81 | 1.81 | 2.46 | 630.70 |
+| solo-sonnet | large | 7 | 5/7 | 11.62 | 11.62 | 2.73 | 870.90 |
+<!-- /bench:table -->
+<!-- bench:table run=handoff kind=paired -->
+| comparison | tasks | ratio (deck) | 95% CI | ratio (billed rates) | 95% CI | ratio (Claude side only) | 95% CI | pass-rate diff | undefined draws |
+|---|---|---|---|---|---|---|---|---|---|
+| hybrid-handoff_vs_solo-opus | 8 | 0.58 | [0.3919, 0.9586] | 1.01 | [0.6895, 1.5732] | 0.16 | [0.093, 0.3377] | 0.00 | 0/10000 |
+| hybrid-handoff_vs_solo-opus@small | 2 | 1.20 | [1.0956, 2.2677] | 1.90 | [1.759, 3.5632] | 0.49 | [0.4321, 0.9723] | 0.00 | 0/10000 |
+| hybrid-handoff_vs_solo-opus@medium | 3 | 0.99 | [0.7738, 1.1059] | 1.65 | [1.3091, 1.8562] | 0.32 | [0.2386, 0.3796] | 0.00 | 0/10000 |
+| hybrid-handoff_vs_solo-opus@large | 3 | 0.43 | [0.2577, 0.6746] | 0.77 | [0.4653, 1.2051] | 0.09 | [0.0501, 0.144] | 0.00 | 0/10000 |
+| solo-sonnet_vs_solo-opus | 8 | 0.58 | [0.4211, 0.8287] | 0.58 | [0.4211, 0.8287] | 0.58 | [0.4211, 0.8287] | -0.15 | 0/10000 |
+| solo-sonnet_vs_solo-opus@small | 2 | 1.00 | [0.8373, 1.1861] | 1.00 | [0.8373, 1.1861] | 1.00 | [0.8373, 1.1861] | -0.20 | 0/10000 |
+| solo-sonnet_vs_solo-opus@medium | 3 | 0.41 | [0.254, 0.6196] | 0.41 | [0.254, 0.6196] | 0.41 | [0.254, 0.6196] | 0.00 | 0/10000 |
+| solo-sonnet_vs_solo-opus@large | 3 | 0.73 | [0.4861, 1.6266] | 0.73 | [0.4861, 1.6266] | 0.73 | [0.4861, 1.6266] | -0.29 | 360/10000 |
+<!-- /bench:table -->
+<!-- bench:table run=handoff kind=judge -->
+| arm | judge | n | mean | consistency | edge_cases | scope | readability | robustness | maintainability |
+|---|---|---|---|---|---|---|---|---|---|
+| hybrid-handoff | claude | 16 | 3.42 | 3.62 | 3.50 | 3.31 | 3.38 | 3.62 | 3.06 |
+| hybrid-handoff | gemini | 16 | 4.52 | 4.75 | 4.12 | 4.38 | 4.75 | 4.56 | 4.56 |
+| author | gemini | 8 | 4.56 | 4.62 | 4.62 | 4.12 | 4.88 | 4.50 | 4.62 |
+| author | claude | 8 | 3.65 | 3.75 | 3.88 | 3.25 | 3.62 | 3.88 | 3.50 |
+| null | gemini | 8 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |
+| null | claude | 8 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |
+| solo-opus | claude | 21 | 4.02 | 4.24 | 4.00 | 3.81 | 4.19 | 4.19 | 3.71 |
+| solo-opus | gemini | 21 | 4.74 | 4.76 | 4.62 | 4.71 | 4.95 | 4.62 | 4.76 |
+| solo-sonnet | claude | 20 | 3.65 | 3.90 | 3.35 | 3.85 | 3.90 | 3.50 | 3.40 |
+| solo-sonnet | gemini | 20 | 4.29 | 4.70 | 3.80 | 4.10 | 4.75 | 4.15 | 4.25 |
+
+anchors: {"author_rank_by_task": {"claude": {"caddy-7877": "6/8", "caddy-7888": "8/10", "caddy-7913": "4/8", "caddy-7995": "2/10", "cli-14136": "9/10", "cli-attach": "1/8", "k6-6169": "5/9", "zoekt-1105": "5/10"}, "gemini": {"caddy-7877": "1/8", "caddy-7888": "2/10", "caddy-7913": "5/8", "caddy-7995": "1/10", "cli-14136": "8/10", "cli-attach": "2/8", "k6-6169": "3/9", "zoekt-1105": "4/10"}}, "null_max_by_judge": {"claude": 1.0, "gemini": 1.0}, "null_mean_by_judge": {"claude": 1.0, "gemini": 1.0}}; agreement: {"n_candidates_both": 73, "spearman_mean": 0.579, "within1_pct": 0.63}; judge-vs-pass: {"claude": 0.3736, "gemini": 0.1886}; failed judge calls: 0
+<!-- /bench:table -->
+
+**Reading the numbers.**
+
+- Per task, cost-of-pass `hybrid-handoff` vs `solo-opus` (n = 2 vs 2–3): cli-attach $9.58 vs $37.18,
+  k6-6169 $8.68 vs $12.86, caddy-7913 $6.31 vs $8.15, zoekt-1105 $2.25 vs $4.80; and the
+  other way on the four cheapest tasks: cli-14136 $4.51 vs $4.30, caddy-7995 $3.09 vs
+  $2.82, caddy-7888 $2.24 vs $2.02, caddy-7877 $1.65 vs $0.73.
+  The arm wins by a wide margin exactly where the solo run is expensive and loses where
+  a solo run costs a dollar or two: the fixed price of one long executor conversation
+  plus Claude's verification turns is about $1.5–2.5 per run whatever the task.
+- **Where the money goes.** Claude's share of the arm's spend is 28 percent ($21.11 of
+  $76.62 at the deck); the rest is one long Gemini conversation per delegation. At the
+  billed Gemini rate that Gemini share doubles, which is the whole difference between the
+  0.58 and the 1.01.
+- **Sensitivity.** Without the five runs that slept mid-run and completed after the
+  wake: cost-of-pass $3.75 on 11 runs against `solo-opus` $7.88 on 20 — the same picture.
+  Two runs started with a warm cache despite the 300 s gap; kept.
+- **Judges.** The empty patch scored 1.0 on every task under both judges (floor intact);
+  the author's patch again ranks mid-pack under the Claude judge and near the top under
+  the Gemini judge; inter-judge Spearman 0.58, 63 percent of candidates within one point,
+  point-biserial against `pass` 0.37 (Claude) and 0.19 (Gemini). The Claude judge's
+  rationales for the hand-off patches name the same things on every large task: dead
+  code and unused fields, helpers duplicated beside an existing library (a hand-rolled
+  CommonMark scanner next to goldmark; a second provisioning client), undocumented extra
+  options — the residue of an executor that wrote more than the requirement and a
+  conductor that never read the diff. Axis means under the Claude judge, hand-off vs
+  `solo-opus`: maintainability 3.06 vs 3.71, readability 3.38 vs 4.19, consistency 3.62
+  vs 4.24, scope 3.31 vs 3.81. Against `solo-sonnet` (3.65) and the author's own patch
+  (3.65) the hand-off arm is 0.2 lower on the same judge.
+- **Spend.** $76.62 in the 16 counted runs ($21.11 Claude, $55.52 Gemini at the deck),
+  about $2.6 in four interrupted attempts, $22.70 for judging (64 calls, none failed).
+**Caveats.** n = 2 per task and no size class has more than three tasks, so the per-class
+intervals are wide; the claim that survives is the overall one at the deck and the
+large-task one. Small tasks lose money under this arm as under every delegation arm; at
+the deck the break-even sits in the medium class (200–600 changed lines), at the billed
+rate above it. Sixteen runs cannot say how often a hand-off fails on a task where the
+executor misreads the requirement: here it never did, but five of the sixteen runs
+needed a third or fourth delegation to get the tests green, and in the main study 2 of
+33 hybrid runs had the executor look the answer up on the web — the executor is not
+always right the first time, and the conductor's tests are the only check left — and
+the tests do not see dead code or duplication, which is exactly what the Claude judge
+docked. No run was excluded, no executor web access was recorded,
+and no run hit a cap.
 
 ### Deviations log (hand-off run)
 
@@ -325,14 +463,36 @@ main result; results will appear here as `bench:table` blocks for run `handoff`.
   and in a headless session there is no later turn to collect it (`zoekt-1105` r1 ended
   with "I'll pick it up when it completes" and 0 delegations). `hybrid-handoff` now runs
   with a 135-minute Bash timeout; such runs are detected (`bash_cap_backgrounded_delegation`)
-  and rerun as environment failures. Three earlier runs had delegations moved to the
-  background but polled them to completion and passed; they are kept (their extra polling
-  turns count against the arm).
+  and rerun as environment failures. Four earlier runs (caddy-7913, cli-14136, cli-attach,
+  k6-6169, all r1) had a delegation moved to the background but polled it to completion
+  and passed; they are kept (their extra polling turns count against the arm).
+- 2026-09-17 15:00Z — two gaps in write attribution, found while checking these records,
+  fixed in `score.py` and re-applied to every run of both studies (`reaccount`): (1) a
+  pipeline such as `printf … | agy-delegate …` has the head `printf`, so its change was
+  logged as a Claude shell write (cli-14136 r1, two calls); the gate records every
+  segment's head, and the wrapper anywhere in the pipeline now counts as agy; (2) Claude
+  Code fires no `PostToolUse` when a tool call returns an error, so a wrapper call that
+  exited non-zero after writing (zoekt-1105 r1: five files from one 20-minute delegation)
+  left its change unattributed or counted "between calls"; a change first seen at the
+  next call is now attributed to the still-open call unless the gate blocked it
+  (`post_missing` in the record). Costs, passes and exclusions are unchanged in both
+  studies.
+- The two lanes ran under launchd (restart after logout or crash) and started no new item
+  on battery power; three attempts interrupted by sleep and one by a lane restart are kept
+  under `runs/*__attempts/`. Billing reconciliation (window 2026-09-16 20:53Z to
+  2026-09-17 16:25Z, refreshed after judging): the Gemini 3.8 Flash SKU unit prices were
+  unchanged from the main run ($1.50 / $7.50 / $0.15), which is what the billed-rate
+  columns use; $144.07 billed against $111.03 computed at those rates, Claude Opus 5
+  $61.78 against $20.25 — the shared project carried other sessions in the window, so
+  the gaps are not attributable and the harness totals are the ones used.
 
 ## Versions and provenance
 
-Claude Code 2.1.270, agy 1.2.2, Go 1.27.1, plugin 0.28.0 (`5392467`) for the hybrid
-arms; prices frozen in `bench/prices.lock.json`; every run records these in `run.json`.
+Claude Code 2.1.272 (pinned binary) and Go 1.27.1 in both runs; plugin 0.28.0 (`5392467`)
+for the hybrid arms; agy 1.2.3 → 1.2.4 during the main run and 1.2.4 → 1.2.5 during the
+hand-off run — the CLI updates itself even from a read-only binary, and each `run.json`
+records the version it saw. Prices frozen in `bench/prices.lock.json`. The pilot ran on
+Claude Code 2.1.270 and agy 1.2.2.
 
 ## What is not counted
 

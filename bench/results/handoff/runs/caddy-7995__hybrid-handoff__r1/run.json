@@ -147,7 +147,8 @@
       "web_tool_calls": 0,
       "write_tool_calls": 0,
       "sidechain_turns": 0,
-      "background_delegations": 0
+      "background_delegations": 0,
+      "bash_cap_backgrounds": 0
     },
     "warm_start": false,
     "usage_reconciles": true,
@@ -258,6 +259,7 @@
     "agy_background": 0,
     "toolchain_gomod": 0,
     "between_calls": 0,
+    "post_missing": 0,
     "events": 49,
     "gate_blocks": 5,
     "blocked_heads": {
@@ -371,7 +373,9 @@
   "notes": [
     "reaccounted at 2026-09-17T04:33:41+00:00",
     "reaccounted at 2026-09-17T04:34:10+00:00",
-    "reaccounted at 2026-09-17T04:34:51+00:00"
+    "reaccounted at 2026-09-17T04:34:51+00:00",
+    "reaccounted at 2026-09-17T13:37:21+00:00",
+    "reaccounted at 2026-09-17T14:48:59+00:00"
   ],
   "prices_lock_sha256": "79eb1b3e8dd948a381a49ba3adbf3a035a38fe8041f0bc0e5aca854472ea5ffe",
   "scheduler_class": "final"
