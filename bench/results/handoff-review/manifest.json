@@ -2,7 +2,7 @@
   "run_id": "handoff-review",
   "created_at": "2026-09-17T23:19:33+00:00",
   "protocol_tag": "bench/protocol-handoff-review-v1",
-  "protocol_sha": "6a30c3195ae3227eafc29806c3c97fe73b75c291",
+  "protocol_sha": "c386459ada8da4d0a8aa72b1ec8e308274393501",
   "reference_arms_from": "full (solo-opus, solo-sonnet); handoff (hybrid-handoff)",
   "versions": {
     "claude": "2.1.272 (Claude Code)",
