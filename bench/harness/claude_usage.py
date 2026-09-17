@@ -204,6 +204,10 @@ def summarize_transcript(path: str, include_sidechains: bool = True) -> dict:
             for block in content:
                 if not isinstance(block, dict) or block.get("type") != "tool_result":
                     continue
+                c0 = block.get("content")
+                t0 = c0 if isinstance(c0, str) else " ".join(x.get("text", "") for x in c0 if isinstance(x, dict)) if isinstance(c0, list) else ""
+                if "moved to the background (id" in t0.lower() and not isinstance(rec.get("toolUseResult"), dict):
+                    s["bash_cap_backgrounds"] += 1
                 tid = block.get("tool_use_id")
                 if tid not in pending:
                     continue
