@@ -65,7 +65,7 @@ def operator_env() -> Dict[str, str]:
     return env
 
 
-def render_config_dir(run_key: str, plugin: bool) -> str:
+def render_config_dir(run_key: str, plugin: bool, bash_timeout_ms: Optional[int] = None) -> str:
     cfg = os.path.join(CFG_DIR, run_key)
     if os.path.isdir(cfg):
         shutil.rmtree(cfg)
@@ -76,6 +76,9 @@ def render_config_dir(run_key: str, plugin: bool) -> str:
         allow += [l.strip() for l in read_text(os.path.join(POLICY_DIR, "allow-plugin.txt")).splitlines() if l.strip()]
     tmpl.pop("_comment", None)
     tmpl["env"] = operator_env()
+    if bash_timeout_ms:
+        tmpl["env"]["BASH_DEFAULT_TIMEOUT_MS"] = str(bash_timeout_ms)
+        tmpl["env"]["BASH_MAX_TIMEOUT_MS"] = str(bash_timeout_ms)
     tmpl["permissions"]["allow"] = allow
     text = json.dumps(tmpl, indent=2).replace("__HOOKS_DIR__", HOOKS_DIR)
     write_text(os.path.join(cfg, "settings.json"), text)
@@ -291,7 +294,7 @@ def run_once(task_id: str, arm: str, rep: int, run_id: str, plugin_dir: Optional
     write_text(os.path.join(raw, "prompt_sent.md"), prompt)
     repo_dir = prepare_checkout(task, task_dir, run_key)
     agy_project = register_agy_project(repo_dir) if arm_cfg["plugin"] else None
-    cfg_dir = render_config_dir(run_key, arm_cfg["plugin"])
+    cfg_dir = render_config_dir(run_key, arm_cfg["plugin"], arm_cfg.get("bash_timeout_ms"))
     versions = tool_versions(plugin_dir if arm_cfg["plugin"] else None)
     meta = {"run_id": run_id, "run_key": run_key, "task_id": task_id, "arm": arm, "rep": rep, "attempt": attempt,
             "lane": lane, "started_at": now_iso(), "versions": versions, "conductor_alias": arm_cfg["conductor_alias"],

@@ -131,7 +131,7 @@ def summarize_transcript(path: str, include_sidechains: bool = True) -> dict:
     s = {"present": os.path.isfile(path), "turns": 0, "input": 0, "output": 0, "cache_creation": 0,
          "cache_read": 0, "first_turn_cache_read": None, "models": {}, "tool_calls": {},
          "web_tool_calls": 0, "write_tool_calls": 0, "bash_commands": [], "agy_calls": [],
-         "sidechain_turns": 0, "wrapper_not_found": 0, "background_delegations": 0}
+         "sidechain_turns": 0, "wrapper_not_found": 0, "background_delegations": 0, "bash_cap_backgrounds": 0}
     if not s["present"]:
         return s
     pending: Dict[str, dict] = {}  # tool_use_id -> agy call record awaiting its result
@@ -199,6 +199,8 @@ def summarize_transcript(path: str, include_sidechains: bool = True) -> dict:
                         low = tur[k].lower()
                         if "agy-delegate" in low and ("command not found" in low or "not found" in low.split("agy-delegate", 1)[1][:80]):
                             s["wrapper_not_found"] += 1
+                if "moved to the background (id" in ((tur.get("stdout") or "") + (tur.get("stderr") or "")).lower():
+                    s["bash_cap_backgrounds"] += 1  # Claude Code pushed a command past the Bash timeout into the background
             for block in content:
                 if not isinstance(block, dict) or block.get("type") != "tool_result":
                     continue

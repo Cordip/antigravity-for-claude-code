@@ -501,6 +501,9 @@ def score_run(run_dir: str, repo_dir: str, task: dict, task_dir: str, repo_cfg: 
     if arm.startswith("hybrid") and not (agy.get("delegations") or 0) and tsum.get("wrapper_not_found"):
         env_failure = "plugin_bin_missing"  # the arm's only write path was absent: an environment failure, rerun
         notes.append("agy-delegate was not on the agent's PATH; no delegation possible")
+    if arm.startswith("hybrid") and not (agy.get("usage_lines") or 0) and tsum.get("bash_cap_backgrounds"):
+        env_failure = "bash_cap_backgrounded_delegation"  # Claude Code moved the delegation past the Bash timeout into the background; headless has no later turn to collect it
+        notes.append("the delegation was moved to the background by the Bash timeout cap and never collected")
     if tsum.get("web_tool_calls"):
         violations.append("claude_web_tool_call")
     if executor_web:
@@ -660,7 +663,9 @@ def reaccount(run_dir: str, task: dict, arm: str, prices: Prices) -> dict:
         violations.append("executor_web_access")
     if arm == "hybrid-forced" and (writes.get("claude_bash") or tsum.get("write_tool_calls")):
         violations.append("claude_side_write_in_forced_arm")
-    rec["env_failure"] = "plugin_bin_missing" if (arm.startswith("hybrid") and not (agy.get("delegations") or 0) and tsum.get("wrapper_not_found")) else None
+    rec["env_failure"] = ("plugin_bin_missing" if (arm.startswith("hybrid") and not (agy.get("delegations") or 0) and tsum.get("wrapper_not_found"))
+                          else "bash_cap_backgrounded_delegation" if (arm.startswith("hybrid") and not (agy.get("usage_lines") or 0) and tsum.get("bash_cap_backgrounds"))
+                          else None)
     gemini_usd = agy.get("shadow_usd")
     rec["claude"].update({"total_cost_usd": claude_usd, "total_cost_usd_source": source, "subtype": subtype, "capped": capped,
                           "num_turns": result.get("num_turns") or (tsum.get("turns") if tsum.get("present") else None),

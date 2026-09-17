@@ -313,6 +313,22 @@ it has never seen runs in its last project root until `agy --new-project` is iss
   the hybrid arms span both versions. The copy is now read-only (`chmod a-w`). The
   follow-up hand-off arm runs on 1.2.4 throughout.
 
+## Follow-up: the hand-off arm (in progress)
+
+Pre-registered in `bench/PROTOCOL-handoff.md` (tag `bench/protocol-handoff-v1`) after the
+main result; results will appear here as `bench:table` blocks for run `handoff`.
+
+### Deviations log (hand-off run)
+
+- 2026-09-17 04:45Z — Claude Code moves a Bash command that exceeds the tool's timeout to
+  the background; the arm's single 120-minute delegation hit the study's 15-minute cap,
+  and in a headless session there is no later turn to collect it (`zoekt-1105` r1 ended
+  with "I'll pick it up when it completes" and 0 delegations). `hybrid-handoff` now runs
+  with a 135-minute Bash timeout; such runs are detected (`bash_cap_backgrounded_delegation`)
+  and rerun as environment failures. Three earlier runs had delegations moved to the
+  background but polled them to completion and passed; they are kept (their extra polling
+  turns count against the arm).
+
 ## Versions and provenance
 
 Claude Code 2.1.270, agy 1.2.2, Go 1.27.1, plugin 0.28.0 (`5392467`) for the hybrid
