@@ -9,6 +9,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(os.path.dirname(HERE), "harness"))
 import agy_usage  # noqa: E402
 import analyze  # noqa: E402
+import schedule  # noqa: E402
 import claude_usage  # noqa: E402
 import common  # noqa: E402
 import score  # noqa: E402
@@ -377,6 +378,17 @@ class Scoring(unittest.TestCase):
         self.assertNotIn("paired judge difference", analyze.render_block(agg, "judge"))
         agg["judge"]["paired_diff"] = {"a_vs_b": {"claude": {"point": 0.5, "ci95": [0.1, 0.9], "n_tasks": 3}}}
         self.assertIn("a_vs_b: claude +0.50 [+0.10, +0.90] (n=3)", analyze.render_block(agg, "judge"))
+
+    def test_executor_death_during_sleep_is_suspended(self):
+        """No delegation succeeded, the run failed and the machine slept: rerun as 'suspended'; the same record without the sleep is a final failure, and a slept run whose delegation succeeded and passed is kept."""
+        rec = {"suspended_s": 4022.0, "env_failure": None,
+               "claude": {"is_error": False, "subtype": "success", "total_cost_usd": 1.1, "errors": [], "transcript": {"present": True, "tool_calls": {"Bash": 8}}},
+               "agy": {"delegations": 3, "usage_lines": 2, "succeeded": 0, "signals": {"AGY_FAILED": 1, "TIMEOUT": 1}},
+               "outcome": {"pass": False}}
+        self.assertEqual(schedule.classify(rec, None), "suspended")
+        self.assertEqual(schedule.classify({**rec, "suspended_s": 0}, None), "final")
+        ok = {**rec, "agy": {**rec["agy"], "succeeded": 2}, "outcome": {"pass": True}}
+        self.assertEqual(schedule.classify(ok, None), "final")
 
     def test_size_class_boundaries(self):
         self.assertEqual(common.size_class(99), "small"); self.assertEqual(common.size_class(100), "medium")

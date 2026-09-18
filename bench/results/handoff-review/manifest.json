@@ -48,6 +48,8 @@
   ],
   "queue_seed": 20260914,
   "notes": [
-    "mains-power gate on; sleep/network deaths rerun; same caps as run full; postrun agent judges and analyzes when the queue finishes"
+    "mains-power gate on; sleep/network deaths rerun; same caps as run full; postrun agent judges and analyzes when the queue finishes",
+    "2026-09-17 23:21Z: lane B idled 11 min at start because the queue lacked allow_same_arm_concurrency; set by hand at 23:32Z, no effect on results",
+    "2026-09-18 05:07Z: cli-attach r1 slept 67 min mid-run; both delegations died on the executor's connection (network issue / TIMEOUT) and the run failed with nothing delivered ($10.95). Classified 'final' by the classifier of the time; relabelled 'suspended' and requeued per the pre-registered sleep rule; classify() now treats a slept, delegating run with no successful delegation and no pass as 'suspended'"
   ]
 }

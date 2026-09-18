@@ -157,6 +157,14 @@ def classify(rec: Optional[dict], error: Optional[str]) -> str:
         # it — killed, or an execution error — is rerun as 'suspended'.
         if c.get("subtype") in ("killed_wall", "error_during_execution") or not c.get("total_cost_usd"):
             return "suspended"
+        # The executor's connection does not survive a sleep either (measured 2026-09-18:
+        # cli-attach hand-off-review r1 slept 67 min; both delegations came back "network
+        # issue connecting to the server" / TIMEOUT after 126 and 22 min, the run failed
+        # with nothing to show). A delegating run in which no delegation succeeded and
+        # that did not pass is the sleep's death, not the arm's result.
+        a_ = rec.get("agy") or {}
+        if (a_.get("delegations") or 0) > 0 and not a_.get("succeeded") and not (rec.get("outcome") or {}).get("pass"):
+            return "suspended"
     
     tool_calls = sum((c.get("transcript") or {}).get("tool_calls", {}).values()) if c.get("transcript") else 0
     errs = " ".join(c.get("errors") or []).lower()
