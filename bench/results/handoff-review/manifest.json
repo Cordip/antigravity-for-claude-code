@@ -51,5 +51,20 @@
     "mains-power gate on; sleep/network deaths rerun; same caps as run full; postrun agent judges and analyzes when the queue finishes",
     "2026-09-17 23:21Z: lane B idled 11 min at start because the queue lacked allow_same_arm_concurrency; set by hand at 23:32Z, no effect on results",
     "2026-09-18 05:07Z: cli-attach r1 slept 67 min mid-run; both delegations died on the executor's connection (network issue / TIMEOUT) and the run failed with nothing delivered ($10.95). Classified 'final' by the classifier of the time; relabelled 'suspended' and requeued per the pre-registered sleep rule; classify() now treats a slept, delegating run with no successful delegation and no pass as 'suspended'"
-  ]
+  ],
+  "raw_archive": {
+    "file": "handoff-review-raw-transcripts.tgz (kept by the operator; offered as a release asset)",
+    "sha256": "ee2ebbf522e21b7ef213a0ccb7c4648bbff75b7358977360026f86f8878e810f",
+    "bytes": 1548423,
+    "contents": "results/handoff-review/runs/**/raw (transcripts, result.json, agy_usage.log, tool_trace.jsonl) and judge/raw"
+  },
+  "finished_at": "2026-09-18T10:39:43+00:00",
+  "counted_runs": 16,
+  "skipped_items": 0,
+  "judging": {
+    "records": 64,
+    "failed": 0,
+    "usd": 22.24,
+    "finished_at": "2026-09-18T16:02:37Z"
+  }
 }

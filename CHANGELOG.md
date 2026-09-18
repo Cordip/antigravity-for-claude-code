@@ -37,6 +37,16 @@ All notable changes to **Antigravity for Claude Code**. Format loosely follows
   writing went unattributed); both studies were re-accounted — write columns changed,
   costs, passes and exclusions did not. `tests/check-bench-claims.py --fix` rewrites the
   quoted tables from their aggregates.
+- **A self-review pass does not buy the quality back.** A second pre-registered follow-up
+  (`bench/PROTOCOL-handoff-review.md`, tag `bench/protocol-handoff-review-v1`) added one
+  checklist review by agy in a fresh conversation after the hand-off: 15/16 passes,
+  0.67× solo Opus 5 per passing task (95% CI 0.52–1.02; 0.60× on large tasks), Claude
+  judge 3.49 against the hand-off's 3.42 (paired +0.07, CI −0.12 to +0.22) and
+  solo-opus's 4.02. The reviewer left in place the dead code and copy-pasted helpers the
+  checklist named. The plain hand-off stays the cheaper configuration at the same judged
+  quality; the harness gained a launchd `postrun` agent (judge and analyze when the
+  queue finishes), multi-run merges and paired per-task judge differences in `analyze`,
+  and a sleep rule for executor deaths.
 - **Two facts from the billing export worth acting on** (not changed here, recorded in
   `bench/prices.lock.json` `_observed_billing`): this Vertex project bills Gemini 3.8
   Flash at $1.50 / $7.50 / $0.15 per Mtok — twice `prices.json`'s promotional
@@ -47,7 +57,7 @@ All notable changes to **Antigravity for Claude Code**. Format loosely follows
   `agy --new-project` is issued there (measured: 450 s → 119 s for the same delegation);
   and under `--dangerously-skip-permissions` the executor may `search_web` for the
   upstream file or pull request (2 of 33 hybrid runs; excluded by the protocol).
-- Test suite: 343 checks plus a 49-check harness suite run as a child; five fixtures pin
+- Test suite: 343 checks plus a 53-check harness suite run as a child; five fixtures pin
   the doc-claims guard.
 
 ## 0.27.4

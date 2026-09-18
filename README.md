@@ -89,6 +89,14 @@ run.
 | solo-sonnet_vs_solo-opus@large | 3 | 0.73 | [0.4861, 1.6266] | 0.73 | [0.4861, 1.6266] | 0.73 | [0.4861, 1.6266] | -0.29 | 360/10000 |
 <!-- /bench:table -->
 
+**A self-review pass by agy does not buy the quality back.** In the second follow-up
+(`hybrid-handoff-review`: the hand-off plus one checklist review by agy in a fresh
+conversation), the Claude judge moved from 3.42 to 3.49 of 5 (paired difference +0.07,
+CI −0.12 to +0.22; `solo-opus` 4.02) while cost per passing task rose to 0.67× `solo-opus`
+(0.52–1.02; 0.60× on large tasks) at 15/16 passes: the reviewer left the dead code and
+copy-pasted helpers it was asked to remove. The plain hand-off is the cheaper
+configuration at the same judged quality.
+
 **Delegating file by file did not save money.** With Claude reading the code, writing
 specifications and verifying (`hybrid-inst`, `hybrid-forced`), cost per passing task was
 1.33–1.68× `solo-opus` at equal test outcomes and 3.8–4.6× the wall-clock:

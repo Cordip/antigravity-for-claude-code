@@ -38,9 +38,9 @@ results on purpose.
 ## Layout
 
 ```
-arms.json  prices.lock.json  PROTOCOL.md  PROTOCOL-handoff.md
+arms.json  prices.lock.json  PROTOCOL.md  PROTOCOL-handoff.md  PROTOCOL-handoff-review.md
 prompts/   task-template.md, hybrid-appendix.md, hybrid-forced-appendix.md,
-           hybrid-handoff-appendix.md, judge.md
+           hybrid-handoff-appendix.md, hybrid-handoff-review-appendix.md, judge.md
 policy/    allow-common.txt, allow-plugin.txt, bash-gate-rules.json
 config/    settings.template.json   (rendered per run into an isolated CLAUDE_CONFIG_DIR)
 hooks/     bash-gate.py, tree-trace.sh
