@@ -82,8 +82,8 @@
     "delegation_nudge": {
       "type": "string",
       "title": "Nudge delegation on bulk-looking prompts",
-      "description": "When on, a UserPromptSubmit hook adds a short advisory note to Claude's context when a prompt looks like bulk work above the delegation break-even (mass edits, migrations, exhaustive tests, fan-out search). Advisory only — Claude still makes the break-even judgment per task. Set to off/false/0/no to suppress.",
-      "default": "on"
+      "description": "When on, a UserPromptSubmit hook adds a short advisory note to Claude's context when a prompt looks like bulk work above the delegation break-even (mass edits, migrations, exhaustive tests, fan-out search). Advisory only — Claude still makes the break-even judgment per task. Off by default in this fork (delegation is the user's explicit call); set to on/true/1/yes to enable.",
+      "default": "off"
     },
     "usage_log": {
       "type": "string",

@@ -5,6 +5,13 @@ All notable changes to **Antigravity for Claude Code**. Format loosely follows
 
 ## 0.29.0
 
+- **Subagent, `/delegate` and the skill lead with the jail.** Under the default
+  `--isolation auto` they no longer ask for `--yolo` or `permissions.allow` rules (which add
+  nothing inside the jail), use `--isolation readonly` for review / search / research, and
+  report exit `16` instead of silently dropping to `--isolation off`. The grant guidance
+  stays for macOS and `--isolation off`.
+- **`delegation_nudge` is off by default.** Delegation is the user's explicit call; set the
+  option to `on` to get the UserPromptSubmit advisory back.
 - **`--isolation`: agy runs inside a bubblewrap jail on Linux, so write tasks work in the
   normal checkout without `--yolo` over the whole machine.** Measured on agy 1.2.11 (WSL2):
   headless without a grant, a denied tool ends the whole turn with no output, and no shell

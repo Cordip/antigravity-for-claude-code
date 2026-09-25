@@ -12,8 +12,12 @@ Do this:
 1. Pick a tier (`flash` default; `pro` for hard reasoning). If the task needs the repo,
    add `--dir <repo-root>` so agy reads the real files (don't paste them into context).
    **On Linux with bwrap nothing more is needed**: the default `--isolation auto` jails agy
-   to the repository (plus `--dir` paths) and approves every tool inside the jail.
-   **Otherwise, if the task WRITES files or uses tools** (web search / URL reads / Vertex AI Search / terminal), it needs
+   to the repository (plus `--dir` paths) and approves every tool inside the jail — edits,
+   tests, git, web search, URL reads — in the current checkout. Do not add `--yolo`. For a
+   read-only task (review, analysis, research) pass `--isolation readonly` so the repo stays
+   untouched. Exit `16` means the jail is unavailable: report it rather than dropping to
+   `--isolation off` on your own.
+   **Without the jail (macOS, or `--isolation off`), if the task WRITES files or uses tools** (web search / URL reads / Vertex AI Search / terminal), it needs
    a grant. For a plain file write the narrower one is a `write_file(<dir>)` entry under
    `permissions.allow` in `~/.gemini/antigravity-cli/settings.json` (recursive beneath
    `<dir>`, no flag needed — substitute a real path for `<dir>`; if a rule is already
@@ -34,7 +38,8 @@ Do this:
    fix: a `permissions.allow` rule covering the target, or `--yolo`. Since agy 1.1.27 the
    wrapper names the refused tool from the envelope's `denied_actions`.)
 2. Run **synchronously** (you may be headless — do not background-and-wait):
-   `agy-delegate --tier <tier> [--dir .] [--yolo] [--digest] "<task>"`
+   `agy-delegate --tier <tier> [--dir .] [--isolation readonly] [--digest] "<task>"`
+   (without the jail: `[--yolo]` in place of `--isolation`)
    For read/analysis tasks, add `--digest` — it appends a digest-only output contract so
    agy returns compact bullets instead of raw content.
 3. Ingest only the **result/digest** — do NOT re-read the files agy already handled

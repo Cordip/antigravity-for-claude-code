@@ -13,12 +13,13 @@
 # the context (no escaping/injection surface).
 #
 # Toggle via plugin userConfig `delegation_nudge`
-# (env CLAUDE_PLUGIN_OPTION_DELEGATION_NUDGE: off/false/0/no/disabled). Default: on.
+# (env CLAUDE_PLUGIN_OPTION_DELEGATION_NUDGE: on/true/1/yes/enabled). Default: off —
+# delegation is the user's explicit call (/antigravity:delegate or asking for agy).
 #
 set -uo pipefail
 
-raw="$(printf '%s' "${CLAUDE_PLUGIN_OPTION_DELEGATION_NUDGE:-on}" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')"
-case "$raw" in off|false|0|no|disabled) exit 0 ;; esac
+raw="$(printf '%s' "${CLAUDE_PLUGIN_OPTION_DELEGATION_NUDGE:-off}" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')"
+case "$raw" in on|true|1|yes|enabled) ;; *) exit 0 ;; esac
 
 IN="$(cat 2>/dev/null || true)"
 [ -n "$IN" ] || exit 0

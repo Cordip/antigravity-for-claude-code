@@ -364,6 +364,10 @@ any figure.
 
 ## SDLC recipes
 
+On Linux with bwrap (default `--isolation auto`), drop every `--yolo` below: the jail
+already approves all tools. Add `--isolation readonly` to review / search / research
+calls so the repository stays untouched.
+
 ```bash
 ROOT=agy-delegate
 

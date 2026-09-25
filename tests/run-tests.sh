@@ -820,8 +820,13 @@ for groups in hooks.values():
 PY
 check "hooks.json shape valid (SessionStart + UserPromptSubmit)" 0 "$rc"
 
-# nudge-delegation (UserPromptSubmit): advisory material only — never a mandate
+# nudge-delegation (UserPromptSubmit): advisory material only — never a mandate.
+# Off by default in this fork; the behaviour checks below run it switched on.
 NUDGE="$HOOKS/nudge-delegation.sh"
+out=$(printf '%s' '{"prompt":"migrate every caller from APIv1 to APIv2 across the codebase"}' | env -u CLAUDE_PLUGIN_OPTION_DELEGATION_NUDGE "$NUDGE" 2>/dev/null)
+if [ -z "$out" ]; then echo "ok: nudge is off by default"; PASS=$((PASS+1));
+else echo "FAIL: nudge fired with no delegation_nudge setting"; FAIL=$((FAIL+1)); fi
+export CLAUDE_PLUGIN_OPTION_DELEGATION_NUDGE=on
 out=$(printf '%s' '{"prompt":"migrate every caller from APIv1 to APIv2 across the codebase"}' | "$NUDGE" 2>/dev/null); rc=$?
 check "nudge fires on bulk EN prompt" 0 "$rc" "additionalContext" "$out"
 check "nudge preserves Claude's judgment (not a mandate)" 0 "$rc" "THE JUDGMENT IS YOURS" "$out"
@@ -841,6 +846,7 @@ else echo "FAIL: nudge fired while disabled"; FAIL=$((FAIL+1)); fi
 out=$(printf '%s' '{"prompt":"hello","cwd":"/home/u/migration-tool"}' | "$NUDGE" 2>/dev/null)
 if [ -z "$out" ]; then echo "ok: nudge scans only the prompt field (cwd noise ignored)"; PASS=$((PASS+1));
 else echo "FAIL: nudge matched a non-prompt field"; FAIL=$((FAIL+1)); fi
+unset CLAUDE_PLUGIN_OPTION_DELEGATION_NUDGE
 
 echo "== delegate subagent guardrail =="
 GATE="$HOOKS/validate-delegate-bash.sh"

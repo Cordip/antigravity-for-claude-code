@@ -63,11 +63,10 @@ agy-delegate [options] "<task>"
 ```
 
 Options: `--tier flash|flash-lo|pro` · `--dir <repo-root>` (so agy reads
-`AGENTS.md` + the real files — always prefer this over pasting code) · `--yolo`
-(required for any tool use or file writing in headless mode — a grant over the machine,
-not over `--dir`) · `--sandbox` (does NOT contain anything; measured inert under
-`--yolo`) ·
+`AGENTS.md` + the real files — always prefer this over pasting code) ·
+`--isolation auto|workspace|readonly|off` (default `auto`, see Modes) ·
 `--timeout 10m` · `-c`/`--continue` to hold state on the cheap side.
+Only without the jail: `--yolo` (a grant over the whole machine) — never needed under it.
 
 ## Cost discipline (why this subagent exists)
 
@@ -85,10 +84,24 @@ not over `--dir`) · `--sandbox` (does NOT contain anything; measured inert unde
 
 ## Modes
 
-- **Write / build** (scaffold, implement, generate tests, migrate): agentic mode. On Linux
-  with bwrap the wrapper's default `--isolation auto` jails agy to the repository and
-  grants everything inside the jail — no `--yolo`, no rule needed, writes outside the
-  repo fail. Otherwise the write needs a grant. Pass `--yolo` unless the user has a `permissions.allow`
+**Jailed (Linux with bwrap — the default).** The wrapper's `--isolation auto` runs agy in
+a bubblewrap jail and approves every tool inside it: agy can edit the repository, run
+tests/builds/git, web-search and read URLs; anything outside the repo (plus `--dir` and
+`~/.gemini`) is read-only and credential dirs are hidden. Pass **no** `--yolo` and no
+rules — they add nothing. Work happens in the caller's current checkout; no worktree.
+
+- **Write / build** (scaffold, implement, generate tests, migrate): run from the repo,
+  default isolation. The caller reviews `git diff` afterwards.
+- **Read-only** (analysis, first-pass review, web search, research): add
+  `--isolation readonly` so the repository stays untouched; if agy must write a report,
+  give it an output directory with `--dir <out-dir>` (the only writable path then).
+  Ask agy to return findings + `file:line` only.
+- Exit `16` = isolation was requested but is unavailable (no bwrap, not Linux, or run
+  from `$HOME`/`/`). Report it; do not silently retry with `--isolation off`.
+
+**Not jailed (macOS, or `--isolation off`)** — agy's own permission model applies:
+
+- **Write / build**: the write needs a grant. Pass `--yolo` unless the user has a `permissions.allow`
   `write_file(<dir>)` rule covering the target in `~/.gemini/antigravity-cli/settings.json`
   — that grants the write recursively beneath `<dir>` with no flag, and is narrower than
   `--yolo`, which approves every tool. If they say a rule is in place and the write is
@@ -100,7 +113,7 @@ not over `--dir`) · `--sandbox` (does NOT contain anything; measured inert unde
   the caller to run on a dedicated branch/worktree and review the diff before merging.
 - **Read-only** (analysis, first-pass review, search): no `--yolo` needed unless
   the task uses tools (web search, URL reads — agy 1.1.28 made those ask first — and Vertex AI Search need `--yolo`). Ask agy to return
-  findings + `file:line` only.
+  findings + `file:line` only. `--sandbox` does NOT contain anything (measured inert under `--yolo`).
 
 ## What to return to the caller
 
@@ -119,3 +132,5 @@ The wrapper exits non-zero and prints an `AGY_SIGNAL {...}` line on failure:
 - `12` timeout → suggest a larger `--timeout` or a narrower task.
 - `13` agy missing → report the install step (https://antigravity.google/docs/cli-using).
 - `2` generic agy failure · `3` empty output → report the stderr and suggest `--tier pro` or a sharper spec.
+- `15` permission denied (only outside the jail) → a `permissions.allow` rule or `--yolo`.
+- `16` isolation unavailable → report it; the caller decides whether `--isolation off` is acceptable.
