@@ -46,6 +46,29 @@ jobs:
       - name: Tests (stubs agy; no network)
         run: bash tests/run-tests.sh
 
+  # agy-delegate / agy-job are Python (src/agy_runner, stdlib only, Python >= 3.9). The
+  # oldest and the current supported Python both run the unit tests; lint and types once.
+  python:
+    name: Python runner (uv)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv (pinned)
+        run: curl -LsSf https://astral.sh/uv/0.12.9/install.sh | sh
+
+      - name: Lint and types
+        run: |
+          uv run --locked ruff check src tests/unit
+          uv run --locked mypy
+
+      - name: Unit tests (Python 3.9 and 3.12)
+        run: |
+          uv run --locked --python 3.9 pytest -q
+          uv run --locked --python 3.12 pytest -q
+
   # CONTRIBUTING targets /bin/bash 3.2 and BSD userland and says outright that testing
   # on Linux only will not catch violations. 0.25.2's CPU spin reproduced only on
   # 3.2.57. This job runs the same suite on macOS with the SYSTEM bash first on PATH,

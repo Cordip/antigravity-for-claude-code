@@ -24,7 +24,7 @@ PASS=0; FAIL=0; SKIP=0
 # flash tier to 3.7 broke four assertions that had the old name baked in, which is what
 # this removes.
 tier_default() { # $1 = FLASH | FLASH_LO | PRO
-  sed -n "s/.*CLAUDE_PLUGIN_OPTION_TIER_$1:-\\(.*\\)}\".*/\\1/p" "$DELEGATE" | head -1
+  sed -n "s/.*(\"TIER_$1\", \"\\(.*\\)\").*/\\1/p" "$ROOT/src/agy_runner/options.py" | head -1
 }
 DEF_FLASH="$(tier_default FLASH)"
 DEF_FLASH_LO="$(tier_default FLASH_LO)"
@@ -88,6 +88,8 @@ has() { case "$2" in *"$1"*) return 0 ;; *) return 1 ;; esac; }
 mkdir -p "$TMP/bin"
 cat > "$TMP/bin/agy" <<'STUB'
 #!/usr/bin/env bash
+# The Python runner probes `agy --version` (it needs >= 1.2) before every run.
+if [ "$1" = "--version" ]; then echo "${STUB_AGY_VERSION:-1.2.11}"; exit 0; fi
 [ -n "${STUB_SLEEP:-}" ] && sleep "$STUB_SLEEP"
 # `agy models` emits the slug format agy 1.1.5+ uses (was display names before) so doctor's
 # tier-model check is exercised against the current format.
@@ -103,6 +105,7 @@ if [ "$1" = "--help" ]; then
   echo "  --print-timeout  timeout"
   exit 0
 fi
+body() {
 case "${STUB_MODE:-text}" in
   empty)   exit 0 ;;                  # no stdout -> wrapper should exit 3
   fail)    echo "boom" >&2; exit 7 ;; # nonzero  -> wrapper should exit 2
@@ -164,8 +167,36 @@ case "${STUB_MODE:-text}" in
   json_quota) printf '{"conversation_id":"","status":"ERROR","response":"","error":"quota exceeded for this model","usage":{}}'; exit 1 ;;
   *)       echo "STUB_OK"; if [ -n "${STUB_TEXT:-}" ]; then printf '%s\n' "$STUB_TEXT"; fi ;;
 esac
+}
+# Without --output-format stream-json: the old shapes, verbatim.
+case " $* " in *" --output-format stream-json "*) ;; *) body "$@"; exit $? ;; esac
+# With it (what the Python runner always asks for): the same reply as agy 1.2 events:
+# init, one step, then a result carrying the reply (or a mode's own JSON envelope).
+text="$(body "$@")"; rc=$?
+if [ -z "$text" ] && [ "$rc" -ne 0 ]; then exit "$rc"; fi
+STUB_BODY="$text" python3 "${STUB_STREAM_PY:-$(dirname "$0")/stub-stream.py}"
+exit "$rc"
 STUB
 chmod +x "$TMP/bin/agy"
+cat > "$TMP/bin/stub-stream.py" <<'STUBPY'
+import json, os
+body = os.environ.get("STUB_BODY", "")
+try:
+    env = json.loads(body, strict=False)
+    if not isinstance(env, dict) or "status" not in env:
+        raise ValueError
+except ValueError:
+    env = {"conversation_id": "stub-conv", "status": "SUCCESS", "response": body,
+           "duration_seconds": 1.5, "num_turns": 1,
+           "usage": {"input_tokens": 10, "output_tokens": 2, "thinking_tokens": 1,
+                     "cache_read_tokens": 3, "total_tokens": 16}}
+cid = env.get("conversation_id") or "stub-conv"
+print(json.dumps({"event": "init", "conversation_id": cid, "init": {"cwd": os.getcwd()}}))
+print(json.dumps({"event": "step_update", "step_update": {"conversation_id": cid,
+      "step_index": 0, "state": "DONE", "step_type": "tool", "tool_name": "run_command"}}))
+print(json.dumps({"event": "result", "result": env}))
+STUBPY
+export STUB_STREAM_PY="$TMP/bin/stub-stream.py"
 
 # --- stub `gcloud` on PATH; logging-read behavior controlled by $GCLOUD_MODE ----
 cat > "$TMP/bin/gcloud" <<'STUB'
@@ -397,36 +428,6 @@ check "agy bad --model -> exit 14 + signal" 14 "$rc" "MODEL_UNAVAILABLE" "$out"
 # agy >= 1.1.8 structured output: used internally, stdout contract unchanged
 out=$(STUB_JSON_CAPABLE=1 STUB_MODE=json_ok "$DELEGATE" "hi" 2>/dev/null); rc=$?
 check "json mode: stdout carries the response text (not the envelope)" 0 "$rc" "JSONBODY" "$out"
-# Regression: the capability probe must not pipe into `grep -q`. That closes the pipe on
-# the first match, `agy --help` can die of SIGPIPE, and under `set -o pipefail` the probe
-# silently reads as "unsupported" -> JSON mode off with no AGY_USAGE, indistinguishable
-# from "no delegation happened". Observed at ~75% failure on a loaded container.
-if grep -qE 'agy --help[^|]*\| *grep' <(sed 's/#.*//' "$DELEGATE"); then
-  echo "FAIL: capability probe pipes agy --help into grep (SIGPIPE race under pipefail)"; FAIL=$((FAIL+1));
-else echo "ok: capability probe avoids the grep pipe (no SIGPIPE race)"; PASS=$((PASS+1)); fi
-# Under load the probe must still be deterministic: run the real gate shape 20x.
-probe_off=0
-for _ in $(seq 1 20); do
-  STUB_JSON_CAPABLE=1 bash -c '
-    set -euo pipefail
-    h="$(agy --help 2>&1 || true)"
-    case "$h" in *--output-format*) exit 0 ;; esac
-    exit 1' >/dev/null 2>&1 || probe_off=$((probe_off+1))
-done
-if [ "$probe_off" -eq 0 ]; then echo "ok: capability probe stable over 20 runs"; PASS=$((PASS+1));
-else echo "FAIL: capability probe flaked $probe_off/20 times"; FAIL=$((FAIL+1)); fi
-
-# The --help probe must be wall-clock bounded like the main call. It was the one
-# unguarded `agy` invocation left: the timeout resolver used to be initialised
-# after it. A hang here is not hypothetical — doctor's own MCP hint documents a
-# blocking mode that survives the issue-37 fix.
-if grep -qE '"\$TO_CMD"[^|]*agy --help' <(sed 's/#.*//' "$DELEGATE"); then
-  echo "ok: the --help capability probe is wall-clock bounded"; PASS=$((PASS+1));
-else echo "FAIL: --help probe runs unguarded (no timeout)"; FAIL=$((FAIL+1)); fi
-if [ "$(sed 's/#.*//' "$DELEGATE" | grep -n 'TO_CMD="\$(timeout_cmd' | cut -d: -f1)" \
-   -lt "$(sed 's/#.*//' "$DELEGATE" | grep -n 'agy --help' | head -1 | cut -d: -f1)" ]; then
-  echo "ok: the timeout resolver is initialised before the probe uses it"; PASS=$((PASS+1));
-else echo "FAIL: TO_CMD resolved after the --help probe — the guard is a no-op"; FAIL=$((FAIL+1)); fi
 
 # --- issue #37: never capture agy through a pipe ------------------------------
 # agy's stdio MCP children INHERIT its stdout and outlive it, so they hold the
@@ -498,13 +499,6 @@ check "json mode: error containing quotes still classifies (exit 14)" 14 "$rc" "
 check "json mode: quoted error yields the actionable hint" 14 "$rc" "not available on this plan" "$out"
 out=$(STUB_JSON_CAPABLE=1 STUB_MODE=json_quota "$DELEGATE" "hi" 2>&1); rc=$?
 check "json mode: structured quota error -> exit 10" 10 "$rc" "QUOTA_EXHAUSTED" "$out"
-# opt-out and capability fallback both take the plain-text path (no AGY_USAGE)
-err=$(STUB_JSON_CAPABLE=1 STUB_MODE=text CLAUDE_PLUGIN_OPTION_STRUCTURED_OUTPUT=off "$DELEGATE" "hi" 2>&1 >/dev/null)
-if grep -q "AGY_USAGE" <<<"$err"; then echo "FAIL: structured_output=off still used json"; FAIL=$((FAIL+1));
-else echo "ok: structured_output=off falls back to plain text"; PASS=$((PASS+1)); fi
-err=$(STUB_JSON_CAPABLE=0 STUB_MODE=text "$DELEGATE" "hi" 2>&1 >/dev/null)
-if grep -q "AGY_USAGE" <<<"$err"; then echo "FAIL: used json against an agy that lacks the flag"; FAIL=$((FAIL+1));
-else echo "ok: falls back when agy has no --output-format (pre-1.1.8)"; PASS=$((PASS+1)); fi
 
 # --- AGY_USAGE_LOG side channel ---------------------------------------------
 # Regression guard for a measurement loss seen in the wild: stderr carries the
@@ -717,10 +711,6 @@ check "print-timeout expiry still prints the partial reply on stdout" 12 "$pt_rc
 check "print-timeout expiry says the output is partial" 12 "$pt_rc" "PARTIAL" "$(cat "$TMP/pt.err")"
 pt_out=$(STUB_MODE=partial_timeout_120 "$DELEGATE" --timeout 5s "write an essay" 2>"$TMP/pt.err"); pt_rc=$?
 check "agy 1.2.0 print-timeout expiry (plain) -> exit 12 with the partial reply" 12 "$pt_rc" "Cogwheels" "$pt_out"
-# Plain-text mode prints no AGY_USAGE line, so the note must not point at one.
-if has 'AGY_USAGE' "$(cat "$TMP/pt.err")"; then
-  echo "FAIL: plain-mode timeout note refers to an AGY_USAGE line that was never printed"; FAIL=$((FAIL+1));
-else echo "ok: plain-mode timeout note does not mention a nonexistent AGY_USAGE line"; PASS=$((PASS+1)); fi
 # Negative control: the same wording inside the reply with clean stderr is a success.
 nt_out=$(STUB_JSON_CAPABLE=1 STUB_MODE=json_reply_mentions_timeout "$DELEGATE" "review it" 2>/dev/null); nt_rc=$?
 check "timeout wording inside the reply alone never classifies" 0 "$nt_rc" "JSONBODY" "$nt_out"
@@ -1744,8 +1734,8 @@ out=$(ROOT="$ROOT" python3 - <<'PY' 2>&1
 import json, os, re
 root = os.environ["ROOT"]
 pj = json.load(open(os.path.join(root, "prices.json")))
-src = open(os.path.join(root, "scripts", "agy-delegate.sh")).read()
-m = re.search(r'flash\)\s*echo "\$\{CLAUDE_PLUGIN_OPTION_TIER_FLASH:-([^}]*)\}"', src)
+src = open(os.path.join(root, "src", "agy_runner", "options.py")).read()
+m = re.search(r'"flash": \("TIER_FLASH", "([^"]*)"\)', src)
 if not m:
     print("flash tier default not found (model_for_tier pattern changed?)"); raise SystemExit
 default = m.group(1)
@@ -1831,14 +1821,14 @@ else echo "FAIL: job did not surface AGY_SIGNAL"; FAIL=$((FAIL+1)); fi
 echo "== fork 0.30.0: model lock, work rules, job timeout, wait =="
 # Model lock (default on): --tier / --model are ignored with a note; default_model moves it.
 out=$(CLAUDE_PLUGIN_OPTION_MODEL_LOCK= "$DELEGATE" --tier pro --print-command "x" 2>"$TMP/ml.err"); rc=$?
-check "model lock: --tier pro still runs Gemini 3.8 Flash (High)" 0 "$rc" 'Gemini\ 3.8\ Flash\ \(High\)' "$out"
+check "model lock: --tier pro still runs Gemini 3.8 Flash (High)" 0 "$rc" "'Gemini 3.8 Flash (High)'" "$out"
 check "model lock: the ignored --tier is named on stderr" 0 "$rc" "--tier pro ignored" "$(cat "$TMP/ml.err")"
 out=$(CLAUDE_PLUGIN_OPTION_MODEL_LOCK=on "$DELEGATE" --model "Gemini 3.1 Pro (High)" --print-command "x" 2>/dev/null); rc=$?
-check "model lock: --model is ignored too" 0 "$rc" 'Gemini\ 3.8\ Flash\ \(High\)' "$out"
+check "model lock: --model is ignored too" 0 "$rc" "'Gemini 3.8 Flash (High)'" "$out"
 out=$(CLAUDE_PLUGIN_OPTION_MODEL_LOCK=on CLAUDE_PLUGIN_OPTION_DEFAULT_MODEL="Custom M" "$DELEGATE" --tier pro --print-command "x" 2>/dev/null); rc=$?
-check "model lock: default_model sets the locked model" 0 "$rc" 'Custom\ M' "$out"
+check "model lock: default_model sets the locked model" 0 "$rc" "'Custom M'" "$out"
 out=$(CLAUDE_PLUGIN_OPTION_MODEL_LOCK=off "$DELEGATE" --tier pro --print-command "x" 2>/dev/null); rc=$?
-check "model_lock=off restores tier routing" 0 "$rc" 'Gemini\ 3.1\ Pro\ \(High\)' "$out"
+check "model_lock=off restores tier routing" 0 "$rc" "'Gemini 3.1 Pro (High)'" "$out"
 # Work rules (default on) are appended; off sends the task unchanged.
 out=$(CLAUDE_PLUGIN_OPTION_WORK_RULES= "$DELEGATE" --print-command "the task" 2>/dev/null); rc=$?
 check "work rules appended by default" 0 "$rc" "never loosen thresholds" "$out"
@@ -1895,7 +1885,7 @@ else echo "ok: --resume does not fall back to --continue"; PASS=$((PASS+1)); fi
 check "resumed job records where it came from" 0 0 "resumed_from=$rid" "$(cat "$ANTIGRAVITY_JOBS/$fid/meta")"
 out=$("$JOB" start --resume "$rid" --continue "x" 2>&1); rc=$?
 check "start --resume with --continue is refused" 1 "$rc" "not both" "$out"
-nid=$(STUB_MODE=text "$JOB" start "plain" 2>/dev/null); AGY_JOB_POLL=0.2 "$JOB" wait "$nid" >/dev/null 2>&1
+nid=$(STUB_MODE=fail "$JOB" start "plain" 2>/dev/null); AGY_JOB_POLL=0.2 "$JOB" wait "$nid" >/dev/null 2>&1
 out=$("$JOB" start --resume "$nid" "x" 2>&1); rc=$?
 check "start --resume on a job without a conversation id is refused" 1 "$rc" "no agy conversation id" "$out"
 # A second job in the same directory is told the checkout is shared.

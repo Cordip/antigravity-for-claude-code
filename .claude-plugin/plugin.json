@@ -1,6 +1,6 @@
 {
   "name": "antigravity",
-  "version": "0.33.0",
+  "version": "0.34.0",
   "description": "Run the Antigravity CLI (Gemini) as a collaborating AI inside Claude Code, with intelligent model routing across the SDLC. Claude conducts — requirements, architecture, the hard 20%, verification, review — and routes deterministic, high-volume work (scaffolding, tests, first-pass review, migrations, web/Vertex AI Search) to Antigravity. Hybrid agentic engineering; lower token cost as a financial lever.",
   "author": {
     "name": "linyuting"
@@ -42,6 +42,12 @@
       "title": "Background job timeout",
       "description": "Timeout for agy-job runs that do not pass --timeout, e.g. 30m, 1h. A job cut off by it can be resumed with --continue.",
       "default": "30m"
+    },
+    "idle_timeout": {
+      "type": "string",
+      "title": "Stop agy after this long without progress",
+      "description": "agy streams an event for every step. When none arrives for this long (e.g. 15m, 900s), the run is stopped with exit 12 and can be resumed with --resume / --continue. It catches a hung agy long before job_timeout. Set 0 to turn it off; keep it above your slowest single command (a long test run sends no events while it runs).",
+      "default": "15m"
     },
     "isolation": {
       "type": "string",
@@ -96,12 +102,6 @@
       "title": "Model for the 'pro' tier",
       "description": "Override the exact agy model the 'pro' tier maps to (default: Gemini 3.1 Pro (High)). Use a name from `agy models`.",
       "default": ""
-    },
-    "structured_output": {
-      "type": "string",
-      "title": "Use agy's structured JSON output",
-      "description": "When on (default), agy-delegate runs agy with --output-format json (agy >= 1.1.8, requires python3) to classify failures from the structured error and report token usage as an AGY_USAGE line on stderr. The text on stdout is unchanged. Set to off/false/0/no to force the plain-text path.",
-      "default": "on"
     },
     "digest_warn_chars": {
       "type": "string",

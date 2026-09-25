@@ -1,0 +1,43 @@
+[project]
+name = "agy-runner"
+version = "0.34.0"
+description = "Runs the Antigravity CLI (agy) in a bubblewrap jail and as background jobs, for the Antigravity plugin for Claude Code."
+requires-python = ">=3.9"
+license = "MIT"
+# Standard library only: the plugin's bin/ shims run this with the system python3.
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "mypy>=1.19.1",
+    "pytest>=8.4.2",
+    "ruff>=0.16.9",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/agy_runner"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests/unit"]
+
+[tool.ruff]
+target-version = "py39"
+line-length = 100
+src = ["src", "tests/unit"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+# The work rules and the digest contract are sent to agy verbatim, one rule per line.
+"src/agy_runner/delegate.py" = ["E501"]
+
+[tool.mypy]
+# mypy itself needs >= 3.10; ruff (target py39) guards the 3.9 syntax.
+python_version = "3.10"
+strict = true
+files = ["src/agy_runner"]

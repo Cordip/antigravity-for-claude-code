@@ -76,6 +76,11 @@ shellcheck scripts/*.sh tests/*.sh   # CI gates on --severity=error
   Linux only will not catch these; CI's macOS job does, but run the suite on 3.2 locally when
   you can.
 - New scripts get a `usage()` and a test in `tests/run-tests.sh`.
+- **The runner is Python** (`src/agy_runner`: `agy-delegate` and `agy-job`; the `.sh`
+  files in `scripts/` are shims). Standard library only, Python >= 3.9, because the plugin
+  runs it with the system `python3`. Develop with uv, never pip:
+  `uv run ruff check src tests/unit`, `uv run mypy`, `uv run pytest`. The bash suite in
+  `tests/run-tests.sh` still exercises the runner end to end through its stub `agy`.
 
 ## Reporting bugs / ideas
 

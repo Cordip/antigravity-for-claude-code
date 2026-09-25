@@ -3,6 +3,27 @@
 All notable changes to **Antigravity for Claude Code**. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/); versions are in `.claude-plugin/plugin.json`.
 
+## 0.34.0
+
+- **`agy-delegate` and `agy-job` are Python** (`src/agy_runner`, standard library only,
+  Python >= 3.9, run with the system `python3` the jail already needed). `scripts/*.sh`
+  and `bin/` keep their names and arguments as shims, so commands, skills and the other
+  scripts are unchanged. The bash suite (343 checks) runs against the Python runner
+  through its stub `agy`; new unit tests run with `uv run pytest` on Python 3.9 and 3.12
+  in CI, with ruff and mypy.
+- **agy >= 1.2 is required** (exit 13 on older agy). The runner always reads agy's
+  `--output-format stream-json` events. The plain-text fallback, the `--help` capability
+  probe and the `structured_output` option are gone.
+- **Live progress.** Each job keeps agy's raw events (`events.ndjson`) and a
+  `progress.json`; `agy-job status` and a `wait --timeout` that gives up show elapsed time,
+  steps, tools used and the current tool.
+- **Idle timeout** (plugin option `idle_timeout`, default 15m): a run that sends no events
+  for that long is stopped with exit 12, instead of burning the whole `--timeout`.
+- **The whole process tree stops.** agy runs in its own session; a timeout, SIGTERM or
+  `agy-job cancel` stops agy and everything it started, and a cancelled job records rc 130.
+- **`--resume` works for cut-off jobs too:** the conversation id is also read from the
+  job's progress file, which has it even when agy never reached its result.
+
 ## 0.33.0
 
 - **Several jobs at once, as with Codex's background tasks.** Nothing isolates them (no

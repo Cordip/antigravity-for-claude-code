@@ -83,11 +83,17 @@ worktree, no permission rules, no approval prompts.
 - [x] **Parallel jobs and per-job follow-ups** (0.33.0): `agy-job start --resume <job-id>`,
   the parallel-write rule, a note on other running jobs.
 
+- [x] **Python port** (0.34.0, planned as a TS port; Python chosen because the jail
+  already requires `python3`, so it adds no runtime and no build step). `src/agy_runner`,
+  stdlib only, uv for development. agy >= 1.2 with stream-json: live progress per job,
+  idle timeout, the whole process tree stopped on timeout / cancel.
+
 ## Next
 
-3. **Port the core to TypeScript.** Replace `agy-delegate.sh` / `agy-job.sh` with a TS
-   runner. Reuse `driver.ts` / `streaming.ts` from `codex-antigravity-subagent` for
-   stream-json progress and persistent sessions. Keep the commands and the job model.
+3. **Live trial 5** on the Python runner: a real job in `field-length`, checking
+   `agy-job status` progress mid-run, the notification, and `--resume`.
+4. **Richer progress** once real stream-json samples show what `tool_info` carries (files
+   edited, commands run).
 
 ## Backlog
 
