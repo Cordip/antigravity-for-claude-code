@@ -237,7 +237,9 @@ Delegation doesn't save money by itself — these do (also in the skill):
   checks. Nothing sits waiting on agy and there are no polling loops. There is no delegate
   subagent in this fork: it cost an extra Sonnet call, hung once waiting on a backgrounded
   Bash call, and its Bash gate never ran (Claude Code ignores `hooks` in a plugin agent's
-  frontmatter). A timeout (exit 12) may leave an empty reply with files already changed; `--continue` resumes
+  frontmatter). Several jobs may run at once in one checkout, as with Codex: read-only
+  ones freely, write ones only on separate files. `agy-job start --resume <job-id>` continues
+  that job's own agy conversation (`--continue` would take agy's most recent one). A timeout (exit 12) may leave an empty reply with files already changed; `--continue` resumes
   the same agy conversation. The wrapper appends work rules to every task (plugin option
   `work_rules`) and logs an `AGY_RUN` line naming the model, jail and timeout before each
   run. `duration_seconds` in `AGY_USAGE` covers the whole agy conversation, so after

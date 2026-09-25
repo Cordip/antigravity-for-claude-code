@@ -7,6 +7,9 @@
 #
 # Usage:
 #   agy-job.sh start  [agy-delegate options] "task"   # -> prints a JOB_ID, returns now
+#   agy-job.sh start  --resume <id> [options] "task"   # follow-up in job <id>'s own agy
+#                                                      # conversation (--conversation), not
+#                                                      # agy's most recent one (--continue)
 #   agy-job.sh list                                    # jobs started from this dir
 #   agy-job.sh status <id>                             # running | done(rc) | failed
 #   agy-job.sh result <id>                             # print stdout (+rc) when finished
@@ -20,6 +23,12 @@
 # Jobs live under ${ANTIGRAVITY_JOBS:-~/.antigravity-jobs}/<id>/ (out, err, rc, meta).
 # A job runs with --timeout 30m unless the args name one (plugin option job_timeout, or
 # env AGY_JOB_TIMEOUT). The 5m wrapper default killed the first real job mid-turn.
+#
+# Several jobs may run at once in one checkout, as with Codex's background tasks: nothing
+# here isolates them, so parallel WRITE jobs must work on separate files (the caller's
+# job). `start` says how many other jobs are running in the same directory. Each job's
+# agy conversation id is read from its AGY_USAGE line, so --resume <id> continues the
+# right conversation even when several jobs have run since.
 #
 set -uo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
@@ -52,6 +61,13 @@ job_state() {
   fi
 }
 
+# agy conversation id of a job, from its AGY_USAGE line (JSON mode). Empty when agy
+# printed none: plain-text mode, or the wall-clock guard killed agy before its envelope.
+job_conv() {
+  grep -m1 '^AGY_USAGE ' "$1/err" 2>/dev/null \
+    | sed -n 's/.*"conversation_id": *"\([^"]*\)".*/\1/p'
+}
+
 # Human label for a delegate exit code (mirrors agy-delegate.sh structured codes).
 rc_label() {
   case "$1" in
@@ -60,7 +76,7 @@ rc_label() {
     3)  echo 'empty output' ;;
     10) echo 'QUOTA — retry later with --continue' ;;
     11) echo 'AUTH required — run `agy` once interactively' ;;
-    12) echo 'TIMEOUT — the reply may be empty and files may already be changed (check git status); --continue resumes the conversation, or raise --timeout' ;;
+    12) echo 'TIMEOUT — the reply may be empty and files may already be changed (check git status); agy-job start --resume <this id> continues the conversation, or raise --timeout' ;;
     13) echo 'agy MISSING — install the Antigravity CLI' ;;
     14) echo 'MODEL unavailable — check `agy models` / tier remap' ;;
     # Both denial shapes: the soft deny (agy 1.1.3+, and again from 1.1.20) and 1.1.13's hard error.
@@ -75,15 +91,44 @@ case "$cmd" in
   start)
     [ $# -ge 1 ] || die "start needs delegate args, e.g.  start --tier pro \"task\""
     [ -x "$DELEGATE" ] || die "delegate not executable: $DELEGATE"
+    resume=""; args=()
+    while [ $# -gt 0 ]; do
+      case "$1" in
+        --resume) [ $# -ge 2 ] || die "--resume needs a job id"; resume="$2"; shift 2 ;;
+        *) args+=("$1"); shift ;;
+      esac
+    done
+    [ "${#args[@]}" -ge 1 ] || die "start needs a task"
+    resumed_from=""
+    if [ -n "$resume" ]; then
+      rjd="$(jobdir "$resume")"
+      [ "$(job_state "$rjd")" != running ] || die "job $(basename "$rjd") is still running; wait for it before resuming"
+      for a in "${args[@]}"; do
+        case "$a" in -c|--continue|--conversation) die "use --resume or --continue/--conversation, not both" ;; esac
+      done
+      conv="$(job_conv "$rjd")"
+      [ -n "$conv" ] || die "job $(basename "$rjd") recorded no agy conversation id (no AGY_USAGE line: plain-text mode, or agy was killed before replying); --continue resumes agy's most recent conversation instead"
+      args=(--conversation "$conv" "${args[@]}")
+      resumed_from="$(basename "$rjd")"
+    fi
+    set -- "${args[@]}"
     has_timeout=0
     for a in "$@"; do [ "$a" = "--timeout" ] && has_timeout=1; done
     if [ "$has_timeout" -eq 0 ]; then
       set -- --timeout "${AGY_JOB_TIMEOUT:-${CLAUDE_PLUGIN_OPTION_JOB_TIMEOUT:-30m}}" "$@"
     fi
+    # Other jobs still running in this directory: parallel writers share the checkout.
+    others=0
+    for ojd in "$REG"/*/; do
+      [ -d "$ojd" ] || continue
+      [ "$(sed -n 's/^cwd=//p' "$ojd/meta" 2>/dev/null)" = "$PWD" ] || continue
+      [ "$(job_state "${ojd%/}")" = running ] && others=$((others+1))
+    done
     id="$(date +%Y%m%d-%H%M%S)-$$-${RANDOM}"
     jd="$REG/$id"; mkdir -p "$jd"
     { echo "id=$id"; echo "cwd=$PWD"; echo "started=$(date -u +%FT%TZ 2>/dev/null || date)";
-      echo "task=$(printf '%s' "${!#}" | tr '\n' ' ' | cut -c1-200)"; } > "$jd/meta"
+      echo "task=$(printf '%s' "${!#}" | tr '\n' ' ' | cut -c1-200)";
+      [ -z "$resumed_from" ] || echo "resumed_from=$resumed_from"; } > "$jd/meta"
     # Job control on: the job gets its own process group (pgid = its pid), so cancel can
     # stop the whole tree. Killing only the subshell and its children used to leave
     # timeout/bwrap/agy running.
@@ -94,6 +139,9 @@ case "$cmd" in
     set +m
     echo "$id"
     echo "agy-job: started $id. Collect it with: agy-job wait $id (as a background Bash command; you are notified when it exits)" >&2
+    if [ "$others" -gt 0 ]; then
+      echo "agy-job: note: $others other job(s) still running in $PWD. They share this checkout: parallel write jobs must touch separate files. agy-job list shows them." >&2
+    fi
     ;;
   list)
     [ -d "$REG" ] || { echo "(no jobs)"; exit 0; }
@@ -117,6 +165,8 @@ case "$cmd" in
     if [ -n "$rc" ]; then echo "  state=$st (rc=$rc: $(rc_label "$rc"))"; else echo "  state=$st"; fi
     sig="$(grep -m1 '^AGY_SIGNAL ' "$jd/err" 2>/dev/null || true)"
     if [ -n "$sig" ]; then echo "  signal=${sig#AGY_SIGNAL }"; fi
+    conv="$(job_conv "$jd")"
+    if [ -n "$conv" ]; then echo "  conversation=$conv (follow up: agy-job start --resume $(basename "$jd") \"<task>\")"; fi
     ;;
   result|wait)
     jd="$(jobdir "${1:-}")"; st="$(job_state "$jd")"
@@ -141,6 +191,9 @@ case "$cmd" in
     [ -s "$jd/err" ] && { echo "----- stderr -----" >&2; cat "$jd/err" >&2; }
     cat "$jd/out" 2>/dev/null
     echo "[exit rc=${rc:-?}${rc:+: $(rc_label "$rc")}]" >&2
+    if [ -n "$(job_conv "$jd")" ]; then
+      echo "[follow up in this job's conversation: agy-job start --resume $(basename "$jd") \"<task>\"]" >&2
+    fi
     ;;
   cancel)
     jd="$(jobdir "${1:-}")"

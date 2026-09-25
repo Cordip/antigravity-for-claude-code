@@ -10,7 +10,9 @@ Raw arguments: $ARGUMENTS
 
 Flags (strip them from the task text):
 
-- `--continue` (or "keep going", "fix what you left"): resume the same agy conversation.
+- `--continue` (or "keep going", "fix what you left"): resume that job's agy conversation
+  with `agy-job start --resume <job-id> "<follow-up>"`. Plain `--continue` resumes agy's most
+  recent conversation, which is another job's once several have run.
 - `--readonly`: the task only reads (review, analysis, research); agy gets
   `--isolation readonly`.
 - `--wait`: block on the result in the foreground (the headless loop at the end) instead
@@ -23,7 +25,7 @@ filesystem is not).
 Every delegation runs as a job, the Codex `--background` pattern: nothing sits waiting on agy.
 
 1. From the repository root, start it with one Bash call:
-   `agy-job start [--isolation readonly] [--continue] "<task>"`. It prints the job id and
+   `agy-job start [--isolation readonly] [--resume <job-id>] "<task>"`. It prints the job id and
    returns at once. The job runs with a 30-minute agy limit (plugin option `job_timeout`).
 2. Run `agy-job wait <id>` with the Bash tool's `run_in_background: true`. Tell the user
    the job started, then carry on with other work or end your turn. Claude Code notifies you
@@ -31,11 +33,22 @@ Every delegation runs as a job, the Codex `--background` pattern: nothing sits w
 3. On the notification, read that background command's output: agy's reply, its stderr,
    and a final `[exit rc=<code>: ...]` line. (`agy-job result <id>` prints the same again.)
 
+**Several jobs at once** are allowed, as with Codex's background tasks. They share this
+checkout (no worktrees), so:
+
+- read-only jobs (`--readonly`) can always run in parallel;
+- parallel write jobs must touch separate files or directories. Write that split into each
+  task ("only edit src/estimate/, do not touch anything else"). Anything that touches shared
+  files, config or dependencies (`pyproject.toml`, lockfiles, `uv sync`, `.gitignore`) runs
+  alone;
+- `agy-job start` prints a note when other jobs are still running in the same directory;
+- verify once all of them have finished: one `git diff`, one test run.
+
 Then read the exit code first:
 
 - `0`: verify (below).
 - `12` timeout: the reply may be empty, but files may already be changed. Check
-  `git status`, then resume with `--continue` (as a job) if the work is unfinished.
+  `git status`, then resume with `agy-job start --resume <job-id>` if the work is unfinished.
 - `16`: the jail is unavailable (no bwrap). Report it; never switch to `--isolation off`
   yourself.
 - other codes: report agy's `AGY_SIGNAL` line to the user.
@@ -47,7 +60,7 @@ names, and compare agy's reported numbers against your own rerun. agy's report i
 not evidence. Watch for loosened thresholds, weakened or skipped tests, config edits that
 work around the jail, stray files, and work done smaller than asked (fewer runs or trials,
 missing cases) that the report does not mention. Then either fix small issues yourself or send one
-`--continue` follow-up that lists the concrete defects.
+`--resume <job-id>` follow-up that lists the concrete defects.
 
 Remember the break-even: delegate only if the offloaded volume clearly exceeds the spec,
 round-trip and verification overhead. Tiny tasks are cheaper to do yourself.

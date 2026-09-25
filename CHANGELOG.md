@@ -3,6 +3,20 @@
 All notable changes to **Antigravity for Claude Code**. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/); versions are in `.claude-plugin/plugin.json`.
 
+## 0.33.0
+
+- **Several jobs at once, as with Codex's background tasks.** Nothing isolates them (no
+  worktrees, like Codex), so `/delegate` and the skill set the rule: read-only jobs run in
+  parallel freely, write jobs only on separate files named in each task, and anything
+  touching shared config, lockfiles or dependencies runs alone. `agy-job start` notes how
+  many other jobs are still running in the same directory.
+- **`agy-job start --resume <job-id>`** continues that job's own agy conversation
+  (`--conversation`, id read from the job's `AGY_USAGE` line), like Codex's per-job
+  `threadId`. `--continue` takes agy's most recent conversation, which belongs to another
+  job once several have run. `status` shows the conversation id, `wait` / `result` print
+  the follow-up command, a resumed job records `resumed_from`. Refused for a running job,
+  a job with no conversation id, or together with `--continue` / `--conversation`.
+
 ## 0.32.0
 
 From live trials 3 and 4:

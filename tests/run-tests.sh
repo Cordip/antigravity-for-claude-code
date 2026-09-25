@@ -1880,6 +1880,32 @@ else echo "FAIL: job cancel left processes in group $pid"; FAIL=$((FAIL+1)); fi
 out=$("$JOB" start --print-command "x" 2>&1 >/dev/null)
 check "job start names the wait command on stderr" 0 0 "agy-job wait" "$out"
 
+# --resume <job>: the follow-up goes to THAT job's agy conversation (from its AGY_USAGE
+# line), not agy's most recent one, so parallel jobs can each be continued.
+rid=$(STUB_JSON_CAPABLE=1 STUB_MODE=json_ok "$JOB" start "first task" 2>/dev/null)
+out=$(AGY_JOB_POLL=0.2 "$JOB" wait "$rid" 2>&1)
+check "job wait names the per-job follow-up" 0 0 "agy-job start --resume $rid" "$out"
+out=$("$JOB" status "$rid" 2>/dev/null)
+check "job status shows the agy conversation id" 0 0 "conversation=c1" "$out"
+fid=$(STUB_MODE=args "$JOB" start --resume "$rid" "follow-up task" 2>/dev/null)
+out=$(AGY_JOB_POLL=0.2 "$JOB" wait "$fid" 2>/dev/null)
+check "start --resume passes --conversation <that job's id>" 0 0 "--conversation c1" "$out"
+if has "--continue" "$out"; then echo "FAIL: --resume also passed --continue"; FAIL=$((FAIL+1));
+else echo "ok: --resume does not fall back to --continue"; PASS=$((PASS+1)); fi
+check "resumed job records where it came from" 0 0 "resumed_from=$rid" "$(cat "$ANTIGRAVITY_JOBS/$fid/meta")"
+out=$("$JOB" start --resume "$rid" --continue "x" 2>&1); rc=$?
+check "start --resume with --continue is refused" 1 "$rc" "not both" "$out"
+nid=$(STUB_MODE=text "$JOB" start "plain" 2>/dev/null); AGY_JOB_POLL=0.2 "$JOB" wait "$nid" >/dev/null 2>&1
+out=$("$JOB" start --resume "$nid" "x" 2>&1); rc=$?
+check "start --resume on a job without a conversation id is refused" 1 "$rc" "no agy conversation id" "$out"
+# A second job in the same directory is told the checkout is shared.
+bid=$(STUB_MODE=text STUB_SLEEP=3 "$JOB" start "busy" 2>/dev/null)
+out=$(STUB_MODE=text "$JOB" start "parallel" 2>&1 >/dev/null)
+check "start notes other running jobs in the same checkout" 0 0 "other job(s) still running" "$out"
+out=$("$JOB" start --resume "$bid" "x" 2>&1); rc=$?
+check "start --resume on a running job is refused" 1 "$rc" "still running" "$out"
+"$JOB" cancel "$bid" >/dev/null 2>&1
+
 DCMD="$ROOT/commands/delegate.md"
 if has "agy-job start" "$(cat "$DCMD")" && has "run_in_background: true" "$(cat "$DCMD")" && has "--timeout 9m" "$(cat "$DCMD")"; then
   echo "ok: /delegate runs long work as a job with a background wait (and a bounded headless wait)"; PASS=$((PASS+1));
@@ -1888,6 +1914,9 @@ out=$(CLAUDE_PLUGIN_OPTION_WORK_RULES= "$DELEGATE" --print-command "the task" 2>
 check "work rules forbid backgrounding and waiting" 0 0 "Never start one in the background" "$out"
 check "work rules forbid config workarounds for the jail" 0 0 "to work around the sandbox" "$out"
 check "work rules ask to disclose doing less than asked" 0 0 "If you did less than asked" "$out"
+if has "--resume" "$(cat "$DCMD")" && has "separate files" "$(cat "$DCMD")"; then
+  echo "ok: /delegate documents per-job follow-ups and the parallel-write rule"; PASS=$((PASS+1));
+else echo "FAIL: /delegate lacks --resume or the parallel-write rule"; FAIL=$((FAIL+1)); fi
 
 echo "== CI workflow invariants =="
 # These cannot be executed here — they need a GitHub runner — so assert the SHAPE of the
