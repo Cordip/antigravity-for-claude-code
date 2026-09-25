@@ -13,14 +13,16 @@ worktree, no permission rules, no approval prompts.
   Verified end to end on agy 1.2.11 / WSL2: writes outside the repo fail with
   `Read-only file system`, while shell, `git commit` and web search work.
 
+- [x] **Subagent and commands for the jailed setup.** The agent, `/delegate` and SKILL.md
+  no longer ask for `--yolo` or `permissions.allow` rules. `delegation_nudge` is off by
+  default.
+- [x] **Jail always on.** `--isolation` defaults to `workspace` and fails closed (exit 16)
+  when bwrap is missing. `--yolo` is gone from all examples.
+- [x] **`media` and `research` on `--isolation readonly`.** In `agy-media` only the
+  transcript directory is writable. `/research` and the web-search recipes run readonly.
+
 ## Next
 
-1. **Subagent and commands for the jailed setup.** Remove the `--yolo` /
-   `permissions.allow` guidance where isolation is active (agent, `/delegate`, SKILL.md),
-   and turn the `delegation_nudge` hook off by default.
-2. **`media` and `research` on `--isolation readonly`.** Only the output directory
-   (`--dir`) is writable. `agy-media.sh` already passes `--dir <file-dir>` for the
-   transcript. The research recipe needs an explicit output dir, or none at all.
 3. **Live trial.** `claude --plugin-dir ~/projects/antigravity-for-claude-code`, then
    `/antigravity:delegate` on a real task in a real repo. Note any friction: hidden paths
    that agy actually needed, timeouts, and output size.
