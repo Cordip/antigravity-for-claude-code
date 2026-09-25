@@ -80,18 +80,25 @@ worktree, no permission rules, no approval prompts.
 - [x] **One path** (0.32.0): the delegate subagent and its Bash gate are removed; every
   delegation is an `agy-job`. New work rule: say so when less was done than asked.
 
+- [x] **Parallel jobs and per-job follow-ups** (0.33.0): `agy-job start --resume <job-id>`,
+  the parallel-write rule, a note on other running jobs.
+
 ## Next
 
-3. **Claude Code mod (optional layer).** Mods are plugins with a TypeScript hooks module
-   (`anthropics/claude-code/mods`, early access, needs
-   `CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1`). Plan: `agy_delegate` / `agy_status` /
-   `agy_result` / `agy_cancel` tools via `$.tool.register`, progress in `$.ui.status` and a
-   pane polled with `$.clock.every`, completion via `$.prompt.submit`, all on top of
-   `agy-job` (a mod cannot own a process past 10 minutes). Without the flag the bash path
-   keeps working.
-4. **Port the core to TypeScript.** Replace `agy-delegate.sh` with a TS runner. Reuse
-   `driver.ts` / `streaming.ts` from `codex-antigravity-subagent` for stream-json
-   progress and persistent sessions. Keep the commands and the job model.
+3. **Port the core to TypeScript.** Replace `agy-delegate.sh` / `agy-job.sh` with a TS
+   runner. Reuse `driver.ts` / `streaming.ts` from `codex-antigravity-subagent` for
+   stream-json progress and persistent sessions. Keep the commands and the job model.
+
+## Backlog
+
+- **Claude Code mod (optional UI layer).** Mods are plugins with a TypeScript hooks module
+  (`anthropics/claude-code/mods`, early access, needs
+  `CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1`, API changed between 2.1.277 and 2.1.282). Plan:
+  `agy_delegate` / `agy_status` / `agy_result` / `agy_cancel` tools via `$.tool.register`,
+  progress in `$.ui.status` and a pane polled with `$.clock.every`, completion via
+  `$.prompt.submit`, all on top of the job runner (a mod cannot own a process past 10
+  minutes). Estimated gain is modest (job visibility, no Bash quoting or prompts); revisit
+  after the TS port gives real stream-json progress and the function hooks API settles.
 
 ## Open questions
 
