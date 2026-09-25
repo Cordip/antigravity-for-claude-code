@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
+FIXTURES = Path(__file__).resolve().parent / "fixtures"
 SRC = ROOT / "src"
 
 # A fake `agy` driven by FAKE_AGY_MODE. It speaks agy 1.2's stream-json and records its
@@ -50,6 +51,12 @@ elif mode == "slow":
         step(i, "run_command", "WORKING"); time.sleep(0.5)
     ev("result", conversation_id=cid, status="SUCCESS", response="SLOW DONE\n",
        usage={"total_tokens": 1})
+elif mode == "replay":
+    # A recorded agy 1.2.11 stream (tests/unit/fixtures), plus its stderr lines.
+    for line in open(os.environ["FAKE_AGY_REPLAY"]):
+        sys.stdout.write(line); sys.stdout.flush()
+    if os.environ.get("FAKE_AGY_STDERR"):
+        sys.stderr.write(os.environ["FAKE_AGY_STDERR"] + "\n")
 elif mode == "error":
     ev("result", conversation_id=cid, status="ERROR", response="",
        error="quota exceeded for this model", usage={})

@@ -138,3 +138,38 @@ def test_resume_uses_the_conversation_from_progress(env: dict[str, str],
     out = run(env, "job", "wait", fid).stdout
     assert "--conversation conv-123" in out
     assert os.path.exists(Path(env["ANTIGRAVITY_JOBS"]) / fid / "meta")
+
+
+def test_replayed_print_timeout_is_exit_12_with_git_status_hint(env: dict[str, str]) -> None:
+    from conftest import FIXTURES
+
+    r = run({**env, "FAKE_AGY_MODE": "replay",
+             "FAKE_AGY_REPLAY": str(FIXTURES / "agy-1.2.11-print-timeout.ndjson"),
+             "FAKE_AGY_STDERR": "[agy] print timeout after 15s with turn in progress; "
+                                "returning partial output"},
+            "delegate", "--timeout", "15s", "x")
+    assert r.returncode == 12
+    assert "NO reply text" in r.stderr and "check git status" in r.stderr
+    assert '"total": 13275' in r.stderr  # AGY_USAGE still printed
+
+
+def test_replayed_tool_error_feeds_the_readonly_hint(env: dict[str, str], tmp_path: Path) -> None:
+    """A write refused by the jail shows up as a tool error; the wrapper names the path."""
+    from conftest import FIXTURES
+
+    home = tmp_path / "home"
+    (home / "projects").mkdir(parents=True)
+    fixture = (FIXTURES / "agy-1.2.11-tools.ndjson").read_text().replace("/home/user", str(home))
+    rec = tmp_path / "rec.ndjson"
+    rec.write_text(fixture)
+    # The hint is for the workspace jail; run the jail's logic with a stub bwrap.
+    stub = tmp_path / "bin" / "bwrap"
+    stub.write_text('#!/bin/sh\nwhile [ "$1" != "--die-with-parent" ]; do shift; done\n'
+                    'shift; exec "$@"\n')
+    stub.chmod(0o755)
+    e = {**env, "HOME": str(home), "FAKE_AGY_MODE": "replay", "FAKE_AGY_REPLAY": str(rec),
+         "CLAUDE_PLUGIN_OPTION_ISOLATION": "workspace"}
+    r = run(e, "delegate", "x", cwd=str(home / "projects"))
+    assert r.returncode == 0, r.stderr
+    assert "isolation_writable" in r.stderr
+    assert f"{home}/projects/field-length/README-probe.md" in r.stderr

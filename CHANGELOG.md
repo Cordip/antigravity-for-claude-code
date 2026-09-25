@@ -16,7 +16,11 @@ All notable changes to **Antigravity for Claude Code**. Format loosely follows
   probe and the `structured_output` option are gone.
 - **Live progress.** Each job keeps agy's raw events (`events.ndjson`) and a
   `progress.json`; `agy-job status` and a `wait --timeout` that gives up show elapsed time,
-  steps, tools used and the current tool.
+  steps, tools used, files written, tool errors, tokens so far, the current tool with its
+  target (`run_command: uv run pytest`), the last commands and the last tool error. Built
+  on real agy 1.2.11 streams (tool run, `--print-timeout` cut, `--conversation` resume),
+  kept as test fixtures. A path the jail refused inside a tool (`read-only file system`)
+  now also triggers the `isolation_writable` hint.
 - **Idle timeout** (plugin option `idle_timeout`, default 15m): a run that sends no events
   for that long is stopped with exit 12, instead of burning the whole `--timeout`.
 - **The whole process tree stops.** agy runs in its own session; a timeout, SIGTERM or

@@ -157,12 +157,37 @@ def progress_line(jd: str) -> str:
     tool_s = " ".join(f"{k} x{v}" for k, v in list(tools.items())[:6]) if tools else "none"
     parts = [f"{_fmt_secs(p.get('elapsed_seconds', 0))}", f"{p.get('steps', 0)} steps",
              f"tools: {tool_s}"]
+    if p.get("files_written_count"):
+        parts.append(f"{p['files_written_count']} files written")
+    if p.get("errors"):
+        parts.append(f"{p['errors']} tool errors")
+    if p.get("tokens"):
+        parts.append(f"{p['tokens']} tokens")
     if p.get("current"):
         parts.append(f"now: {p['current']}")
     parts.append(f"last event {_fmt_secs(p.get('idle_seconds', 0))} ago")
     if p.get("denied"):
         parts.append(f"denied: {' '.join(p['denied'])}")
     return " · ".join(parts)
+
+
+def progress_details(jd: str) -> list[str]:
+    """Extra status lines: recent commands, files written, the last tool error."""
+    try:
+        p = json.loads(_read(os.path.join(jd, "progress.json")) or "null")
+    except ValueError:
+        return []
+    if not isinstance(p, dict):
+        return []
+    lines = [f"  command={c}" for c in (p.get("commands") or [])[-3:]]
+    files = p.get("files_written") or []
+    if files:
+        more = p.get("files_written_count", len(files)) - len(files[-5:])
+        lines.append("  files_written=" + ", ".join(files[-5:])
+                     + (f" (+{more} more)" if more > 0 else ""))
+    if p.get("last_error"):
+        lines.append(f"  last_error={p['last_error']}")
+    return lines
 
 
 def _others_running(cwd: str) -> int:
@@ -293,6 +318,8 @@ def cmd_status(ref: str) -> int:
     prog = progress_line(jd)
     if prog:
         print(f"  progress={prog}")
+        for line in progress_details(jd):
+            print(line)
     for line in _read(os.path.join(jd, "err")).splitlines():
         if line.startswith("AGY_SIGNAL "):
             print(f"  signal={line[len('AGY_SIGNAL '):]}")

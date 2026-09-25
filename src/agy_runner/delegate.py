@@ -118,6 +118,7 @@ class Delegate:
         self.out = stdout
         self.err = stderr
         self.model = ""
+        self.tool_errors: list[str] = []
 
     # --- output helpers ---------------------------------------------------------------
     def say(self, msg: str) -> None:
@@ -431,8 +432,9 @@ class Delegate:
                progress: Progress, err_text: str, a: Args, timeout: str,
                isolation: str) -> int:
         res = tail.result
+        self.tool_errors = progress.error_messages
         # Trailing newlines dropped, as the bash wrapper's $(cat ...) did: one print adds one.
-        out = (res.response if res else tail.fallback_text()).rstrip("\n")
+        out = (res.response if res else (progress.text or tail.fallback_text())).rstrip("\n")
         if res:
             meta = {
                 "status": res.status, "error": res.error, "usage": res.usage,
@@ -540,7 +542,7 @@ class Delegate:
     def readonly_hint(self, out: str, err_text: str, isolation: str) -> None:
         if isolation != "workspace":
             return
-        paths = jailmod.readonly_paths([out, err_text])
+        paths = jailmod.readonly_paths([out, err_text, *self.tool_errors])
         if paths:
             self.say(f"note: agy hit read-only paths in the jail: {' '.join(paths)}. If a tool "
                      "needs one of them (a cache, never a credential), add it to the plugin "

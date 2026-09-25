@@ -1,12 +1,18 @@
 """agy `--output-format stream-json`: one JSON event per line.
 
-Shapes (agy 1.2.x; unknown events are ignored):
-  {"event":"init","conversation_id":"c","init":{"cwd":..,"model":..,"tools":[..]}}
+Shapes, measured on agy 1.2.11 (tests/unit/fixtures; unknown events are ignored):
+  {"event":"init","conversation_id":"c","init":{"model":..,"cwd":..,"tools":[..]}}
   {"event":"step_update","step_update":{"conversation_id":..,"step_index":4,
-     "state":"WORKING|DONE|DENIED","step_type":"tool|agent_response","tool_name":..,
-     "text_delta":..,"tool_info":{"name":..,"output":..},"usage":{..}}}
+     "state":"ACTIVE|DONE|ERROR","step_type":"user_input|agent_response|tool",
+     "tool_name":"run_command","duration_seconds":..,"text_delta":..,"usage":{..},
+     "tool_info":{"name":..,"parameters":{"CommandLine"|"AbsolutePath"|"TargetFile":..},
+                  "output":..,"error":{"type":"TOOL_ERROR","message":..}}}}
   {"event":"result","result":{"conversation_id":..,"status":"SUCCESS|ERROR","response":..,
      "error":..,"duration_seconds":..,"num_turns":..,"usage":{"input_tokens":..,..}}}
+A tool step arrives twice (ACTIVE, then DONE or ERROR) with the same step_index. usage on
+agent_response steps is per step; on result, and duration / num_turns there, it covers the
+whole conversation, earlier --continue / --conversation turns included. A --print-timeout
+cut still ends with a result (empty response, usage of the finished steps).
 """
 
 from __future__ import annotations
@@ -88,19 +94,35 @@ class Result:
         )
 
 
+def _short(text: str, limit: int = 120) -> str:
+    text = " ".join(text.split())
+    return text if len(text) <= limit else text[: limit - 1] + "…"
+
+
+# The parameter that says what a tool acted on, by tool (agy 1.2.11 names).
+_TARGET_KEYS = ("CommandLine", "TargetFile", "AbsolutePath", "SearchPath", "Query", "Url")
+
+
 @dataclass
 class Progress:
-    """What a running agy turn has done so far, for `agy-job status`. Tool names and
-    counts only: arguments can hold file contents and secrets."""
+    """What a running agy turn has done so far, for `agy-job status`: tool counts, the
+    commands it ran and the files it wrote (paths only, never contents or outputs),
+    tool errors, and the tokens of the steps so far."""
 
     started: float = field(default_factory=time.time)
     last_event: float = field(default_factory=time.time)
     conversation_id: str = ""
     steps: int = 0
     tools: dict[str, int] = field(default_factory=dict)
+    commands: list[str] = field(default_factory=list)
+    files_written: list[str] = field(default_factory=list)
+    errors: int = 0
+    last_error: str = ""
+    error_messages: list[str] = field(default_factory=list)
     denied: list[str] = field(default_factory=list)
     current: str = ""
-    text_chars: int = 0
+    tokens: int = 0
+    text: str = ""
     _seen_steps: set[int] = field(default_factory=set)
 
     def update(self, name: str, payload: dict[str, Any]) -> None:
@@ -111,20 +133,42 @@ class Progress:
         if name != "step_update":
             return
         idx = payload.get("step_index")
-        tool = payload.get("tool_name") or (payload.get("tool_info") or {}).get("name")
+        info = payload.get("tool_info") if isinstance(payload.get("tool_info"), dict) else {}
+        assert isinstance(info, dict)
+        tool = str(payload.get("tool_name") or info.get("name") or "")
         state = str(payload.get("state") or "")
-        if isinstance(idx, int) and idx not in self._seen_steps:
+        params = info.get("parameters") if isinstance(info.get("parameters"), dict) else {}
+        assert isinstance(params, dict)
+        target = next((str(params[k]) for k in _TARGET_KEYS if params.get(k)), "")
+        new = isinstance(idx, int) and idx not in self._seen_steps
+        if new:
+            assert isinstance(idx, int)
             self._seen_steps.add(idx)
             self.steps += 1
             if tool:
-                self.tools[str(tool)] = self.tools.get(str(tool), 0) + 1
+                self.tools[tool] = self.tools.get(tool, 0) + 1
+                if params.get("CommandLine"):
+                    self.commands = [*self.commands, _short(str(params["CommandLine"]))][-5:]
+                if params.get("TargetFile") and str(params["TargetFile"]) not in self.files_written:
+                    self.files_written.append(str(params["TargetFile"]))
         if tool:
-            self.current = f"{tool} ({state.lower()})" if state else str(tool)
-            if state == "DENIED" and str(tool) not in self.denied:
-                self.denied.append(str(tool))
+            label = f"{tool}: {_short(target, 80)}" if target else tool
+            self.current = f"{label} ({state.lower()})" if state else label
+            if state == "DENIED" and tool not in self.denied:
+                self.denied.append(tool)
+            err = info.get("error")
+            if state == "ERROR" or err:
+                msg = err.get("message") if isinstance(err, dict) else err
+                self.errors += 1
+                self.last_error = _short(f"{tool}: {msg or state}", 200)
+                if msg:
+                    self.error_messages = [*self.error_messages, str(msg)][-20:]
+        usage = payload.get("usage")
+        if isinstance(usage, dict) and state == "DONE":
+            self.tokens += _int(usage.get("total_tokens"))
         delta = payload.get("text_delta")
         if isinstance(delta, str):
-            self.text_chars += len(delta)
+            self.text += delta
 
     def as_dict(self) -> dict[str, Any]:
         now = time.time()
@@ -135,8 +179,13 @@ class Progress:
             "steps": self.steps,
             "tools": dict(sorted(self.tools.items(), key=lambda kv: -kv[1])),
             "current": self.current,
+            "commands": self.commands,
+            "files_written": self.files_written[-20:],
+            "files_written_count": len(self.files_written),
+            "errors": self.errors,
+            "last_error": self.last_error,
             "denied": self.denied,
-            "text_chars": self.text_chars,
+            "tokens": self.tokens,
         }
 
     def write(self, path: str) -> None:

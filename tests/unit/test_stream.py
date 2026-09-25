@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 
 from agy_runner.stream import Progress, Result, parse_line
+from conftest import FIXTURES
 
 
 def test_parse_line_envelope_and_top_level_conversation() -> None:
@@ -57,3 +58,49 @@ def test_progress_records_denials_and_writes_atomically(tmp_path) -> None:  # ty
     assert data["denied"] == ["write_file"]
     assert data["steps"] == 1
     assert not list(tmp_path.glob("*.tmp.*"))
+
+
+def replay(name: str) -> tuple[Progress, Result | None]:
+    p, res = Progress(), None
+    for line in (FIXTURES / name).read_text().splitlines():
+        ev = parse_line(line)
+        assert ev is not None, line
+        p.update(*ev)
+        if ev[0] == "result":
+            res = Result.from_payload(ev[1])
+    return p, res
+
+
+def test_real_stream_tools_run() -> None:
+    p, res = replay("agy-1.2.11-tools.ndjson")
+    assert res is not None and res.status == "SUCCESS" and res.response == "DONE.\n"
+    assert res.usage["total"] == 85102 and res.num_turns == 1
+    # 12 distinct steps: user input, 6 agent responses, 5 tools (each tool arrives twice).
+    assert p.steps == 12
+    assert p.tools == {"run_command": 2, "view_file": 1, "write_to_file": 2}
+    assert p.commands == ["ls src/field_length", "cat /nonexistent-file-for-test"]
+    probe = "/home/user/projects/field-length/README-probe.md"
+    assert p.files_written == ["/tmp/agy-sample.txt", probe]
+    assert p.errors == 1
+    assert "read-only file system" in p.last_error
+    assert p.error_messages == [f"open {probe}: read-only file system"]
+    assert p.text == "DONE.\n"
+    # Per-step usage of the agent responses, which is what a cut-off run has to go on.
+    assert p.tokens == 13355 + 13582 + 14199 + 14409 + 14661 + 14896
+
+
+def test_real_stream_print_timeout_still_ends_with_a_result() -> None:
+    p, res = replay("agy-1.2.11-print-timeout.ndjson")
+    assert res is not None and res.response == ""
+    assert res.usage["total"] == 13275  # the finished steps only
+    assert p.current == "run_command: sleep 40 (active)"
+
+
+def test_real_stream_resume_keeps_the_conversation_and_counts_cumulatively() -> None:
+    _, r1 = replay("agy-1.2.11-tools.ndjson")
+    p3, r3 = replay("agy-1.2.11-resume.ndjson")
+    assert r1 is not None and r3 is not None
+    assert r3.conversation_id == r1.conversation_id == p3.conversation_id
+    # result.duration / num_turns / usage cover the whole conversation.
+    assert r3.num_turns == 2 and r3.duration_seconds > r1.duration_seconds
+    assert r3.usage["total"] > r1.usage["total"]

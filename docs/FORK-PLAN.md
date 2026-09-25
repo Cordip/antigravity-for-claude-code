@@ -92,8 +92,9 @@ worktree, no permission rules, no approval prompts.
 
 3. **Live trial 5** on the Python runner: a real job in `field-length`, checking
    `agy-job status` progress mid-run, the notification, and `--resume`.
-4. **Richer progress** once real stream-json samples show what `tool_info` carries (files
-   edited, commands run).
+4. Open: agy's `result` usage, `duration_seconds` and `num_turns` are cumulative over a
+   resumed conversation (measured); per-run numbers would need the difference to the
+   previous job's result.
 
 ## Backlog
 
