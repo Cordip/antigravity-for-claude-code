@@ -3,6 +3,25 @@
 All notable changes to **Antigravity for Claude Code**. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/); versions are in `.claude-plugin/plugin.json`.
 
+## 0.32.0
+
+From live trials 3 and 4:
+
+- **One delegation path: jobs.** The `antigravity-delegate` subagent is removed.
+  `/antigravity:delegate` always runs `agy-job start` and a background `agy-job wait`
+  (trial 4 confirmed the notification flow with no polling); `--wait` and headless
+  sessions use the bounded `agy-job wait --timeout 9m` loop. Once the subagent also ran
+  in the background it did the same job as the job path with an extra Sonnet call, and
+  on a small task (trial 3) delegation was a net loss anyway. The session-start policy,
+  the nudge, the skill and the docs now point to `agy-job`.
+- **The Bash gate is removed with it** (`hooks/validate-delegate-bash.sh` and its
+  `PreToolUse` registration). It only restricted the subagent, and the main
+  conversation's Bash was never gated.
+- **New work rule:** if agy did less than asked (fewer runs or trials, a subset of
+  cases), it must say so with the numbers asked for and done. In trial 4 agy ran 10–15
+  trials where the spec asks for 100/200 and did not mention it. `/delegate`'s
+  verification step now checks for that too.
+
 ## 0.31.0
 
 From the second live trial (phase 1 again, on Flash, through the 0.30.0 subagent):

@@ -194,8 +194,9 @@ come from delegation. In enforcement-strength order:
    skill; keep the conductor for architecture/hard problems"). Note the plugin already
    injects its cost policy at session start — keep the CLAUDE.md line short to avoid
    duplication.
-2. **Recall automation (shipped in the plugin):** the delegate subagent is picked up
-   proactively and a prompt-level nudge flags bulk-looking requests. Both are advisory —
+2. **Recall automation (shipped in the plugin):** the session-start policy and the skill
+   steer Claude to start an `agy-job` proactively, and a prompt-level nudge flags
+   bulk-looking requests. Both are advisory —
    the break-even judgment stays with Claude (full auto-routing measured as a net loss
    below break-even).
 3. **Hard enforcement:** per-user/group **spend caps and RBAC via a gateway**

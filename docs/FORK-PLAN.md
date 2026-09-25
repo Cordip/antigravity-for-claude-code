@@ -68,16 +68,30 @@ worktree, no permission rules, no approval prompts.
   private XDG cache plus the shared package caches (`shared_caches`,
   `isolation_writable`), and two more work rules.
 
+- [x] **Live trial 3** (0.31.0, small task: "add a test and run uv run pytest"). Claude
+  picked the subagent path; one 7m call, exit 0 after 262 s, 270k tokens, one new test
+  file, uv worked in the jail, the subagent closed cleanly. Claude itself called the
+  delegation a net loss for a task that small.
+- [x] **Live trial 4** (0.31.0, `--background`, "run experiments E2–E5, fix what fails").
+  Job path as designed: `agy-job start`, background `agy-job wait`, a completion
+  notification, no polling. Exit 0 after 624 s, 534k tokens, no jail or cache errors.
+  Claude's rerun matched agy's numbers and confirmed a real bug fix, but agy ran 10–15
+  trials where the spec asks for 100/200 and dropped some breakdowns without saying so.
+- [x] **One path** (0.32.0): the delegate subagent and its Bash gate are removed; every
+  delegation is an `agy-job`. New work rule: say so when less was done than asked.
+
 ## Next
 
-3. **Live trial 3.** A short run of the new job path: `/antigravity:delegate` in
-   `field-length` on a bounded task that runs `uv run pytest`. Check that the result
-   arrives as a notification, uv uses the shared cache, and no subagent row is left.
+3. **Claude Code mod (optional layer).** Mods are plugins with a TypeScript hooks module
+   (`anthropics/claude-code/mods`, early access, needs
+   `CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1`). Plan: `agy_delegate` / `agy_status` /
+   `agy_result` / `agy_cancel` tools via `$.tool.register`, progress in `$.ui.status` and a
+   pane polled with `$.clock.every`, completion via `$.prompt.submit`, all on top of
+   `agy-job` (a mod cannot own a process past 10 minutes). Without the flag the bash path
+   keeps working.
 4. **Port the core to TypeScript.** Replace `agy-delegate.sh` with a TS runner. Reuse
    `driver.ts` / `streaming.ts` from `codex-antigravity-subagent` for stream-json
-   progress and persistent sessions. Keep the commands and the subagent. Later, possibly
-   a Claude Code mod (`tool.register` + a progress pane) once function hooks leave
-   early access.
+   progress and persistent sessions. Keep the commands and the job model.
 
 ## Open questions
 

@@ -21,13 +21,6 @@ do), and a **non-destructive** proof-of-concept (exit codes / policy decisions, 
 
 ## Scope — what matters most here
 
-- **`hooks/validate-delegate-bash.sh`** — the PreToolUse gate that is the *only* thing
-  restricting what the `antigravity-delegate` subagent may run via Bash. Bypasses here
-  (arbitrary command execution under prompt injection) are the highest-value reports.
-  Claude Code ignores `hooks` in a plugin agent's frontmatter, so the gate is registered in
-  `hooks/hooks.json` for every Bash call and acts only when the hook input's `agent_type`
-  names the delegate subagent. Before 0.31.0 of this fork it was registered only in the
-  frontmatter and never ran.
 - **The bubblewrap jail in `scripts/agy-delegate.sh`** — what agy can write. Besides the
   repository it can write the jail cache and the shared package caches (see README); a
   poisoned package cache would run outside the jail later, and `shared_caches=off` closes

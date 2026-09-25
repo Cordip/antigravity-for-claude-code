@@ -559,7 +559,8 @@ fi
 # script in the repo root. The caller catches that in review, but it is cheaper to ask
 # up front. The second trial (0.30.0) added two: agy started its test run in the background
 # and waited on it until --print-timeout cut the turn off at 30m, and it put a uv cache dir
-# into pyproject.toml and .gitignore because $HOME is read-only in the jail.
+# into pyproject.toml and .gitignore because $HOME is read-only in the jail. The fourth ran
+# 10-15 trials where the spec asked for 100/200 and did not say so.
 # (Appended after the write-task heuristic, which scans the user's prompt only.)
 case "$(printf '%s' "${CLAUDE_PLUGIN_OPTION_WORK_RULES:-on}" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')" in
   off|false|0|no|disabled) ;;
@@ -568,6 +569,7 @@ case "$(printf '%s' "${CLAUDE_PLUGIN_OPTION_WORK_RULES:-on}" | tr '[:upper:]' '[
 WORK RULES (from the orchestrator, who will review your diff and rerun everything):
 - Never weaken, skip or delete tests, and never loosen thresholds or tolerances to make a check pass. If something fails, leave it failing and say so.
 - Report only results you actually observed in this run (exact commands and their real output). Say \"not run\" rather than estimating.
+- If you did less than asked (fewer runs or trials, a subset of cases, a smaller setup), say so explicitly in the report, with the numbers asked for and the numbers done.
 - Do not leave scratch or debug files in the repository.
 - Run commands in the foreground. Never start one in the background and then wait or poll for it: your turn has a time limit, and waiting burns it.
 - Do not change project config (pyproject.toml, package.json, .gitignore, ...) to work around the sandbox. If a path is read-only, say which one and continue without it.

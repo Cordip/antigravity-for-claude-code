@@ -1,6 +1,6 @@
 {
   "name": "antigravity",
-  "version": "0.31.0",
+  "version": "0.32.0",
   "description": "Run the Antigravity CLI (Gemini) as a collaborating AI inside Claude Code, with intelligent model routing across the SDLC. Claude conducts — requirements, architecture, the hard 20%, verification, review — and routes deterministic, high-volume work (scaffolding, tests, first-pass review, migrations, web/Vertex AI Search) to Antigravity. Hybrid agentic engineering; lower token cost as a financial lever.",
   "author": {
     "name": "linyuting"
@@ -64,7 +64,7 @@
     "work_rules": {
       "type": "string",
       "title": "Append work rules to every task",
-      "description": "When on (default), agy-delegate appends a short rule block to each task: never weaken tests or loosen thresholds, report only observed results, leave no scratch files, run commands in the foreground (never background one and wait on it), do not edit project config to work around the jail, end with a report of files changed and commands run. Set to off/false/0/no to send the task text unchanged.",
+      "description": "When on (default), agy-delegate appends a short rule block to each task: never weaken tests or loosen thresholds, report only observed results, say when less was done than asked, leave no scratch files, run commands in the foreground (never background one and wait on it), do not edit project config to work around the jail, end with a report of files changed and commands run. Set to off/false/0/no to send the task text unchanged.",
       "default": "on"
     },
     "coding_policy": {

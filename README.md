@@ -47,10 +47,11 @@ you → Claude Code (conduct: design / verify / review)
 - **Internal fan-out** — one delegation, and agy spawns its own subagents on the cheap side (dynamic `define_subagent` on agy ≥ 1.0.16; `TypeName "self"` + Role on any version); each leaves a **readable trajectory** you audit with `agy-trace`.
 - **Built-in cost discipline** — measured, not guessed (see below).
 - **Drops in with the discipline on** — a `SessionStart` hook injects the *cost-aware*
-  routing policy automatically (toggle in plugin settings), and the `antigravity-delegate`
-  subagent does file **writing** on Gemini, so Claude spends **no tokens generating file contents**.
-- **No slash command required** — the delegate subagent is picked up **proactively** for bulk
-  work, and a prompt-level nudge flags bulk-looking requests as delegation candidates.
+  routing policy automatically (toggle in plugin settings), and delegated jobs do file
+  **writing** on Gemini, so Claude spends **no tokens generating file contents**.
+- **No slash command required** — the policy and the skill steer Claude to start an `agy-job`
+  **proactively** for bulk work, and a prompt-level nudge flags bulk-looking requests as
+  delegation candidates.
   Both are advisory: **the break-even judgment stays with Claude** (full auto-routing is a
   measured net loss below the break-even), and the nudge is toggleable (`delegation_nudge`).
 
@@ -89,7 +90,7 @@ In Claude Code:
 | command | what it does |
 |---|---|
 | `/antigravity:setup` | health check — `agy` installed + authenticated, scripts ready |
-| `/antigravity:delegate [--background\|--wait] [--continue] [--readonly] <task>` | hand a subtask to agy as a background job (a small one through the `antigravity-delegate` subagent), then verify |
+| `/antigravity:delegate [--wait] [--continue] [--readonly] <task>` | hand a subtask to agy as a background job, then verify |
 | `/antigravity:review [--adversarial]` | independent cross-model review of the current diff; Claude reconciles |
 | `/antigravity:research <topic>` | Claude-orchestrated deep research — agy does grounded web legwork, Claude verifies citations across ≥2 sources |
 | `/antigravity:media <file> [focus] [--convert]` | understand audio / video / images — agy transcribes + analyzes, returns a **timestamped digest**; full transcript goes to a file, not your context |
@@ -229,16 +230,14 @@ Delegation doesn't save money by itself — these do (also in the skill):
 > **Something broken?** See **[docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)** — symptom-first fixes for Windows/WSL, writes that silently don't happen, quota/auth/timeout codes, and updating.
 
 **Guardrails**
-- **Delegation works like Codex's `--background` tasks.** `/antigravity:delegate` starts long
-  work with `agy-job start` (30-minute agy limit, plugin option `job_timeout`), which returns
-  a job id at once, then runs `agy-job wait <id>` as a background Bash command. Claude is
-  notified when agy exits, reads the result, reviews the diff and reruns the checks. Nothing
-  sits waiting on agy and there are no polling loops. Small bounded tasks can go through
-  the `antigravity-delegate` subagent instead (Sonnet, one `agy-delegate --timeout 7m` call
-  that always returns within Bash's 10-minute limit, agy's reply returned verbatim). Its
-  Bash is gated to the wrapper by a `PreToolUse` hook in `hooks/hooks.json`, scoped to the
-  subagent by `agent_type` (Claude Code ignores `hooks` in a plugin agent's frontmatter). A
-  timeout (exit 12) may leave an empty reply with files already changed; `--continue` resumes
+- **Delegation works like Codex's `--background` tasks.** `/antigravity:delegate` starts
+  every task with `agy-job start` (30-minute agy limit, plugin option `job_timeout`), which
+  returns a job id at once, then runs `agy-job wait <id>` as a background Bash command.
+  Claude is notified when agy exits, reads the result, reviews the diff and reruns the
+  checks. Nothing sits waiting on agy and there are no polling loops. There is no delegate
+  subagent in this fork: it cost an extra Sonnet call, hung once waiting on a backgrounded
+  Bash call, and its Bash gate never ran (Claude Code ignores `hooks` in a plugin agent's
+  frontmatter). A timeout (exit 12) may leave an empty reply with files already changed; `--continue` resumes
   the same agy conversation. The wrapper appends work rules to every task (plugin option
   `work_rules`) and logs an `AGY_RUN` line naming the model, jail and timeout before each
   run. `duration_seconds` in `AGY_USAGE` covers the whole agy conversation, so after
@@ -316,7 +315,6 @@ Delegation doesn't save money by itself — these do (also in the skill):
 ```
 .claude-plugin/   plugin (+ userConfig: model_lock, timeout, job_timeout, isolation, shared_caches, isolation_writable, work_rules, …) + marketplace manifests
 skills/antigravity/SKILL.md   WHEN + HOW Claude collaborates with agy
-agents/           antigravity-delegate subagent (file work runs on Gemini, not Claude)
 commands/         slash commands (delegate, review, research, media, cloud-run-debug, setup, status, result, cancel)
 hooks/            SessionStart: agy health check + auto-inject the cost-aware policy
 bin/              PATH shims (bare names): agy-delegate · agy-job · agy-cost-compare · agy-doctor · cloud-debug · agy-trace · agy-media · measure-session · agy-migrate

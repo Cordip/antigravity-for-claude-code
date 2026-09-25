@@ -1,6 +1,6 @@
 ---
-description: Delegate a well-scoped subtask to Antigravity (agy / Gemini 3.8 Flash) as a background job (or, for a small task, through the antigravity-delegate subagent), then verify.
-argument-hint: "[--background|--wait] [--continue] [--readonly] <task>"
+description: Delegate a well-scoped subtask to Antigravity (agy / Gemini 3.8 Flash) as a background job, then verify.
+argument-hint: "[--wait] [--continue] [--readonly] <task>"
 ---
 
 Delegate the following task to Antigravity, following the `antigravity` skill's
@@ -13,16 +13,14 @@ Flags (strip them from the task text):
 - `--continue` (or "keep going", "fix what you left"): resume the same agy conversation.
 - `--readonly`: the task only reads (review, analysis, research); agy gets
   `--isolation readonly`.
-- `--background` / `--wait`: force the job path / the subagent path below.
+- `--wait`: block on the result in the foreground (the headless loop at the end) instead
+  of waiting in the background. `--background` is the default and accepted as a no-op.
 
 Never add `--tier`, `--model` or `--yolo`: the model is locked to Gemini 3.8 Flash (High),
 and agy always runs in the bubblewrap jail (the repository is writable, the rest of the
 filesystem is not).
 
-Pick the path:
-
-**A. Job (the default, and always for long or multi-step work: implementing a spec, a test
-suite, a migration).** This is the Codex `--background` pattern: nothing sits waiting on agy.
+Every delegation runs as a job, the Codex `--background` pattern: nothing sits waiting on agy.
 
 1. From the repository root, start it with one Bash call:
    `agy-job start [--isolation readonly] [--continue] "<task>"`. It prints the job id and
@@ -33,12 +31,7 @@ suite, a migration).** This is the Codex `--background` pattern: nothing sits wa
 3. On the notification, read that background command's output: agy's reply, its stderr,
    and a final `[exit rc=<code>: ...]` line. (`agy-job result <id>` prints the same again.)
 
-**B. Subagent (`--wait`, or a small bounded task that fits in 7 minutes).** Invoke the
-`Agent` tool with `subagent_type: "antigravity:antigravity-delegate"` in the foreground. Its
-prompt is the task text, plus "read-only" or "continue the previous agy run" as needed. It
-makes one 7-minute `agy-delegate` call and returns agy's reply and an `EXIT <code>` line.
-
-Then, on either path, read the exit code first:
+Then read the exit code first:
 
 - `0`: verify (below).
 - `12` timeout: the reply may be empty, but files may already be changed. Check
@@ -52,12 +45,13 @@ Then, on either path, read the exit code first:
 **Verify** it yourself: `git status` / `git diff`, run the tests and the commands the task
 names, and compare agy's reported numbers against your own rerun. agy's report is a claim,
 not evidence. Watch for loosened thresholds, weakened or skipped tests, config edits that
-work around the jail, and stray files. Then either fix small issues yourself or send one
+work around the jail, stray files, and work done smaller than asked (fewer runs or trials,
+missing cases) that the report does not mention. Then either fix small issues yourself or send one
 `--continue` follow-up that lists the concrete defects.
 
 Remember the break-even: delegate only if the offloaded volume clearly exceeds the spec,
 round-trip and verification overhead. Tiny tasks are cheaper to do yourself.
 
-Headless (`claude -p`): there is no later turn for a notification. Start the job, then run
+Headless (`claude -p`) or `--wait`: there is no later turn for a notification. Start the job, then run
 `agy-job wait <id> --timeout 9m` in the foreground, repeating while it prints
 "still running" (exit 2).
