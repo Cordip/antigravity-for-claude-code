@@ -11,7 +11,9 @@ Task: $ARGUMENTS
 Do this:
 1. Pick a tier (`flash` default; `pro` for hard reasoning). If the task needs the repo,
    add `--dir <repo-root>` so agy reads the real files (don't paste them into context).
-   **If the task WRITES files or uses tools** (web search / URL reads / Vertex AI Search / terminal), it needs
+   **On Linux with bwrap nothing more is needed**: the default `--isolation auto` jails agy
+   to the repository (plus `--dir` paths) and approves every tool inside the jail.
+   **Otherwise, if the task WRITES files or uses tools** (web search / URL reads / Vertex AI Search / terminal), it needs
    a grant. For a plain file write the narrower one is a `write_file(<dir>)` entry under
    `permissions.allow` in `~/.gemini/antigravity-cli/settings.json` (recursive beneath
    `<dir>`, no flag needed — substitute a real path for `<dir>`; if a rule is already

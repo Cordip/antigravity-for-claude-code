@@ -189,6 +189,11 @@ chmod +x "$TMP/bin/gcloud"
 
 export PATH="$TMP/bin:$PATH"
 
+# --isolation defaults to auto, which jails agy in bwrap on any Linux box that has it —
+# and implies --dangerously-skip-permissions, which every argument assertion below would
+# then see. Pin it off for the suite; the isolation block turns it on per call.
+export CLAUDE_PLUGIN_OPTION_ISOLATION=off
+
 # A minimal PATH dir with common utils but deliberately NO gcloud/agy, so
 # "missing on PATH" tests stay deterministic on runners that ship gcloud in
 # /usr/bin (GitHub-hosted ubuntu does — so PATH=/usr/bin:/bin would still find it).
@@ -233,6 +238,88 @@ check "pro tier -> correct model string" 0 "$rc" "Gemini 3.1 Pro (High)" "$out"
 
 out=$(printf 'piped prompt' | STUB_MODE=args "$DELEGATE" - 2>/dev/null); rc=$?
 check "stdin prompt (-) read" 0 "$rc" "-p" "$out"
+
+# --- --isolation: the bwrap jail --------------------------------------------------
+# A stub bwrap logs its mounts (and the settings copy it was handed, which the wrapper
+# deletes on exit) and then runs the command after --die-with-parent unjailed.
+ISO="$TMP/iso"; mkdir -p "$ISO/bin" "$ISO/home/.gemini/antigravity-cli" "$ISO/home/.ssh" "$ISO/repo/sub" "$ISO/out"
+printf '{"enableTerminalSandbox": true, "model": "x"}\n' > "$ISO/home/.gemini/antigravity-cli/settings.json"
+git -C "$ISO/repo" init -q . 2>/dev/null
+cat > "$ISO/bin/bwrap" <<'STUB'
+#!/usr/bin/env bash
+: > "$STUB_BWRAP_LOG"
+while [ $# -gt 0 ]; do
+  printf '%s\n' "$1" >> "$STUB_BWRAP_LOG"
+  case "$1" in
+    --bind)
+      case "$3" in *settings.json) echo "SETTINGS_COPY $(cat "$2")" >> "$STUB_BWRAP_LOG" ;; esac ;;
+    --die-with-parent) shift; exec "$@" ;;
+  esac
+  shift
+done
+STUB
+chmod +x "$ISO/bin/bwrap"
+export STUB_BWRAP_LOG="$ISO/bwrap.log"
+check_has() { # desc needle haystack — exact substring, newlines included (grep -F would OR the lines)
+  if has "$2" "$3"; then echo "ok: $1"; PASS=$((PASS+1)); else echo "FAIL: $1 (missing '$2')"; FAIL=$((FAIL+1)); fi
+}
+iso() { # run the wrapper from $ISO/repo/sub with the stub bwrap and a fake HOME
+  (cd "$ISO/repo/sub" && HOME="$ISO/home" PATH="$ISO/bin:$PATH" STUB_MODE=args "$DELEGATE" "$@")
+}
+if [ "$(uname -s)" = Linux ]; then
+  real_repo="$(cd "$ISO/repo" && pwd -P)"
+  out=$(iso --isolation workspace "hi" 2>/dev/null); rc=$?
+  check "isolation workspace -> agy runs with skip-permissions" 0 "$rc" "--dangerously-skip-permissions" "$out"
+  log="$(cat "$STUB_BWRAP_LOG" 2>/dev/null)"
+  check_has "isolation workspace -> repo toplevel (not the subdir) is writable" "--bind
+$real_repo
+$real_repo" "$log"
+  check_has "isolation workspace -> private /tmp" "--tmpfs
+/tmp" "$log"
+  check_has "isolation workspace -> ~/.ssh hidden" "--tmpfs
+$(cd "$ISO/home" && pwd -P)/.ssh" "$log"
+  check "isolation workspace -> agy terminal sandbox off in the settings copy" 0 0 '"enableTerminalSandbox": false' "$log"
+  check "isolation workspace -> settings copy keeps the user's other keys" 0 0 '"model": "x"' "$log"
+  if grep -q '"enableTerminalSandbox": true' "$ISO/home/.gemini/antigravity-cli/settings.json"; then
+    echo "ok: isolation leaves the user's settings.json untouched"; PASS=$((PASS+1))
+  else echo "FAIL: isolation modified the user's settings.json"; FAIL=$((FAIL+1)); fi
+
+  out=$(iso --isolation workspace --sandbox "hi" 2>/dev/null); rc=$?
+  if [ "$rc" -eq 0 ] && ! has "--sandbox" "$out"; then
+    echo "ok: --sandbox is dropped under isolation"; PASS=$((PASS+1))
+  else echo "FAIL: --sandbox reached agy under isolation (rc=$rc)"; FAIL=$((FAIL+1)); fi
+
+  out=$(iso --isolation readonly --dir "$ISO/out" "hi" 2>/dev/null); rc=$?
+  log="$(cat "$STUB_BWRAP_LOG" 2>/dev/null)"
+  real_out="$(cd "$ISO/out" && pwd -P)"
+  if [ "$rc" -eq 0 ] && has "$real_out" "$log" && ! has "$real_repo
+" "$log"; then
+    echo "ok: isolation readonly -> only --dir is writable, not the repo"; PASS=$((PASS+1))
+  else echo "FAIL: isolation readonly mounts (rc=$rc)"; FAIL=$((FAIL+1)); fi
+
+  out=$(CLAUDE_PLUGIN_OPTION_ISOLATION=auto iso "hi" 2>/dev/null); rc=$?
+  check "isolation auto with bwrap on Linux -> jailed" 0 "$rc" "--dangerously-skip-permissions" "$out"
+
+  out=$(iso --isolation workspace --print-command "hi" 2>/dev/null); rc=$?
+  case "$out" in bwrap\ *) check "dry run under isolation shows the bwrap command" 0 "$rc" ;;
+    *) echo "FAIL: dry run under isolation does not start with bwrap: $out"; FAIL=$((FAIL+1)) ;; esac
+
+  out=$(cd "$ISO/home" && HOME="$ISO/home" PATH="$ISO/bin:$PATH" STUB_MODE=args \
+        "$DELEGATE" --isolation workspace "hi" 2>&1); rc=$?
+  check "isolation refuses to make \$HOME writable -> exit 16" 16 "$rc" "ISOLATION_UNAVAILABLE" "$out"
+else
+  echo "skip: --isolation jail tests (Linux only)"; SKIP=$((SKIP+1))
+fi
+# No bwrap on PATH: explicit isolation fails closed, auto falls back to plain agy.
+mkdir -p "$ISO/nobwrap"; ln -sf "$TMP/bin/agy" "$ISO/nobwrap/agy"
+out=$(PATH="$ISO/nobwrap:$TMP/min" STUB_MODE=args "$DELEGATE" --isolation workspace "hi" 2>&1); rc=$?
+check "explicit isolation without bwrap -> exit 16" 16 "$rc" "ISOLATION_UNAVAILABLE" "$out"
+out=$(PATH="$ISO/nobwrap:$TMP/min" STUB_MODE=args CLAUDE_PLUGIN_OPTION_ISOLATION=auto "$DELEGATE" "hi" 2>/dev/null); rc=$?
+if [ "$rc" -eq 0 ] && ! has "--dangerously-skip-permissions" "$out"; then
+  echo "ok: isolation auto without bwrap -> plain agy, no skip-permissions"; PASS=$((PASS+1))
+else echo "FAIL: isolation auto without bwrap (rc=$rc): $out"; FAIL=$((FAIL+1)); fi
+out=$("$DELEGATE" --isolation bogus "hi" 2>/dev/null); rc=$?
+check "invalid --isolation -> exit 1" 1 "$rc"
 
 # structured exit codes + machine-readable signal (stderr merged into capture)
 out=$(STUB_MODE=quota "$DELEGATE" "hi" 2>&1); rc=$?

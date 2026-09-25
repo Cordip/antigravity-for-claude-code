@@ -85,8 +85,10 @@ not over `--dir`) · `--sandbox` (does NOT contain anything; measured inert unde
 
 ## Modes
 
-- **Write / build** (scaffold, implement, generate tests, migrate): agentic mode, and the
-  write needs a grant. Pass `--yolo` unless the user has a `permissions.allow`
+- **Write / build** (scaffold, implement, generate tests, migrate): agentic mode. On Linux
+  with bwrap the wrapper's default `--isolation auto` jails agy to the repository and
+  grants everything inside the jail — no `--yolo`, no rule needed, writes outside the
+  repo fail. Otherwise the write needs a grant. Pass `--yolo` unless the user has a `permissions.allow`
   `write_file(<dir>)` rule covering the target in `~/.gemini/antigravity-cli/settings.json`
   — that grants the write recursively beneath `<dir>` with no flag, and is narrower than
   `--yolo`, which approves every tool. If they say a rule is in place and the write is

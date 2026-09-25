@@ -3,6 +3,28 @@
 All notable changes to **Antigravity for Claude Code**. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/); versions are in `.claude-plugin/plugin.json`.
 
+## 0.29.0
+
+- **`--isolation`: agy runs inside a bubblewrap jail on Linux, so write tasks work in the
+  normal checkout without `--yolo` over the whole machine.** Measured on agy 1.2.11 (WSL2):
+  headless without a grant, a denied tool ends the whole turn with no output, and no shell
+  command runs at all — agy cannot even run the tests it wrote. With `--yolo`, `--sandbox`
+  is no containment: agy's file tool wrote outside the workspace, reads and `curl` were
+  unrestricted, and the terminal sandbox made the workspace itself read-only to the shell.
+  Under `bwrap` both the file tool and the shell hit the same read-only mount, so the
+  wrapper now passes `--dangerously-skip-permissions` *inside* the jail: the filesystem is
+  read-only except the git toplevel of `$PWD` (and a linked worktree's common git dir),
+  each `--dir` and `~/.gemini`; `/tmp` is private; `~/.ssh`, `~/.aws`, `~/.claude`,
+  `~/.codex` and other credential paths are hidden (`AGY_ISOLATION_HIDE` overrides the
+  list). agy's own terminal sandbox cannot nest in bwrap (`remount root ro: operation not
+  permitted`), so the jail mounts a private settings copy with `enableTerminalSandbox:
+  false` over it; the user's `settings.json` is never written. Modes: `auto` (default —
+  jail when Linux + bwrap + python3, else the old behavior), `workspace`, `readonly` (only
+  `--dir` writable, for research/media) and `off`. A writable root that is or contains
+  `$HOME` is refused, as is an explicit mode without bwrap: new exit code `16`
+  (`ISOLATION_UNAVAILABLE`). Network stays open — agy needs it. New plugin option
+  `isolation`. Suite 345 -> 360.
+
 ## 0.28.0
 
 - **`AGY_USAGE` now names the model that ran, the tier it was picked from, and agy's own

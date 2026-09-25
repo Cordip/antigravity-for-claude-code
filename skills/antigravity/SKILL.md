@@ -1,7 +1,7 @@
 ---
 name: antigravity
 description: Run the Antigravity CLI (Gemini) as a collaborating AI inside Claude Code, with intelligent model routing across the software development lifecycle. Claude is the conductor/orchestrator — requirements, architecture, the hard 20%, verification, and review — and routes deterministic, high-volume work (scaffolding, boilerplate, test generation, first-pass review, migrations, web/Vertex AI Search) to Antigravity (Gemini), the cheaper, faster model. Use when the user wants to "use Antigravity / agy", "vibe code / agentic engineering", "accelerate the SDLC", "delegate to Gemini", "scaffold / generate tests / migrate", "first-pass code review", "search web or internal/company data", "deep research / multi-source research report", "second-model cross-check", or "lower token cost on a big job". Claude always verifies Antigravity's output and re-checks itself if unsatisfied.
-version: 0.28.0
+version: 0.29.0
 ---
 
 # Antigravity for Claude Code — hybrid SDLC
@@ -221,6 +221,20 @@ Claude owns correctness. For anything that ships:
 If wrong: retry on `--tier pro`, sharpen the spec, or do that piece yourself.
 
 ## Safety for write tasks
+
+**Linux with bubblewrap (`--isolation`, default `auto`): none of the grant lore below
+applies.** The wrapper runs agy inside a `bwrap` jail — the filesystem read-only except the
+current repository (git toplevel), each `--dir` and `~/.gemini`; a private `/tmp`;
+`~/.ssh`, `~/.aws`, `~/.claude` and other credential paths hidden — and passes
+`--dangerously-skip-permissions` inside it. Writes, shell commands (tests, builds, git),
+web search and URL reads then just work headless, in the current checkout, with no
+worktree and no `permissions.allow` rules; a write outside the repo fails with
+`Read-only file system`. Measured on agy 1.2.11 / WSL2. Limits: reads are not
+restricted beyond the hidden paths, and the network stays open (agy needs it). Use
+`--isolation readonly` for research/media runs (only `--dir` is writable), and
+`--isolation off` for the previous behavior. Exit `16` = isolation was requested but
+bwrap/python3/Linux is missing, or the writable root would contain `$HOME`. On macOS, or
+with isolation off, the rules below still hold:
 
 Read-only work (search, review, analysis) is low-risk. **When agy writes files or runs
 commands** (`--yolo` grants write + terminal):

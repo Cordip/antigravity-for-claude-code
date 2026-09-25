@@ -225,6 +225,13 @@ Delegation doesn't save money by itself — these do (also in the skill):
 > **Something broken?** See **[docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)** — symptom-first fixes for Windows/WSL, writes that silently don't happen, quota/auth/timeout codes, and updating.
 
 **Guardrails**
+- **Linux: agy runs jailed by default.** With `bwrap` installed (`apt install bubblewrap`),
+  `--isolation auto` runs agy in a bubblewrap jail: read-only filesystem except the current
+  repository, `--dir` paths and `~/.gemini`; private `/tmp`; credential dirs hidden. Inside
+  it agy gets `--dangerously-skip-permissions`, so writes, tests, web search and URL reads
+  work headless in your normal checkout — no worktree, no `permissions.allow` rules. Network
+  stays open and reads are not restricted beyond the hidden paths. `--isolation off` (or the
+  `isolation` plugin option) restores the previous behavior.
 - Always **verify** agy's output (it can be wrong, and may even alter its environment to make a check pass — re-run gates yourself in a clean state).
 - `--yolo` auto-approves every tool call — a grant over your whole machine, not over `--dir`.
   **`--sandbox` does not contain it.** Measured on macOS with agy 1.1.19: with `--yolo`, `--sandbox` changed nothing — a write to an absolute path OUTSIDE `--dir` succeeded (rc 0), `id` ran and returned a real uid, and `curl https://example.com` returned 200. agy's own help says "terminal restrictions"; whatever it restricts, it is not those, and not in this combination. Not tested on Linux. Use a throwaway checkout, or a

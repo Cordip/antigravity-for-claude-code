@@ -26,7 +26,20 @@
 #       --yolo                       Auto-approve all tool permissions (DANGEROUS). Reaches agy as
 #                                    --dangerously-skip-permissions; agy 1.1.25 rejects a literal --yolo
 #       --sandbox                    Run agent with terminal sandbox restrictions
-#       --digest                     Append a digest-only output contract to the prompt
+#                                    (ignored under --isolation: agy's sandbox cannot nest in bwrap)
+#       --isolation <auto|workspace|readonly|off>
+#                                    Run agy inside a bubblewrap (bwrap) jail — Linux only.
+#                                    workspace: the filesystem is read-only except the current
+#                                    repository (git toplevel, or $PWD), every --dir and agy's
+#                                    own state (~/.gemini); /tmp is private; credential dirs
+#                                    (~/.ssh, ~/.aws, ...) are hidden. readonly: the same, but
+#                                    only the --dir paths are writable. Inside the jail agy runs
+#                                    with --dangerously-skip-permissions (the jail, not agy's
+#                                    prompts, is the boundary), so writes, shell, web search and
+#                                    URL reads all work headless. The network stays open (agy
+#                                    needs it). auto (default): workspace when bwrap + python3
+#                                    are available on Linux, else off. Plugin option: isolation.
+#       --digest                    Append a digest-only output contract to the prompt
 #                                    (ingest digests, not raw dumps — the biggest cost lever)
 #       --mode <accept-edits|plan>   agy execution mode (agy >= 1.1.0). accept-edits is NOT a
 #                                    write grant: measured on agy 1.1.13, where the flag is
@@ -50,6 +63,8 @@
 #             |    denied_actions, measured on 1.2.0) and 1.1.13's hard error (rc 1, "user
 #             |    denied permission", 1.1.13-1.1.19). Add a permissions.allow rule, or --yolo.
 #             |    URL reads need a grant too since 1.1.28 (read_url(<target>), or the flag).
+#             | 16 isolation unavailable — --isolation workspace|readonly was asked for but bwrap /
+#             |    python3 / Linux is missing, or the writable root would expose $HOME or /.
 #
 # On a classifiable failure, a machine-readable line is printed to stderr so
 # orchestrators (e.g. agy-job.sh) can react without scraping prose:
@@ -77,6 +92,8 @@ TIER_EXPLICIT=0
 MODEL=""
 YOLO=0
 SANDBOX=0
+ISOLATION="${CLAUDE_PLUGIN_OPTION_ISOLATION:-auto}"
+ISOLATED=0          # 1 once --isolation resolved to a bwrap jail (workspace | readonly)
 DIGEST=0
 MODE=""
 ADD_DIRS=()
@@ -232,6 +249,98 @@ outer_timeout_secs() {
   echo $(( secs + pad ))
 }
 
+# --- --isolation: a bubblewrap jail around agy (Linux) ----------------------------
+# Why a jail instead of agy's own knobs, measured on agy 1.2.11:
+#   * --sandbox confines the SHELL only (and makes the workspace read-only to it), while
+#     agy's file-write tool still writes anywhere once permissions are skipped, and reads,
+#     shell reads and the network are unrestricted;
+#   * without --yolo every permissioned tool is auto-denied headless and the whole turn
+#     ends with no output, so agy cannot run a single test command.
+# Under bwrap both tools hit the same read-only mount, so skip-permissions is safe to pass:
+# the kernel, not agy's prompt, is the boundary. agy's terminal sandbox (sbox) cannot nest
+# inside bwrap ("remount root ro: operation not permitted", every shell call fails), so the
+# jail mounts a private settings copy with enableTerminalSandbox=false over agy's own.
+# The user's settings.json is never modified.
+
+# Paths under $HOME hidden inside the jail (empty tmpfs / /dev/null). Override with
+# AGY_ISOLATION_HIDE (space-separated, relative to $HOME).
+ISOLATION_HIDE_DEFAULT=".ssh .gnupg .aws .azure .kube .docker .config/gh .config/gcloud .password-store .local/share/keyrings .netrc .git-credentials .claude .claude.json .codex"
+
+isolation_fail() {
+  echo "agy-delegate: isolation unavailable — $1. Install bubblewrap (bwrap) on Linux, or pass --isolation off (agy then needs permissions.allow rules or --yolo)." >&2
+  signal ISOLATION_UNAVAILABLE "$1"
+  exit 16
+}
+
+can_isolate() {
+  [ "$(uname -s 2>/dev/null)" = Linux ] && command -v bwrap >/dev/null 2>&1 \
+    && command -v python3 >/dev/null 2>&1
+}
+
+abs_dir() { (cd "$1" 2>/dev/null && pwd -P); }
+
+# Write agy's settings with the terminal sandbox off to $1. Returns 1 when the user has
+# no settings.json (nothing to override; agy's default leaves sbox off).
+make_settings_copy() {
+  local src="$HOME/.gemini/antigravity-cli/settings.json"
+  [ -f "$src" ] || return 1
+  python3 - "$src" "$1" <<'PY' || isolation_fail "could not rewrite $src as JSON"
+import json, sys
+src, dst = sys.argv[1], sys.argv[2]
+with open(src, encoding="utf-8") as fh:
+    data = json.load(fh)
+if not isinstance(data, dict):
+    sys.exit(1)
+data["enableTerminalSandbox"] = False
+with open(dst, "w", encoding="utf-8") as fh:
+    json.dump(data, fh, indent=2)
+PY
+}
+
+# Fill JAIL_CMD with `bwrap <mounts...>`. $1 = settings copy to mount ("" = none).
+build_jail() {
+  local home p d root common rel
+  local rw=()
+  home="$(abs_dir "$HOME")" || isolation_fail "HOME ($HOME) is not a directory"
+  if [ "$ISOLATION" = workspace ]; then
+    root="$(git rev-parse --show-toplevel 2>/dev/null || pwd -P)"
+    rw+=("$root")
+    # A linked worktree commits into the main repository's git dir; make it writable too.
+    common="$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null || true)"
+    if [ -n "$common" ] && [ -d "$common" ]; then
+      case "$common/" in "$root"/*) ;; *) rw+=("$common") ;; esac
+    fi
+  fi
+  for p in "${ADD_DIRS[@]:-}"; do
+    [ -n "$p" ] || continue
+    d="$(abs_dir "$p")" || isolation_fail "--dir '$p' is not a directory"
+    rw+=("$d")
+  done
+  for p in "${rw[@]:-}"; do
+    [ -n "$p" ] || continue
+    # A writable root at or above $HOME would put every dotfile back in reach.
+    if [ "$p" = / ] || [ "$p" = "$home" ]; then
+      isolation_fail "refusing to make '$p' writable (run from a project directory)"
+    fi
+    case "$home/" in "$p"/*) isolation_fail "refusing to make '$p' writable: it contains \$HOME" ;; esac
+  done
+
+  JAIL_CMD=(bwrap --ro-bind / / --dev /dev --proc /proc --tmpfs /tmp)
+  for rel in ${AGY_ISOLATION_HIDE-$ISOLATION_HIDE_DEFAULT}; do
+    p="$home/$rel"
+    if [ -L "$p" ]; then continue
+    elif [ -d "$p" ]; then JAIL_CMD+=(--tmpfs "$p")
+    elif [ -f "$p" ]; then JAIL_CMD+=(--ro-bind /dev/null "$p")
+    fi
+  done
+  [ -d "$home/.gemini" ] && JAIL_CMD+=(--bind "$home/.gemini" "$home/.gemini")
+  [ -n "${1:-}" ] && JAIL_CMD+=(--bind "$1" "$home/.gemini/antigravity-cli/settings.json")
+  for p in "${rw[@]:-}"; do
+    [ -n "$p" ] && JAIL_CMD+=(--bind "$p" "$p")
+  done
+  JAIL_CMD+=(--setenv TMPDIR /tmp --chdir "$(pwd -P)" --new-session --die-with-parent)
+}
+
 while [ $# -gt 0 ]; do
   case "$1" in
     -t|--tier)      need "$#" "$1"; TIER="$2"; TIER_EXPLICIT=1; shift 2 ;;
@@ -239,7 +348,8 @@ while [ $# -gt 0 ]; do
     --timeout)      need "$#" "$1"; TIMEOUT="$2"; shift 2 ;;
     --yolo)         YOLO=1; shift ;;
     --sandbox)      SANDBOX=1; shift ;;
-    --digest)       DIGEST=1; shift ;;               # ask agy for a digest-only reply
+    --isolation)    need "$#" "$1"; ISOLATION="$2"; shift 2 ;;
+    --digest)      DIGEST=1; shift ;;               # ask agy for a digest-only reply
     --mode)         need "$#" "$1"; MODE="$2"; shift 2
                     case "$MODE" in accept-edits|plan) ;;
                       *) die "invalid --mode '$MODE' (use accept-edits | plan; agy >= 1.1.0)" ;;
@@ -295,6 +405,22 @@ if on_wsl; then
       /mnt/*) echo "agy-delegate: note: --add-dir '$d' is on a Windows mount under WSL; agy reads it over a slow 9p bridge (calls can take 20s+). Move the repo into the Linux FS (~) for ~10x faster I/O." >&2; break ;;
     esac
   done
+fi
+
+# Resolve --isolation. Invalid values die rather than silently running unjailed.
+case "$ISOLATION" in
+  auto) if can_isolate; then ISOLATION=workspace; else ISOLATION=off; fi ;;
+  workspace|readonly) can_isolate || isolation_fail "--isolation $ISOLATION needs Linux with bwrap and python3" ;;
+  off) ;;
+  *) die "invalid --isolation '$ISOLATION' (use auto | workspace | readonly | off)" ;;
+esac
+if [ "$ISOLATION" != off ]; then
+  ISOLATED=1
+  YOLO=1   # the jail is the boundary; headless prompts would only auto-deny
+  if [ "$SANDBOX" -eq 1 ]; then
+    echo "agy-delegate: note: --sandbox ignored under --isolation $ISOLATION (agy's terminal sandbox cannot nest inside bwrap)" >&2
+    SANDBOX=0
+  fi
 fi
 
 # Heads-up: a likely write task with no visible write grant. Headless agy's write
@@ -371,8 +497,8 @@ TO_CMD="$(timeout_cmd || true)"
 # exists. Declaring them empty up front means the probe's file is covered too —
 # it used to be cleaned by a trailing `rm -f`, which a SIGINT during the probe
 # skips. `rm -f ""` is a silent no-op, so the unset ones cost nothing.
-HELPF=""; ERR=""; OUTF=""
-trap 'rm -f "$HELPF" "$ERR" "$OUTF" 2>/dev/null' EXIT
+HELPF=""; ERR=""; OUTF=""; SETF=""
+trap 'rm -f "$HELPF" "$ERR" "$OUTF" "$SETF" 2>/dev/null' EXIT
 
 JSON_MODE=0
 raw_so="${CLAUDE_PLUGIN_OPTION_STRUCTURED_OUTPUT:-on}"
@@ -404,9 +530,22 @@ case "$(printf '%s' "$raw_so" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')"
     fi ;;
 esac
 
+# --- the command that runs agy: bare, or inside the bwrap jail ---
+AGY_CMD=(agy)
+if [ "$ISOLATED" -eq 1 ]; then
+  if [ "$PRINT_CMD" -eq 1 ]; then
+    # Dry run: show where the settings copy would go without writing one.
+    if [ -f "$HOME/.gemini/antigravity-cli/settings.json" ]; then build_jail '<settings-copy>'; else build_jail ''; fi
+  else
+    SETF="$(mktemp "${TMPDIR:-/tmp}/agy-settings.XXXXXX")"
+    if make_settings_copy "$SETF"; then build_jail "$SETF"; else build_jail ''; fi
+  fi
+  AGY_CMD=("${JAIL_CMD[@]}" agy)
+fi
+
 # --- dry run: print the resolved (shell-quoted) agy invocation and exit ---
 if [ "$PRINT_CMD" -eq 1 ]; then
-  { printf 'agy'; printf ' %q' "${ARGS[@]}" -p "$PROMPT"; printf '\n'; }
+  { printf '%s' "${AGY_CMD[0]}"; printf ' %q' "${AGY_CMD[@]:1}" "${ARGS[@]}" -p "$PROMPT"; printf '\n'; }
   exit 0
 fi
 
@@ -438,10 +577,10 @@ fi
 set +e
 if [ -n "$TO_CMD" ]; then
   # --kill-after sends SIGKILL if agy ignores the initial SIGTERM (defensive).
-  "$TO_CMD" --kill-after=10 "$TO_SECS" agy "${ARGS[@]}" -p "$PROMPT" < /dev/null >"$OUTF" 2>"$ERR"
+  "$TO_CMD" --kill-after=10 "$TO_SECS" "${AGY_CMD[@]}" "${ARGS[@]}" -p "$PROMPT" < /dev/null >"$OUTF" 2>"$ERR"
   RC=$?
 else
-  agy "${ARGS[@]}" -p "$PROMPT" < /dev/null >"$OUTF" 2>"$ERR"
+  "${AGY_CMD[@]}" "${ARGS[@]}" -p "$PROMPT" < /dev/null >"$OUTF" 2>"$ERR"
   RC=$?
 fi
 OUT="$(cat "$OUTF" 2>/dev/null)"

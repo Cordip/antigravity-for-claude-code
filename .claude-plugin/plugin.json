@@ -1,6 +1,6 @@
 {
   "name": "antigravity",
-  "version": "0.28.0",
+  "version": "0.29.0",
   "description": "Run the Antigravity CLI (Gemini) as a collaborating AI inside Claude Code, with intelligent model routing across the SDLC. Claude conducts — requirements, architecture, the hard 20%, verification, review — and routes deterministic, high-volume work (scaffolding, tests, first-pass review, migrations, web/Vertex AI Search) to Antigravity. Hybrid agentic engineering; lower token cost as a financial lever.",
   "author": {
     "name": "linyuting"
@@ -30,6 +30,12 @@
       "title": "Default delegation timeout",
       "description": "Default agy print-mode timeout when --timeout is not passed, e.g. 5m, 10m, 300s.",
       "default": "5m"
+    },
+    "isolation": {
+      "type": "string",
+      "title": "Jail agy in bubblewrap (Linux)",
+      "description": "auto (default): on Linux with bwrap and python3, run agy inside a bubblewrap jail — the filesystem read-only except the current repository, --dir paths and ~/.gemini; private /tmp; ~/.ssh, ~/.aws and other credential dirs hidden — with --dangerously-skip-permissions inside it, so writes, shell commands, web search and URL reads work headless without permissions.allow rules or --yolo. The network stays open. workspace: always (fail if bwrap is missing). readonly: only --dir paths writable. off: plain agy, as before.",
+      "default": "auto"
     },
     "coding_policy": {
       "type": "string",
