@@ -11,13 +11,13 @@ Task: $ARGUMENTS
 Do this:
 1. Pick a tier (`flash` default; `pro` for hard reasoning). If the task needs the repo,
    add `--dir <repo-root>` so agy reads the real files (don't paste them into context).
-   **On Linux with bwrap nothing more is needed**: the default `--isolation auto` jails agy
+   **Nothing more is needed**: agy always runs in the default jail (`--isolation workspace`, Linux + bwrap), which confines it
    to the repository (plus `--dir` paths) and approves every tool inside the jail — edits,
    tests, git, web search, URL reads — in the current checkout. Do not add `--yolo`. For a
    read-only task (review, analysis, research) pass `--isolation readonly` so the repo stays
-   untouched. Exit `16` means the jail is unavailable: report it rather than dropping to
+   untouched. Exit `16` means the jail is unavailable (no bwrap): report it; never drop to
    `--isolation off` on your own.
-   **Without the jail (macOS, or `--isolation off`), if the task WRITES files or uses tools** (web search / URL reads / Vertex AI Search / terminal), it needs
+   **Only if the user explicitly chose `--isolation off`: if the task WRITES files or uses tools** (web search / URL reads / Vertex AI Search / terminal), it needs
    a grant. For a plain file write the narrower one is a `write_file(<dir>)` entry under
    `permissions.allow` in `~/.gemini/antigravity-cli/settings.json` (recursive beneath
    `<dir>`, no flag needed — substitute a real path for `<dir>`; if a rule is already

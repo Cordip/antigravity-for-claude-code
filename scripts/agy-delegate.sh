@@ -29,7 +29,7 @@
 #                                    (ignored under --isolation: agy's sandbox cannot nest in bwrap)
 #       --isolation <auto|workspace|readonly|off>
 #                                    Run agy inside a bubblewrap (bwrap) jail — Linux only.
-#                                    workspace: the filesystem is read-only except the current
+#                                    workspace (default): the filesystem is read-only except the current
 #                                    repository (git toplevel, or $PWD), every --dir and agy's
 #                                    own state (~/.gemini); /tmp is private; credential dirs
 #                                    (~/.ssh, ~/.aws, ...) are hidden. readonly: the same, but
@@ -37,8 +37,11 @@
 #                                    with --dangerously-skip-permissions (the jail, not agy's
 #                                    prompts, is the boundary), so writes, shell, web search and
 #                                    URL reads all work headless. The network stays open (agy
-#                                    needs it). auto (default): workspace when bwrap + python3
-#                                    are available on Linux, else off. Plugin option: isolation.
+#                                    needs it). Without bwrap the default fails closed (exit 16)
+#                                    instead of running agy unjailed. auto: workspace when bwrap +
+#                                    python3 are available on Linux, else off. off: plain agy, whose
+#                                    own permission prompts auto-deny headless (see --yolo).
+#                                    Plugin option: isolation.
 #       --digest                    Append a digest-only output contract to the prompt
 #                                    (ingest digests, not raw dumps — the biggest cost lever)
 #       --mode <accept-edits|plan>   agy execution mode (agy >= 1.1.0). accept-edits is NOT a
@@ -92,7 +95,7 @@ TIER_EXPLICIT=0
 MODEL=""
 YOLO=0
 SANDBOX=0
-ISOLATION="${CLAUDE_PLUGIN_OPTION_ISOLATION:-auto}"
+ISOLATION="${CLAUDE_PLUGIN_OPTION_ISOLATION:-workspace}"
 ISOLATED=0          # 1 once --isolation resolved to a bwrap jail (workspace | readonly)
 DIGEST=0
 MODE=""
@@ -410,7 +413,7 @@ fi
 # Resolve --isolation. Invalid values die rather than silently running unjailed.
 case "$ISOLATION" in
   auto) if can_isolate; then ISOLATION=workspace; else ISOLATION=off; fi ;;
-  workspace|readonly) can_isolate || isolation_fail "--isolation $ISOLATION needs Linux with bwrap and python3" ;;
+  workspace|readonly) can_isolate || isolation_fail "isolation '$ISOLATION' (the default is workspace) needs Linux with bwrap and python3" ;;
   off) ;;
   *) die "invalid --isolation '$ISOLATION' (use auto | workspace | readonly | off)" ;;
 esac

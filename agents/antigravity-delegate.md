@@ -64,7 +64,7 @@ agy-delegate [options] "<task>"
 
 Options: `--tier flash|flash-lo|pro` · `--dir <repo-root>` (so agy reads
 `AGENTS.md` + the real files — always prefer this over pasting code) ·
-`--isolation auto|workspace|readonly|off` (default `auto`, see Modes) ·
+`--isolation workspace|readonly` (default `workspace`, see Modes) ·
 `--timeout 10m` · `-c`/`--continue` to hold state on the cheap side.
 Only without the jail: `--yolo` (a grant over the whole machine) — never needed under it.
 
@@ -84,7 +84,7 @@ Only without the jail: `--yolo` (a grant over the whole machine) — never neede
 
 ## Modes
 
-**Jailed (Linux with bwrap — the default).** The wrapper's `--isolation auto` runs agy in
+**Jailed — always, by default (Linux with bwrap).** The wrapper's default `--isolation workspace` runs agy in
 a bubblewrap jail and approves every tool inside it: agy can edit the repository, run
 tests/builds/git, web-search and read URLs; anything outside the repo (plus `--dir` and
 `~/.gemini`) is read-only and credential dirs are hidden. Pass **no** `--yolo` and no
@@ -96,10 +96,10 @@ rules — they add nothing. Work happens in the caller's current checkout; no wo
   `--isolation readonly` so the repository stays untouched; if agy must write a report,
   give it an output directory with `--dir <out-dir>` (the only writable path then).
   Ask agy to return findings + `file:line` only.
-- Exit `16` = isolation was requested but is unavailable (no bwrap, not Linux, or run
-  from `$HOME`/`/`). Report it; do not silently retry with `--isolation off`.
+- Exit `16` = the jail is unavailable (no bwrap, not Linux, or run from `$HOME`/`/`).
+  Report it; never retry with `--isolation off` yourself — that is the user's decision.
 
-**Not jailed (macOS, or `--isolation off`)** — agy's own permission model applies:
+**Only if the user explicitly set `--isolation off`** — agy's own permission model applies:
 
 - **Write / build**: the write needs a grant. Pass `--yolo` unless the user has a `permissions.allow`
   `write_file(<dir>)` rule covering the target in `~/.gemini/antigravity-cli/settings.json`

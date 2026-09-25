@@ -106,7 +106,9 @@ the cross-model verification value (Claude executing Claude loses both).
 agy-delegate [options] "the task prompt"
 ```
 Options: `--tier flash|flash-lo|pro` · `--dir <path>` (workspace, repeatable) ·
-`--timeout 10m` · `--yolo` (auto-approve **ALL** tools — the blunt grant; needed for web search /
+`--timeout 10m` · `--isolation workspace|readonly|auto|off` (default `workspace`: agy runs in a
+bubblewrap jail that approves every tool inside it — see **Safety for write tasks**) ·
+only with `--isolation off`: `--yolo` (auto-approve **ALL** tools — the blunt grant; needed for web search /
 URL reads (agy 1.1.28+; or a `read_url(<target>)` rule) / Vertex AI Search / terminal, and for writes not covered by a `permissions.allow` rule. For a
 file write the narrower grant is usually a `write_file(<dir>)` entry in
 `~/.gemini/antigravity-cli/settings.json`, which needs no flag — see below. Run write tasks
@@ -222,8 +224,8 @@ If wrong: retry on `--tier pro`, sharpen the spec, or do that piece yourself.
 
 ## Safety for write tasks
 
-**Linux with bubblewrap (`--isolation`, default `auto`): none of the grant lore below
-applies.** The wrapper runs agy inside a `bwrap` jail — the filesystem read-only except the
+**agy always runs jailed (`--isolation`, default `workspace`, Linux + bubblewrap): none of
+the grant lore below applies.** The wrapper runs agy inside a `bwrap` jail — the filesystem read-only except the
 current repository (git toplevel), each `--dir` and `~/.gemini`; a private `/tmp`;
 `~/.ssh`, `~/.aws`, `~/.claude` and other credential paths hidden — and passes
 `--dangerously-skip-permissions` inside it. Writes, shell commands (tests, builds, git),
@@ -232,9 +234,10 @@ worktree and no `permissions.allow` rules; a write outside the repo fails with
 `Read-only file system`. Measured on agy 1.2.11 / WSL2. Limits: reads are not
 restricted beyond the hidden paths, and the network stays open (agy needs it). Use
 `--isolation readonly` for research/media runs (only `--dir` is writable), and
-`--isolation off` for the previous behavior. Exit `16` = isolation was requested but
-bwrap/python3/Linux is missing, or the writable root would contain `$HOME`. On macOS, or
-with isolation off, the rules below still hold:
+`--isolation off` only when the user explicitly asks for upstream behavior. Exit `16` =
+bwrap/python3/Linux is missing (the default fails closed instead of running agy unjailed),
+or the writable root would contain `$HOME`. Only with `--isolation off` do the rules below
+hold:
 
 Read-only work (search, review, analysis) is low-risk. **When agy writes files or runs
 commands** (`--yolo` grants write + terminal):
@@ -364,34 +367,34 @@ any figure.
 
 ## SDLC recipes
 
-On Linux with bwrap (default `--isolation auto`), drop every `--yolo` below: the jail
-already approves all tools. Add `--isolation readonly` to review / search / research
-calls so the repository stays untouched.
+Every call below runs in the default jail (`--isolation workspace`), which approves all
+tools — no `--yolo`. Review / search / research calls add `--isolation readonly` so the
+repository stays untouched.
 
 ```bash
 ROOT=agy-delegate
 
 # Scaffold from a spec (Claude wrote the spec/architecture)
-"$ROOT" --tier pro --yolo --dir ./app \
+"$ROOT" --tier pro --dir ./app \
   "Scaffold per ARCHITECTURE.md: dirs, configs, stub modules. Follow AGENTS.md."
 
 # Generate tests for a contract Claude defined
-"$ROOT" --tier flash --yolo --dir ./app \
+"$ROOT" --tier flash --dir ./app \
   "Write unit + edge-case tests for src/payments.py covering the cases in SPEC.md."
 
 # First-pass review (Claude does the final pass)
 "$ROOT" --tier pro "Review for bugs/security/perf, be skeptical. List file:line: <diff>"
 
 # Implement-until-tests-pass (feedback loop; isolate on a branch)
-"$ROOT" --tier pro --yolo --dir ./app \
+"$ROOT" --tier pro --dir ./app \
   "Implement feature X to satisfy AGENTS.md and make 'pytest -q' pass. Iterate until green."
 
 # Migration / modernization
-"$ROOT" --tier pro --yolo --dir ./svc \
+"$ROOT" --tier pro --dir ./svc \
   "Migrate all callers from APIv1 to APIv2 per MIGRATION.md. List every file changed."
 
 # Web search → Claude re-checks
-"$ROOT" --tier pro --yolo "Use web search for <X>. Give URLs + dates."
+"$ROOT" --tier pro --isolation readonly "Use web search for <X>. Give URLs + dates."
 
 # Audio / video / image understanding (Claude can't hear or watch; Gemini can)
 # agy-media writes the full transcript to a FILE and returns a timestamped digest —
@@ -403,8 +406,8 @@ agy-media ./memo.m4a --convert                     # agy mishandles m4a/aiff; co
 # grep that timestamp out of the transcript file rather than trusting the summary.
 
 # Vertex AI Search over internal data (discover engines, then query)
-"$ROOT" --tier pro --yolo "List Vertex AI Search engines (list_engines)."
-"$ROOT" --tier pro --yolo "Search engine <ENGINE_ID> for: <question>. Cite the hits."
+"$ROOT" --tier pro --isolation readonly "List Vertex AI Search engines (list_engines)."
+"$ROOT" --tier pro --isolation readonly "Search engine <ENGINE_ID> for: <question>. Cite the hits."
 ```
 
 ## Internal fan-out recipe (agy spawns its own subagents)
@@ -433,10 +436,10 @@ ONE delegation and let agy fan out internally — the coordination tokens land o
 cheap side, and you ingest a single digest.
 
 ```bash
-# Preferred form (agy >= 1.0.16). --yolo (the wrapper's flag; it reaches agy as
-# --dangerously-skip-permissions) is required so the subagent tools aren't
-# soft-denied headless (see below). Verified live on agy 1.1.5.
-agy-delegate --dir . --yolo --digest --timeout 10m \
+# Preferred form (agy >= 1.0.16). The default jail approves the subagent tools; with
+# --isolation off add --yolo, or they are soft-denied headless (see below).
+# Verified live on agy 1.1.5.
+agy-delegate --dir . --digest --timeout 10m \
   "ACTUALLY use your define_subagent and invoke_subagent tools (do NOT simulate).
    Decompose <task> into up to 3 units. For each unit: define_subagent a named specialist
    (name + system_prompt for its role, following this repo's conventions / AGENTS.md if
@@ -446,7 +449,7 @@ agy-delegate --dir . --yolo --digest --timeout 10m \
 ```
 
 Verified behaviors (1.0.12 → 1.1.5):
-- **Pass `--yolo`.** On 1.1.3+ the subagent tools need permission that headless mode
+- **In the jail nothing more is needed; with `--isolation off` pass `--yolo`.** On 1.1.3+ the subagent tools need permission that headless mode
   can't prompt for, so without `--yolo` the spawn is denied (wrapper exit 15). Whether
   it is a soft deny or the hard error 1.1.13 introduced for writes (and 1.1.20 took
   back) has not been measured for this tool — the grant and the exit code are the same either way.
@@ -489,14 +492,14 @@ unverified.**
 2. **Fan-out fetch (agy, cheap, parallel).** One call per sub-question; force compact
    stdout so bulky pages stay in Gemini's context, not Claude's:
    ```bash
-   "$ROOT" --tier flash --yolo \
+   "$ROOT" --tier flash --isolation readonly \
      "Use web search for <sub-question>. Return 5-8 bullet findings, each with the
       exact source URL and publication date. Output ONLY findings+URLs+dates."
    ```
 3. **Deepen on key sources (agy).** For each load-bearing claim, name the URL and make
    agy quote the supporting text (turns domain-level citations into verifiable quotes):
    ```bash
-   "$ROOT" --tier pro --yolo \
+   "$ROOT" --tier pro --isolation readonly \
      "Open <URL> and quote the exact sentence(s) supporting: '<claim>'.
       If the page does not support it, reply NOT SUPPORTED."
    ```
@@ -519,7 +522,7 @@ Built-in Google tools (MCP), verified working in headless `--print` mode:
   `search`, `conversational_search`).
 - **Google Cloud Logging**, **Notebooks** (Colab/Jupyter), **Visualization** (charts).
 
-Tool use in headless mode requires `--yolo` (print mode can't show approval prompts);
+Tool use in headless mode needs the default jail or, with `--isolation off`, `--yolo` (print mode can't show approval prompts);
 search/list tools are read-only so this is low-risk.
 
 ## Economics (a financial lever, not the headline)

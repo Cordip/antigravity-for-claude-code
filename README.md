@@ -172,14 +172,14 @@ scripts/agy-delegate.sh --tier pro --dir ./src "List every TODO with file:line"
 # bulk read -> digest-only reply (the biggest cost lever; wrapper warns on dump-sized replies)
 scripts/agy-delegate.sh --digest --dir . "Map the auth flow end to end"
 
-# write task: needs a grant — a permissions.allow write_file(<dir>) rule, or --yolo (run on a branch)
-scripts/agy-delegate.sh --yolo --dir ./app "Implement X per SPEC.md"
+# write task: runs in the default bwrap jail (repo writable, everything else read-only)
+scripts/agy-delegate.sh --dir ./app "Implement X per SPEC.md"
 
-# live web / Google search — and, since agy 1.1.28, any URL read — need --yolo (or a read_url(<target>) rule) headless
-scripts/agy-delegate.sh --tier pro --yolo "Web-search <X>. Give URLs + dates."
+# live web / Google search and URL reads — read-only jail, nothing written
+scripts/agy-delegate.sh --tier pro --isolation readonly "Web-search <X>. Give URLs + dates."
 
 # Vertex AI Search over internal data
-scripts/agy-delegate.sh --tier pro --yolo "List Vertex AI Search engines (list_engines)."
+scripts/agy-delegate.sh --tier pro --isolation readonly "List Vertex AI Search engines (list_engines)."
 
 # cross-model review / stdin / background job
 scripts/agy-delegate.sh --tier pro "Review for bugs, be skeptical: <paste>"
@@ -225,13 +225,14 @@ Delegation doesn't save money by itself — these do (also in the skill):
 > **Something broken?** See **[docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)** — symptom-first fixes for Windows/WSL, writes that silently don't happen, quota/auth/timeout codes, and updating.
 
 **Guardrails**
-- **Linux: agy runs jailed by default.** With `bwrap` installed (`apt install bubblewrap`),
-  `--isolation auto` runs agy in a bubblewrap jail: read-only filesystem except the current
+- **agy always runs jailed (Linux).** Requires `bwrap` (`apt install bubblewrap`); without it
+  the wrapper refuses (exit 16) rather than run agy unjailed. The default `--isolation
+  workspace` runs agy in a bubblewrap jail: read-only filesystem except the current
   repository, `--dir` paths and `~/.gemini`; private `/tmp`; credential dirs hidden. Inside
   it agy gets `--dangerously-skip-permissions`, so writes, tests, web search and URL reads
   work headless in your normal checkout — no worktree, no `permissions.allow` rules. Network
   stays open and reads are not restricted beyond the hidden paths. `--isolation off` (or the
-  `isolation` plugin option) restores the previous behavior.
+  `isolation` plugin option) restores upstream behavior, where the grant notes below apply.
 - Always **verify** agy's output (it can be wrong, and may even alter its environment to make a check pass — re-run gates yourself in a clean state).
 - `--yolo` auto-approves every tool call — a grant over your whole machine, not over `--dir`.
   **`--sandbox` does not contain it.** Measured on macOS with agy 1.1.19: with `--yolo`, `--sandbox` changed nothing — a write to an absolute path OUTSIDE `--dir` succeeded (rc 0), `id` ran and returned a real uid, and `curl https://example.com` returned 200. agy's own help says "terminal restrictions"; whatever it restricts, it is not those, and not in this combination. Not tested on Linux. Use a throwaway checkout, or a

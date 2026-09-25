@@ -33,9 +33,9 @@
     },
     "isolation": {
       "type": "string",
-      "title": "Jail agy in bubblewrap (Linux)",
-      "description": "auto (default): on Linux with bwrap and python3, run agy inside a bubblewrap jail — the filesystem read-only except the current repository, --dir paths and ~/.gemini; private /tmp; ~/.ssh, ~/.aws and other credential dirs hidden — with --dangerously-skip-permissions inside it, so writes, shell commands, web search and URL reads work headless without permissions.allow rules or --yolo. The network stays open. workspace: always (fail if bwrap is missing). readonly: only --dir paths writable. off: plain agy, as before.",
-      "default": "auto"
+      "title": "Jail agy in bubblewrap (Linux; always on by default)",
+      "description": "workspace (default): run agy inside a bubblewrap jail — the filesystem read-only except the current repository, --dir paths and ~/.gemini; private /tmp; ~/.ssh, ~/.aws and other credential dirs hidden — with --dangerously-skip-permissions inside it, so writes, shell commands, web search and URL reads work headless without permissions.allow rules or --yolo. The network stays open. Without bwrap the wrapper refuses (exit 16) instead of running agy unjailed. readonly: only --dir paths writable. auto: jail when bwrap is available, else plain agy. off: plain agy (upstream behavior).",
+      "default": "workspace"
     },
     "coding_policy": {
       "type": "string",

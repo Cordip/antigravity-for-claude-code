@@ -5,8 +5,15 @@ All notable changes to **Antigravity for Claude Code**. Format loosely follows
 
 ## 0.29.0
 
+- **The jail is always on: `--isolation` defaults to `workspace`, not `auto`.** Without
+  bwrap (or off Linux) the wrapper now refuses with exit `16` instead of silently running
+  agy unjailed; `auto` remains available for that fallback, and `off` for upstream
+  behavior. Recipes, README examples and `/research` drop `--yolo` (web search and URL
+  reads run `--isolation readonly`), and `agy-media` runs `--isolation readonly` with only
+  the transcript's directory writable — the "grant over your whole machine" warning now
+  appears only with isolation off.
 - **Subagent, `/delegate` and the skill lead with the jail.** Under the default
-  `--isolation auto` they no longer ask for `--yolo` or `permissions.allow` rules (which add
+  `--isolation workspace` they no longer ask for `--yolo` or `permissions.allow` rules (which add
   nothing inside the jail), use `--isolation readonly` for review / search / research, and
   report exit `16` instead of silently dropping to `--isolation off`. The grant guidance
   stays for macOS and `--isolation off`.

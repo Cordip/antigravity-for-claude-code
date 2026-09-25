@@ -179,9 +179,18 @@ Transcript file: $OUT"
 # The same measurement corrected this warning. 0.25.0 said "--dir exposes $DIR", which
 # UNDERSTATES it: --dir is where agy looks first, not a boundary. --yolo approves every
 # tool, and agy then writes wherever it likes.
-NEIGHBOURS="$(ls -1 "$DIR" 2>/dev/null | grep -c . || echo 0)"
-echo "agy-media: --yolo approves ALL agy tools for this run, including the terminal, so this is a grant over YOUR WHOLE MACHINE — not just $DIR ($NEIGHBOURS entr(y/ies) beside your file), which is only where agy starts looking. Measured: under --yolo, agy writes outside --dir and runs shell commands, and --sandbox does not change that. Run this on files you are willing to hand an unsupervised agent." >&2
-ARGS=(--tier "$TIER" --yolo --dir "$DIR" --timeout "$TIMEOUT")
+#
+# Unless isolation is off, none of that applies: agy-delegate jails agy in bwrap, and
+# `readonly` leaves only the transcript's directory writable (the media file is read
+# through the read-only root). The grant stays inside the jail.
+case "$(printf '%s' "${CLAUDE_PLUGIN_OPTION_ISOLATION:-workspace}" | tr '[:upper:]' '[:lower:]')" in
+  off)
+    NEIGHBOURS="$(ls -1 "$DIR" 2>/dev/null | grep -c . || echo 0)"
+    echo "agy-media: --yolo approves ALL agy tools for this run, including the terminal, so this is a grant over YOUR WHOLE MACHINE — not just $DIR ($NEIGHBOURS entr(y/ies) beside your file), which is only where agy starts looking. Measured: under --yolo, agy writes outside --dir and runs shell commands, and --sandbox does not change that. Run this on files you are willing to hand an unsupervised agent." >&2
+    ARGS=(--tier "$TIER" --yolo --dir "$DIR" --timeout "$TIMEOUT") ;;
+  *)
+    ARGS=(--tier "$TIER" --isolation readonly --dir "$(dirname "$OUT")" --timeout "$TIMEOUT") ;;
+esac
 if [ "$PRINT_CMD" -eq 1 ]; then
   { printf 'agy-delegate'; printf ' %q' "${ARGS[@]}" "$PROMPT"; printf '\n'; }
   exit 0

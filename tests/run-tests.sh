@@ -318,6 +318,8 @@ out=$(PATH="$ISO/nobwrap:$TMP/min" STUB_MODE=args CLAUDE_PLUGIN_OPTION_ISOLATION
 if [ "$rc" -eq 0 ] && ! has "--dangerously-skip-permissions" "$out"; then
   echo "ok: isolation auto without bwrap -> plain agy, no skip-permissions"; PASS=$((PASS+1))
 else echo "FAIL: isolation auto without bwrap (rc=$rc): $out"; FAIL=$((FAIL+1)); fi
+out=$(PATH="$ISO/nobwrap:$TMP/min" STUB_MODE=args env -u CLAUDE_PLUGIN_OPTION_ISOLATION "$DELEGATE" "hi" 2>&1); rc=$?
+check "default isolation without bwrap fails closed -> exit 16" 16 "$rc" "ISOLATION_UNAVAILABLE" "$out"
 out=$("$DELEGATE" --isolation bogus "hi" 2>/dev/null); rc=$?
 check "invalid --isolation -> exit 1" 1 "$rc"
 
@@ -1185,6 +1187,12 @@ media_out="$(bash "$ROOT/scripts/agy-media.sh" --print-command "$mdir/clip.wav" 
 if has 'WHOLE MACHINE' "$media_out" && has "$mdir" "$media_out"; then
   echo "ok: agy-media says the grant covers the machine, not just --dir"; PASS=$((PASS+1));
 else echo "FAIL: agy-media understates --yolo as a --dir-scoped exposure"; FAIL=$((FAIL+1)); fi
+# Jailed (anything but isolation=off): no --yolo, readonly jail, only the transcript dir writable.
+mkdir -p "$mdir/notes"
+media_cmd="$(CLAUDE_PLUGIN_OPTION_ISOLATION=workspace bash "$ROOT/scripts/agy-media.sh" --print-command --out "$mdir/notes/t.md" "$mdir/clip.wav" 2>/dev/null)"
+if has '--isolation readonly' "$media_cmd" && has "--dir $mdir/notes " "$media_cmd" && ! has '--yolo' "$media_cmd"; then
+  echo "ok: jailed agy-media runs readonly with only the transcript dir writable"; PASS=$((PASS+1));
+else echo "FAIL: jailed agy-media args: $media_cmd"; FAIL=$((FAIL+1)); fi
 
 echo "== doctor.sh tier-model check (agy 1.1.5 slug format) =="
 # The stub's `agy models` emits slugs (gemini-3.5-flash); doctor's default tier models are
