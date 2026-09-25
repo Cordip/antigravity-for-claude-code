@@ -42,6 +42,25 @@ set -uo pipefail
 
 input="$(cat)"
 
+# Scope. Claude Code ignores `hooks` in a PLUGIN agent's frontmatter ("For security
+# reasons, plugin subagents don't support the hooks, mcpServers, or permissionMode
+# frontmatter fields"), so the frontmatter registration never ran: in live trial 2 the
+# subagent ran sleep / ps / tail unchecked. Since 0.31.0 the plugin's hooks.json registers
+# this gate for EVERY Bash call, and it acts only when the hook input's agent_type names
+# this subagent (plugin agents report "plugin:<plugin>:<agent>"; a copy in
+# ~/.claude/agents reports the bare name). Anything else (the main conversation, other
+# subagents) passes untouched. Matched in bash, before python3, so a missing python3
+# cannot block unrelated Bash calls. AGY_GATE_ALL=1 gates every call (the test suite).
+if [ "${AGY_GATE_ALL:-0}" != 1 ]; then
+  case "$input" in
+    *'"agent_type"'*) ;;
+    *) exit 0 ;;
+  esac
+  if ! printf '%s' "$input" | grep -Eq '"agent_type"[[:space:]]*:[[:space:]]*"([^"]*:)?antigravity-delegate"'; then
+    exit 0
+  fi
+fi
+
 BLOCK_MSG="[antigravity-delegate] blocked: this subagent may only run agy-delegate / agy-job, as a BARE name with no path and no pipeline. No other commands, pipes, chaining, redirection, substitution, comments, or unquoted newlines. To give agy a repository, pass --dir <repo-root> rather than piping content in. Delegate file work to agy; verification is the caller's job."
 
 # python3 gives a correct, quote-aware parse. Fail CLOSED if it's missing.

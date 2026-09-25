@@ -33,7 +33,10 @@
 #                                    repository (git toplevel, or $PWD), every --dir and agy's
 #                                    own state (~/.gemini); /tmp is private; credential dirs
 #                                    (~/.ssh, ~/.aws, ...) are hidden. readonly: the same, but
-#                                    only the --dir paths are writable. Inside the jail agy runs
+#                                    only the --dir paths are writable. workspace also gets a
+#                                    writable cache: XDG_CACHE_HOME=~/.cache/agy-jail plus the
+#                                    real uv/pip/npm/cargo/go/gradle/maven caches (plugin options
+#                                    shared_caches, isolation_writable). Inside the jail agy runs
 #                                    with --dangerously-skip-permissions (the jail, not agy's
 #                                    prompts, is the boundary), so writes, shell, web search and
 #                                    URL reads all work headless. The network stays open (agy
@@ -275,6 +278,22 @@ outer_timeout_secs() {
 # AGY_ISOLATION_HIDE (space-separated, relative to $HOME).
 ISOLATION_HIDE_DEFAULT=".ssh .gnupg .aws .azure .kube .docker .config/gh .config/gcloud .password-store .local/share/keyrings .netrc .git-credentials .claude .claude.json .codex"
 
+# Caches (workspace jail only). $HOME is read-only in the jail, so without this every
+# package manager fails on its cache (live trial 2: uv could not write ~/.cache/uv, and
+# agy worked around it by adding a cache dir to pyproject.toml). ~/.cache as a whole is
+# NOT made writable: it holds shell init scripts (p10k instant prompt, zoxide init) that
+# run outside the jail on the next shell start. Instead:
+#   * XDG_CACHE_HOME points at a private, persistent jail cache (~/.cache/agy-jail), so any
+#     tool that follows XDG works without being listed;
+#   * the real package caches below are bound into it (xdg:<name> -> <jail cache>/<name>)
+#     or at their own path (tools that ignore XDG), so downloads are shared with the host.
+#     Only directories that exist are bound. Plugin option shared_caches=off skips them.
+#   * plugin option isolation_writable adds more paths (space-separated, ~ allowed).
+# A cache the jail writes can later run outside it (e.g. a modified wheel that uv reuses
+# unchecked); shared_caches=off closes that at the cost of a cold cache.
+# Override the list with AGY_ISOLATION_CACHES (same syntax).
+ISOLATION_CACHES_DEFAULT="xdg:uv xdg:pip xdg:go-build .npm .cargo/registry .cargo/git go/pkg/mod .gradle/caches .m2/repository"
+
 isolation_fail() {
   echo "agy-delegate: isolation unavailable — $1. Install bubblewrap (bwrap) on Linux, or pass --isolation off (agy then needs permissions.allow rules or --yolo)." >&2
   signal ISOLATION_UNAVAILABLE "$1"
@@ -287,6 +306,18 @@ can_isolate() {
 }
 
 abs_dir() { (cd "$1" 2>/dev/null && pwd -P); }
+
+# After a workspace-jailed run: if agy's reply or stderr mentions a read-only path under
+# $HOME, name it and say how to make it writable, so an unlisted cache costs one rerun
+# instead of an agy workaround in the repo. Advisory only; never changes the exit code.
+readonly_hint() {
+  [ "$ISOLATION" = workspace ] || return 0
+  local paths
+  paths="$( { printf '%s\n' "$OUT"; cat "$ERR" 2>/dev/null; } | grep -i 'read-only file system' \
+    | grep -oE "$HOME/[^][:space:]'\"\`:,()[]+" | sort -u | head -3 | tr '\n' ' ' || true)"
+  [ -n "$paths" ] || return 0
+  echo "agy-delegate: note: agy hit read-only paths in the jail: ${paths% }. If a tool needs one of them (a cache, never a credential), add it to the plugin option isolation_writable and rerun with --continue." >&2
+}
 
 # Write agy's settings with the terminal sandbox off to $1. Returns 1 when the user has
 # no settings.json (nothing to override; agy's default leaves sbox off).
@@ -325,7 +356,18 @@ build_jail() {
     d="$(abs_dir "$p")" || isolation_fail "--dir '$p' is not a directory"
     rw+=("$d")
   done
-  for p in "${rw[@]:-}"; do
+  local extra=()
+  if [ "$ISOLATION" = workspace ]; then
+    for p in ${CLAUDE_PLUGIN_OPTION_ISOLATION_WRITABLE:-}; do
+      # The option value carries a literal ~; it is expanded here on purpose.
+      # shellcheck disable=SC2088
+      case "$p" in "~") p="$home" ;; "~/"*) p="$home/${p#"~/"}" ;; esac
+      if d="$(abs_dir "$p")"; then extra+=("$d")
+      else echo "agy-delegate: note: isolation_writable path '$p' is not a directory — skipped" >&2
+      fi
+    done
+  fi
+  for p in "${rw[@]:-}" "${extra[@]:-}"; do
     [ -n "$p" ] || continue
     # A writable root at or above $HOME would put every dotfile back in reach.
     if [ "$p" = / ] || [ "$p" = "$home" ]; then
@@ -335,6 +377,34 @@ build_jail() {
   done
 
   JAIL_CMD=(bwrap --ro-bind / / --dev /dev --proc /proc --tmpfs /tmp)
+  if [ "$ISOLATION" = workspace ]; then
+    local jc="${AGY_JAIL_CACHE:-$home/.cache/agy-jail}" src dst shared=1
+    case "$(printf '%s' "${CLAUDE_PLUGIN_OPTION_SHARED_CACHES:-on}" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')" in
+      off|false|0|no|disabled) shared=0 ;;
+    esac
+    # A dry run (--print-command) creates nothing.
+    [ "$PRINT_CMD" -eq 1 ] || mkdir -p "$jc" || isolation_fail "could not create the jail cache $jc"
+    JAIL_CMD+=(--bind "$jc" "$jc" --setenv XDG_CACHE_HOME "$jc")
+    if [ "$shared" -eq 1 ]; then
+      for rel in ${AGY_ISOLATION_CACHES-$ISOLATION_CACHES_DEFAULT}; do
+        case "$rel" in
+          xdg:*) src="$home/.cache/${rel#xdg:}"; dst="$jc/${rel#xdg:}" ;;
+          *)     src="$home/$rel"; dst="$src" ;;
+        esac
+        { [ -d "$src" ] && [ ! -L "$src" ]; } || continue
+        [ "$PRINT_CMD" -eq 1 ] || [ "$dst" = "$src" ] || mkdir -p "$dst" || continue
+        JAIL_CMD+=(--bind "$src" "$dst")
+      done
+    fi
+  else
+    # readonly: tools still get a cache, a throwaway one in the private /tmp.
+    JAIL_CMD+=(--setenv XDG_CACHE_HOME /tmp/.cache)
+  fi
+  for p in "${extra[@]:-}"; do
+    [ -n "$p" ] && JAIL_CMD+=(--bind "$p" "$p")
+  done
+  # Hidden paths are mounted after the extra writable ones, so a broad isolation_writable
+  # entry cannot re-expose them.
   for rel in ${AGY_ISOLATION_HIDE-$ISOLATION_HIDE_DEFAULT}; do
     p="$home/$rel"
     if [ -L "$p" ]; then continue
@@ -487,7 +557,10 @@ fi
 # first live trial (0.29.0) had agy loosen a test threshold 10x, weaken the oracle test,
 # report a median error for an estimator that failed on every trial, and leave a debug
 # script in the repo root. The caller catches that in review, but it is cheaper to ask
-# up front. (Appended after the write-task heuristic, which scans the user's prompt only.)
+# up front. The second trial (0.30.0) added two: agy started its test run in the background
+# and waited on it until --print-timeout cut the turn off at 30m, and it put a uv cache dir
+# into pyproject.toml and .gitignore because $HOME is read-only in the jail.
+# (Appended after the write-task heuristic, which scans the user's prompt only.)
 case "$(printf '%s' "${CLAUDE_PLUGIN_OPTION_WORK_RULES:-on}" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')" in
   off|false|0|no|disabled) ;;
   *) PROMPT="$PROMPT
@@ -496,6 +569,8 @@ WORK RULES (from the orchestrator, who will review your diff and rerun everythin
 - Never weaken, skip or delete tests, and never loosen thresholds or tolerances to make a check pass. If something fails, leave it failing and say so.
 - Report only results you actually observed in this run (exact commands and their real output). Say \"not run\" rather than estimating.
 - Do not leave scratch or debug files in the repository.
+- Run commands in the foreground. Never start one in the background and then wait or poll for it: your turn has a time limit, and waiting burns it.
+- Do not change project config (pyproject.toml, package.json, .gitignore, ...) to work around the sandbox. If a path is read-only, say which one and continue without it.
 - End with a short report: files changed, commands run with their results, and what is unfinished or failing." ;;
 esac
 
@@ -753,6 +828,7 @@ if [ "$RC" -eq 0 ] && grep -qE 'print timeout after .*returning partial output' 
   # work). The work itself is on disk, so point at git status, not at the reply.
   if [[ "$OUT" = *[!$' \t\n\r']* ]]; then partial_note="the reply above is PARTIAL"; else partial_note="agy returned NO reply text (the turn ended before its final message)"; fi
   echo "agy-delegate: agy's --print-timeout ($TIMEOUT) expired mid-turn — $partial_note. Files may already be changed: check git status. --continue resumes the same conversation (agy 1.1.28+ reports no usage for the cut-off turn${usage_note}). Raise --timeout or narrow the task." >&2
+  readonly_hint
   signal TIMEOUT "agy print-timeout ($TIMEOUT) expired mid-turn — reply may be empty, files may be changed; --continue resumes"
   exit 12
 fi
@@ -763,6 +839,7 @@ if [ $RC -ne 0 ]; then
   # In JSON mode agy puts the diagnostic in the envelope instead of stderr — relay it
   # so the failure is still visible to a human reading the transcript.
   [ -n "$JSON_ERROR" ] && printf '%s\n' "$JSON_ERROR" >&2
+  readonly_hint
   # Best-effort classification into a structured code (the generic 2 is the safe
   # fallback). Scans agy's diagnostics only — never the model-generated response,
   # which could contain trigger words and misclassify. In JSON mode (agy >= 1.1.8)
@@ -832,4 +909,5 @@ if [ "$WARN_CHARS" -gt 0 ] && [ "${#OUT}" -gt "$WARN_CHARS" ]; then
   echo "agy-delegate: note: output is ${#OUT} chars (> ${WARN_CHARS}) — that looks like a raw dump, not a digest. Don't ingest this into the conductor's context: re-run with --digest, or have agy summarize it first. (plugin option digest_warn_chars tunes this; 0 disables.)" >&2
 fi
 
+readonly_hint
 printf '%s\n' "$OUT"

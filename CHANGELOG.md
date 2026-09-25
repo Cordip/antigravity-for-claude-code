@@ -3,6 +3,43 @@
 All notable changes to **Antigravity for Claude Code**. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/); versions are in `.claude-plugin/plugin.json`.
 
+## 0.31.0
+
+From the second live trial (phase 1 again, on Flash, through the 0.30.0 subagent):
+
+- **Long work no longer goes through the subagent.** In the trial agy ran for the full 30
+  minutes, Claude Code moved the subagent's Bash call to the background after 10, and the
+  subagent then kept polling (`sleep`, `ps`, `tail`, a `kill -0` loop) until agy exited;
+  its row stayed "running" in the UI after it had reported. `/antigravity:delegate` now
+  follows Codex's `--background` tasks: `agy-job start` returns a job id at once, and the
+  main agent runs `agy-job wait <id>` as a background Bash command and is notified when it
+  exits. Headless sessions use `agy-job wait <id> --timeout 9m` in a foreground loop.
+- **The subagent is for bounded tasks only:** `tools: Bash`, one
+  `agy-delegate --timeout 7m` call (525 s with the wrapper's guard, inside Bash's
+  10-minute limit), no waiting, polling or `Read`.
+- **The Bash gate actually runs now.** Claude Code ignores `hooks` in a plugin agent's
+  frontmatter, so `validate-delegate-bash.sh` never ran and the trial's subagent could run
+  anything. `hooks/hooks.json` now registers it for every Bash call; it acts only when the
+  hook input's `agent_type` names the delegate subagent, and it decides that in bash before
+  python3, so unrelated calls are never blocked.
+- **Caches in the jail.** `$HOME` is read-only in the jail; in the trial uv could not write
+  its cache and agy put a cache dir into `pyproject.toml` and `.gitignore`. The workspace
+  jail now sets `XDG_CACHE_HOME=~/.cache/agy-jail` (private, persistent) and binds the real
+  uv, pip, go-build, npm, cargo, Go module, Gradle and Maven caches that exist. `~/.cache`
+  itself stays read-only: it holds shell init scripts that run outside the jail. New plugin
+  options `shared_caches` (on; off = private cache only) and `isolation_writable` (extra
+  paths). When agy's output mentions a read-only path under `$HOME`, the wrapper names it
+  and points at `isolation_writable`. The readonly jail gets a throwaway cache in `/tmp`.
+- **Two more work rules:** run commands in the foreground (agy spent most of the trial's
+  first 30 minutes waiting on a test run it had backgrounded itself), and do not edit
+  project config to work around the sandbox.
+- **`agy-job`:** `wait --timeout <dur>` (exit 2, "still running"); a job leads its own
+  process group, so `cancel` also stops `timeout`, `bwrap` and agy; `start` names the wait
+  command on stderr.
+- **Docs:** `duration_seconds` in `AGY_USAGE` covers the whole agy conversation, so after
+  `--continue` it includes the earlier turns (the trial's follow-up reported 2277 s for
+  about 7 minutes of work).
+
 ## 0.30.0
 
 From the first live trial (phase 1 of a spec in a fresh Python repo, via `agy-job`):

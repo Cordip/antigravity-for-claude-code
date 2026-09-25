@@ -44,11 +44,35 @@ worktree, no permission rules, no approval prompts.
   partial reply, work rules are appended to every task, and `AGY_RUN` logs model, jail and
   timeout before each run.
 
+- [x] **Live trial 2** (2026-09-25, same repo, branch `agy/phase1-test2`, Flash High,
+  workspace jail, via the 0.30.0 subagent in the background). Two runs: the first hit the
+  30m limit (exit 12, 1.33M tokens), one `--continue` follow-up finished with exit 0
+  (1.57M tokens cumulative). Committed as `9aa9a19`. Findings:
+  - **The work rules held.** No loosened thresholds or weakened tests; agy reported a
+    regression honestly ("not tuned to pass"), and Claude's reruns matched its numbers.
+    One trailing blank line in `.gitignore` was left over.
+  - **The first 30 minutes were mostly agy waiting** on a test run it had started in the
+    background itself.
+  - **The subagent polled** after its Bash call was moved to the background at 10
+    minutes, and its row stayed "running" in the UI. The main agent twice told the user
+    nothing was running.
+  - **The Bash gate never ran:** plugin agent frontmatter `hooks` are ignored.
+  - **uv could not write `~/.cache/uv`** in the jail; agy added a cache dir to
+    `pyproject.toml` / `.gitignore`, reverted on Claude's follow-up.
+  - Quality: the first pass cut corners (markings fit on two features, wrong oracle dict
+    shape, no README); the follow-up fixed all five listed defects. The estimator still
+    gives a length in only 35% of wide shots.
+- [x] **Fixes from trial 2** (0.31.0): long work runs as `agy-job` + background
+  `agy-job wait` (Codex `--background` pattern), the subagent is bounded to 7 minutes,
+  the Bash gate is registered in `hooks.json` scoped by `agent_type`, the jail has a
+  private XDG cache plus the shared package caches (`shared_caches`,
+  `isolation_writable`), and two more work rules.
+
 ## Next
 
-3. **Live trial 2.** Rerun phase 1 in `~/projects/field-length` (fresh branch from `main`)
-   with `/antigravity:delegate`, on Flash. Compare with trial 1: time, tokens, whether the
-   work rules held, how many follow-ups were needed.
+3. **Live trial 3.** A short run of the new job path: `/antigravity:delegate` in
+   `field-length` on a bounded task that runs `uv run pytest`. Check that the result
+   arrives as a notification, uv uses the shared cache, and no subagent row is left.
 4. **Port the core to TypeScript.** Replace `agy-delegate.sh` with a TS runner. Reuse
    `driver.ts` / `streaming.ts` from `codex-antigravity-subagent` for stream-json
    progress and persistent sessions. Keep the commands and the subagent. Later, possibly

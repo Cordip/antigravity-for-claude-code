@@ -10,10 +10,12 @@
 #   agy-job.sh list                                    # jobs started from this dir
 #   agy-job.sh status <id>                             # running | done(rc) | failed
 #   agy-job.sh result <id>                             # print stdout (+rc) when finished
-#   agy-job.sh wait   <id>                             # block until finished, then = result
-#                                                      # (run it as a background Bash command
-#                                                      #  and wait for its exit notification)
-#   agy-job.sh cancel <id>                             # terminate a running job
+#   agy-job.sh wait   <id> [--timeout <dur>]           # block until finished, then = result;
+#                                                      # --timeout (e.g. 9m) gives up with
+#                                                      # "still running", exit 2. Run it as a
+#                                                      # background Bash command and wait for
+#                                                      # its exit notification.
+#   agy-job.sh cancel <id>                             # terminate a running job (agy included)
 #
 # Jobs live under ${ANTIGRAVITY_JOBS:-~/.antigravity-jobs}/<id>/ (out, err, rc, meta).
 # A job runs with --timeout 30m unless the args name one (plugin option job_timeout, or
@@ -82,10 +84,16 @@ case "$cmd" in
     jd="$REG/$id"; mkdir -p "$jd"
     { echo "id=$id"; echo "cwd=$PWD"; echo "started=$(date -u +%FT%TZ 2>/dev/null || date)";
       echo "task=$(printf '%s' "${!#}" | tr '\n' ' ' | cut -c1-200)"; } > "$jd/meta"
+    # Job control on: the job gets its own process group (pgid = its pid), so cancel can
+    # stop the whole tree. Killing only the subshell and its children used to leave
+    # timeout/bwrap/agy running.
+    set -m
     ( nohup "$DELEGATE" "$@" >"$jd/out" 2>"$jd/err"; echo $? >"$jd/rc" ) >/dev/null 2>&1 &
     echo $! > "$jd/pid"
     disown 2>/dev/null || true
+    set +m
     echo "$id"
+    echo "agy-job: started $id. Collect it with: agy-job wait $id (as a background Bash command; you are notified when it exits)" >&2
     ;;
   list)
     [ -d "$REG" ] || { echo "(no jobs)"; exit 0; }
@@ -113,7 +121,20 @@ case "$cmd" in
   result|wait)
     jd="$(jobdir "${1:-}")"; st="$(job_state "$jd")"
     if [ "$cmd" = wait ]; then
-      while [ "$st" = "running" ]; do sleep "${AGY_JOB_POLL:-5}"; st="$(job_state "$jd")"; done
+      limit=0
+      if [ "${2:-}" = "--timeout" ]; then
+        [ -n "${3:-}" ] || die "wait --timeout needs a duration, e.g. 9m"
+        n="${3%[smh]}"; unit="${3#"$n"}"
+        case "$n" in (*[!0-9]*|'') die "bad --timeout '$3' (use e.g. 540, 540s, 9m, 1h)" ;; esac
+        case "$unit" in h) limit=$(( n * 3600 )) ;; m) limit=$(( n * 60 )) ;; *) limit=$n ;; esac
+      elif [ -n "${2:-}" ]; then
+        die "unknown wait option '$2' (use --timeout <dur>)"
+      fi
+      start_s=$SECONDS
+      while [ "$st" = "running" ]; do
+        if [ "$limit" -gt 0 ] && [ $(( SECONDS - start_s )) -ge "$limit" ]; then break; fi
+        sleep "${AGY_JOB_POLL:-5}"; st="$(job_state "$jd")"
+      done
     fi
     if [ "$st" = "running" ]; then echo "still running — try again later"; exit 2; fi
     rc="$(cat "$jd/rc" 2>/dev/null || true)"
@@ -125,7 +146,10 @@ case "$cmd" in
     jd="$(jobdir "${1:-}")"
     pid="$(cat "$jd/pid" 2>/dev/null || true)"
     if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
-      pkill -P "$pid" 2>/dev/null || true   # children (agy) first
+      # The whole process group (jobs started since 0.31.0 lead their own); the old
+      # children-first kill stays as the fallback for jobs started before that.
+      kill -- "-$pid" 2>/dev/null || true
+      pkill -P "$pid" 2>/dev/null || true
       kill "$pid" 2>/dev/null || true
       echo "cancelled $(basename "$jd")"
     else

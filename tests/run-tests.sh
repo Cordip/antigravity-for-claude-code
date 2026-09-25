@@ -162,7 +162,7 @@ case "${STUB_MODE:-text}" in
   # at the first `"` loses it and the failure misclassifies. This is what shipped.
   json_err_quoted) printf '{"conversation_id":"","status":"ERROR","response":"","error":"invalid model selection (--model \\"X\\" --effort \\"\\"): model X is not recognized as a known model or custom model in settings","usage":{}}'; exit 1 ;;
   json_quota) printf '{"conversation_id":"","status":"ERROR","response":"","error":"quota exceeded for this model","usage":{}}'; exit 1 ;;
-  *)       echo "STUB_OK" ;;
+  *)       echo "STUB_OK"; if [ -n "${STUB_TEXT:-}" ]; then printf '%s\n' "$STUB_TEXT"; fi ;;
 esac
 STUB
 chmod +x "$TMP/bin/agy"
@@ -200,6 +200,10 @@ export CLAUDE_PLUGIN_OPTION_ISOLATION=off
 # routing and exact prompts, so it runs with both off. Their own tests set them explicitly.
 export CLAUDE_PLUGIN_OPTION_MODEL_LOCK=off
 export CLAUDE_PLUGIN_OPTION_WORK_RULES=off
+# The Bash gate acts only inside the delegate subagent (agent_type in the hook input);
+# the upstream gate tests send bare tool_input, so gate every call. The scoping has its
+# own tests.
+export AGY_GATE_ALL=1
 
 # A minimal PATH dir with common utils but deliberately NO gcloud/agy, so
 # "missing on PATH" tests stay deterministic on runners that ship gcloud in
@@ -314,6 +318,57 @@ $(cd "$ISO/home" && pwd -P)/.ssh" "$log"
   out=$(cd "$ISO/home" && HOME="$ISO/home" PATH="$ISO/bin:$PATH" STUB_MODE=args \
         "$DELEGATE" --isolation workspace "hi" 2>&1); rc=$?
   check "isolation refuses to make \$HOME writable -> exit 16" 16 "$rc" "ISOLATION_UNAVAILABLE" "$out"
+
+  # Caches (0.31.0): a private XDG cache, the real package caches that exist bound into it
+  # or at their own path, missing ones skipped, ~/.cache itself never writable.
+  mkdir -p "$ISO/home/.cache/uv" "$ISO/home/.npm"
+  real_home="$(cd "$ISO/home" && pwd -P)"
+  out=$(iso --isolation workspace "hi" 2>/dev/null); rc=$?
+  log="$(cat "$STUB_BWRAP_LOG" 2>/dev/null)"
+  check_has "jail cache -> XDG_CACHE_HOME is the private jail cache" "--setenv
+XDG_CACHE_HOME
+$real_home/.cache/agy-jail" "$log"
+  check_has "jail cache -> the real uv cache is bound into it" "--bind
+$real_home/.cache/uv
+$real_home/.cache/agy-jail/uv" "$log"
+  check_has "jail cache -> a non-XDG cache (~/.npm) is bound at its own path" "--bind
+$real_home/.npm
+$real_home/.npm" "$log"
+  if [ -d "$ISO/home/.cache/agy-jail/uv" ] && ! has "$real_home/.cargo" "$log" \
+     && ! has "--bind
+$real_home/.cache
+" "$log"; then
+    echo "ok: jail cache -> created on disk, missing caches skipped, ~/.cache itself read-only"; PASS=$((PASS+1))
+  else echo "FAIL: jail cache mounts (missing dir, a missing cache bound, or ~/.cache writable)"; FAIL=$((FAIL+1)); fi
+  out=$(CLAUDE_PLUGIN_OPTION_SHARED_CACHES=off iso --isolation workspace "hi" 2>/dev/null); rc=$?
+  log="$(cat "$STUB_BWRAP_LOG" 2>/dev/null)"
+  if [ "$rc" -eq 0 ] && has "XDG_CACHE_HOME" "$log" && ! has "$real_home/.cache/uv" "$log" && ! has "$real_home/.npm" "$log"; then
+    echo "ok: shared_caches=off -> private jail cache only"; PASS=$((PASS+1))
+  else echo "FAIL: shared_caches=off still binds real caches (rc=$rc)"; FAIL=$((FAIL+1)); fi
+  mkdir -p "$ISO/home/.gradle-extra"
+  out=$(CLAUDE_PLUGIN_OPTION_ISOLATION_WRITABLE="~/.gradle-extra ~/nope" iso --isolation workspace "hi" 2>&1); rc=$?
+  log="$(cat "$STUB_BWRAP_LOG" 2>/dev/null)"
+  check_has "isolation_writable -> ~ path bound writable" "--bind
+$real_home/.gradle-extra
+$real_home/.gradle-extra" "$log"
+  check "isolation_writable -> a missing path is skipped with a note" 0 "$rc" "is not a directory — skipped" "$out"
+  out=$(CLAUDE_PLUGIN_OPTION_ISOLATION_WRITABLE="~" iso --isolation workspace "hi" 2>&1); rc=$?
+  check "isolation_writable refuses \$HOME itself -> exit 16" 16 "$rc" "ISOLATION_UNAVAILABLE" "$out"
+  out=$(iso --isolation readonly --dir "$ISO/out" "hi" 2>/dev/null)
+  log="$(cat "$STUB_BWRAP_LOG" 2>/dev/null)"
+  if has "/tmp/.cache" "$log" && ! has "$real_home/.cache/uv" "$log"; then
+    echo "ok: readonly jail -> throwaway cache in the private /tmp, no shared caches"; PASS=$((PASS+1))
+  else echo "FAIL: readonly jail cache mounts"; FAIL=$((FAIL+1)); fi
+  rm -rf "$ISO/home/.cache/agy-jail"
+  out=$(iso --isolation workspace --print-command "hi" 2>/dev/null)
+  if [ ! -e "$ISO/home/.cache/agy-jail" ]; then echo "ok: dry run creates no jail cache"; PASS=$((PASS+1));
+  else echo "FAIL: --print-command created the jail cache"; FAIL=$((FAIL+1)); fi
+  # A read-only path in agy's reply gets named, with the option that fixes it.
+  err=$(cd "$ISO/repo/sub" && HOME="$ISO/home" PATH="$ISO/bin:$PATH" STUB_MODE=text \
+        STUB_TEXT="error: failed to write '$ISO/home/.cache/weird/x': Read-only file system (os error 30)" \
+        "$DELEGATE" --isolation workspace "hi" 2>&1 >/dev/null); rc=$?
+  check "read-only path in the reply -> isolation_writable hint" 0 "$rc" "isolation_writable" "$err"
+  check "read-only hint names the path" 0 "$rc" "$ISO/home/.cache/weird/x" "$err"
 else
   echo "skip: --isolation jail tests (Linux only)"; SKIP=$((SKIP+1))
 fi
@@ -1024,7 +1079,7 @@ leak_free "plain wrong command"                  '"SECRETPROMPTMARKER --flag x"'
 
 AGENT="$ROOT/agents/antigravity-delegate.md"
 tl=$(grep -m1 '^tools:' "$AGENT")
-if [ "$tl" = "tools: Bash, Read" ]; then echo "ok: delegate agent tools allowlist exact (gated Bash + Read, no Write/Edit)"; PASS=$((PASS+1));
+if [ "$tl" = "tools: Bash" ]; then echo "ok: delegate agent tools allowlist exact (gated Bash only, no Read/Write/Edit)"; PASS=$((PASS+1));
 else echo "FAIL: delegate agent tools line unexpected: '$tl'"; FAIL=$((FAIL+1)); fi
 if grep -q "PreToolUse" "$AGENT" && grep -q "validate-delegate-bash.sh" "$AGENT"; then
   echo "ok: delegate agent wires the PreToolUse Bash gate"; PASS=$((PASS+1));
@@ -1982,6 +2037,57 @@ check "job keeps an explicit --timeout" 0 0 "--print-timeout 7m" "$out"
 jid=$(STUB_MODE=text STUB_SLEEP=1 "$JOB" start "slow task" 2>/dev/null)
 out=$(AGY_JOB_POLL=0.2 "$JOB" wait "$jid" 2>/dev/null); rc=$?
 check "job wait blocks until a running job is done" 0 "$rc" "STUB_OK" "$out"
+
+echo "== fork 0.31.0 =="
+# wait --timeout gives up with "still running" (exit 2) instead of blocking past it.
+jid=$(STUB_MODE=text STUB_SLEEP=5 "$JOB" start "slow task" 2>/dev/null)
+out=$(AGY_JOB_POLL=0.2 "$JOB" wait "$jid" --timeout 1 2>/dev/null); rc=$?
+check "job wait --timeout -> still running, exit 2" 2 "$rc" "still running" "$out"
+out=$("$JOB" wait "$jid" --timeout soon 2>&1); rc=$?
+check "job wait --timeout rejects a bad duration" 1 "$rc" "bad --timeout" "$out"
+# cancel stops the whole job tree (the job leads its own process group), not just the shell.
+"$JOB" cancel "$jid" >/dev/null 2>&1; sleep 0.5
+pid=$(cat "$ANTIGRAVITY_JOBS/$jid/pid" 2>/dev/null)
+if [ -n "$pid" ] && ! pgrep -g "$pid" >/dev/null 2>&1; then echo "ok: job cancel leaves no process in the job's group"; PASS=$((PASS+1));
+else echo "FAIL: job cancel left processes in group $pid"; FAIL=$((FAIL+1)); fi
+out=$("$JOB" start --print-command "x" 2>&1 >/dev/null)
+check "job start names the wait command on stderr" 0 0 "agy-job wait" "$out"
+
+# The gate is registered in hooks.json (plugin agent frontmatter hooks are ignored) and acts
+# only inside the delegate subagent, identified by agent_type.
+if grep -q '"PreToolUse"' "$ROOT/hooks/hooks.json" && grep -q 'validate-delegate-bash.sh' "$ROOT/hooks/hooks.json"; then
+  echo "ok: hooks.json registers the Bash gate"; PASS=$((PASS+1));
+else echo "FAIL: hooks.json does not register the Bash gate"; FAIL=$((FAIL+1)); fi
+gate_scoped() { printf '%s' "$1" | AGY_GATE_ALL=0 "$GATE" >/dev/null 2>&1; }
+gate_scoped '{"tool_input":{"command":"sleep 5"}}'; rc=$?
+check "gate passes a main-thread call (no agent_type)" 0 "$rc"
+gate_scoped '{"agent_type":"Explore","tool_input":{"command":"sleep 5"}}'; rc=$?
+check "gate passes another subagent's call" 0 "$rc"
+gate_scoped '{"agent_type":"plugin:antigravity:antigravity-delegate","tool_input":{"command":"sleep 5"}}'; rc=$?
+check "gate blocks the plugin delegate subagent (plugin:antigravity:antigravity-delegate)" 2 "$rc"
+gate_scoped '{"agent_type":"antigravity:antigravity-delegate","tool_input":{"command":"ps aux"}}'; rc=$?
+check "gate blocks the delegate subagent (antigravity:antigravity-delegate)" 2 "$rc"
+gate_scoped '{"agent_type": "antigravity-delegate","tool_input":{"command":"true"}}'; rc=$?
+check "gate blocks a user-level copy (antigravity-delegate)" 2 "$rc"
+gate_scoped '{"agent_type":"plugin:antigravity:antigravity-delegate","tool_input":{"command":"agy-delegate --timeout 7m \"task\""}}'; rc=$?
+check "gate allows the delegate subagent's wrapper call" 0 "$rc"
+gate_scoped '{"agent_type":"my-antigravity-delegate-x","tool_input":{"command":"sleep 5"}}'; rc=$?
+check "gate does not match a lookalike agent name" 0 "$rc"
+mkdir -p "$TMP/nopy"; for u in bash cat grep; do ln -sf "$(command -v "$u")" "$TMP/nopy/$u"; done
+out=$(printf '%s' '{"agent_type":"Explore","tool_input":{"command":"ls"}}' | AGY_GATE_ALL=0 PATH="$TMP/nopy" "$GATE" 2>&1); rc=$?
+check "gate without python3 still passes unrelated calls" 0 "$rc"
+
+# The subagent is for bounded work: a 7m call that returns in the foreground, no waiting.
+if has "agy-delegate --timeout 7m" "$(cat "$AGENT")" && ! has "wait for its completion notification" "$(cat "$AGENT")"; then
+  echo "ok: delegate agent makes one 7m call and never waits on a background task"; PASS=$((PASS+1));
+else echo "FAIL: delegate agent timeout / waiting rules"; FAIL=$((FAIL+1)); fi
+DCMD="$ROOT/commands/delegate.md"
+if has "agy-job start" "$(cat "$DCMD")" && has "run_in_background: true" "$(cat "$DCMD")" && has "--timeout 9m" "$(cat "$DCMD")"; then
+  echo "ok: /delegate runs long work as a job with a background wait (and a bounded headless wait)"; PASS=$((PASS+1));
+else echo "FAIL: /delegate job path"; FAIL=$((FAIL+1)); fi
+out=$(CLAUDE_PLUGIN_OPTION_WORK_RULES= "$DELEGATE" --print-command "the task" 2>/dev/null)
+check "work rules forbid backgrounding and waiting" 0 0 "Never start one in the background" "$out"
+check "work rules forbid config workarounds for the jail" 0 0 "to work around the sandbox" "$out"
 
 echo "== CI workflow invariants =="
 # These cannot be executed here — they need a GitHub runner — so assert the SHAPE of the

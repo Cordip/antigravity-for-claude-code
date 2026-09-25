@@ -89,7 +89,7 @@ In Claude Code:
 | command | what it does |
 |---|---|
 | `/antigravity:setup` | health check — `agy` installed + authenticated, scripts ready |
-| `/antigravity:delegate [--background\|--wait] [--continue] [--readonly] <task>` | hand a subtask to agy through the `antigravity-delegate` subagent (background by default for long work), then verify |
+| `/antigravity:delegate [--background\|--wait] [--continue] [--readonly] <task>` | hand a subtask to agy as a background job (a small one through the `antigravity-delegate` subagent), then verify |
 | `/antigravity:review [--adversarial]` | independent cross-model review of the current diff; Claude reconciles |
 | `/antigravity:research <topic>` | Claude-orchestrated deep research — agy does grounded web legwork, Claude verifies citations across ≥2 sources |
 | `/antigravity:media <file> [focus] [--convert]` | understand audio / video / images — agy transcribes + analyzes, returns a **timestamped digest**; full transcript goes to a file, not your context |
@@ -229,14 +229,20 @@ Delegation doesn't save money by itself — these do (also in the skill):
 > **Something broken?** See **[docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)** — symptom-first fixes for Windows/WSL, writes that silently don't happen, quota/auth/timeout codes, and updating.
 
 **Guardrails**
-- **Delegation works like Codex's `/codex:rescue`.** `/antigravity:delegate` spawns the
-  `antigravity-delegate` subagent (Sonnet; Bash gated to the wrapper, plus Read for the output of a run longer than 10 minutes), in the
-  background for long work. It makes one `agy-delegate --timeout 30m` call and returns agy's
-  reply verbatim; Claude is notified when it finishes, then reviews the diff and reruns the
-  checks. No polling loops. A timeout (exit 12) may leave an empty reply with files already
-  changed; `--continue` resumes the same agy conversation. The wrapper appends work rules
-  to every task (plugin option `work_rules`) and logs an `AGY_RUN` line naming the model,
-  jail and timeout before each run.
+- **Delegation works like Codex's `--background` tasks.** `/antigravity:delegate` starts long
+  work with `agy-job start` (30-minute agy limit, plugin option `job_timeout`), which returns
+  a job id at once, then runs `agy-job wait <id>` as a background Bash command. Claude is
+  notified when agy exits, reads the result, reviews the diff and reruns the checks. Nothing
+  sits waiting on agy and there are no polling loops. Small bounded tasks can go through
+  the `antigravity-delegate` subagent instead (Sonnet, one `agy-delegate --timeout 7m` call
+  that always returns within Bash's 10-minute limit, agy's reply returned verbatim). Its
+  Bash is gated to the wrapper by a `PreToolUse` hook in `hooks/hooks.json`, scoped to the
+  subagent by `agent_type` (Claude Code ignores `hooks` in a plugin agent's frontmatter). A
+  timeout (exit 12) may leave an empty reply with files already changed; `--continue` resumes
+  the same agy conversation. The wrapper appends work rules to every task (plugin option
+  `work_rules`) and logs an `AGY_RUN` line naming the model, jail and timeout before each
+  run. `duration_seconds` in `AGY_USAGE` covers the whole agy conversation, so after
+  `--continue` it includes the earlier turns.
 - **agy always runs jailed (Linux).** Requires `bwrap` (`apt install bubblewrap`); without it
   the wrapper refuses (exit 16) rather than run agy unjailed. The default `--isolation
   workspace` runs agy in a bubblewrap jail: read-only filesystem except the current
@@ -245,6 +251,14 @@ Delegation doesn't save money by itself — these do (also in the skill):
   work headless in your normal checkout — no worktree, no `permissions.allow` rules. Network
   stays open and reads are not restricted beyond the hidden paths. `--isolation off` (or the
   `isolation` plugin option) restores upstream behavior, where the grant notes below apply.
+- **Caches in the jail.** `$HOME` is read-only there, so the jail points `XDG_CACHE_HOME` at a
+  private, persistent cache (`~/.cache/agy-jail`) and binds the real uv, pip, go-build, npm,
+  cargo, Go module, Gradle and Maven caches into it when they exist, so package managers work
+  and do not download everything again. `~/.cache` itself stays read-only (it holds shell
+  init scripts that run outside the jail). A cache the jail writes can later run outside it;
+  `shared_caches=off` gives agy only the private cache. A tool that keeps its cache elsewhere
+  fails with "Read-only file system"; the wrapper names the path, and the plugin option
+  `isolation_writable` adds it.
 - Always **verify** agy's output (it can be wrong, and may even alter its environment to make a check pass — re-run gates yourself in a clean state).
 - `--yolo` auto-approves every tool call — a grant over your whole machine, not over `--dir`.
   **`--sandbox` does not contain it.** Measured on macOS with agy 1.1.19: with `--yolo`, `--sandbox` changed nothing — a write to an absolute path OUTSIDE `--dir` succeeded (rc 0), `id` ran and returned a real uid, and `curl https://example.com` returned 200. agy's own help says "terminal restrictions"; whatever it restricts, it is not those, and not in this combination. Not tested on Linux. Use a throwaway checkout, or a
@@ -300,7 +314,7 @@ Delegation doesn't save money by itself — these do (also in the skill):
 <summary><b>📦 What's inside · local dev · tests</b></summary>
 
 ```
-.claude-plugin/   plugin (+ userConfig: model_lock, timeout, job_timeout, isolation, work_rules, …) + marketplace manifests
+.claude-plugin/   plugin (+ userConfig: model_lock, timeout, job_timeout, isolation, shared_caches, isolation_writable, work_rules, …) + marketplace manifests
 skills/antigravity/SKILL.md   WHEN + HOW Claude collaborates with agy
 agents/           antigravity-delegate subagent (file work runs on Gemini, not Claude)
 commands/         slash commands (delegate, review, research, media, cloud-run-debug, setup, status, result, cancel)

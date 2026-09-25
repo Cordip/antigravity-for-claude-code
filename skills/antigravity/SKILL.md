@@ -1,7 +1,7 @@
 ---
 name: antigravity
 description: Run the Antigravity CLI (Gemini) as a collaborating AI inside Claude Code, with intelligent model routing across the software development lifecycle. Claude is the conductor/orchestrator — requirements, architecture, the hard 20%, verification, and review — and routes deterministic, high-volume work (scaffolding, boilerplate, test generation, first-pass review, migrations, web/Vertex AI Search) to Antigravity (Gemini), the cheaper, faster model. Use when the user wants to "use Antigravity / agy", "vibe code / agentic engineering", "accelerate the SDLC", "delegate to Gemini", "scaffold / generate tests / migrate", "first-pass code review", "search web or internal/company data", "deep research / multi-source research report", "second-model cross-check", or "lower token cost on a big job". Claude always verifies Antigravity's output and re-checks itself if unsatisfied.
-version: 0.30.0
+version: 0.31.0
 ---
 
 # Antigravity for Claude Code — hybrid SDLC
@@ -52,13 +52,17 @@ model (plugin option `model_lock`, on by default): the other agy models do not w
 agents. `--tier` / `--model` are ignored with a note on stderr, so do not pass them.
 `default_model` changes the locked model; `model_lock=off` restores the upstream tiers below.
 
-**Long work goes through the `antigravity-delegate` subagent, in the background** (the Codex
-`/codex:rescue` pattern): the subagent makes one `agy-delegate --timeout 30m` call and returns
-agy's reply verbatim, you keep working and are notified when it finishes. No `sleep` or
-`agy-job status` polling loops. A timeout (exit 12) can leave an empty reply with files already
-changed: check `git status`, then follow up with `--continue`. The wrapper appends work rules to
-every task (never weaken tests or thresholds, report only observed results, no scratch files);
-still verify: agy's report is a claim.
+**Long work runs as a job** (the Codex `--background` pattern): `agy-job start "<task>"` from
+the repository root returns a job id at once (30-minute agy limit), then run `agy-job wait <id>`
+with the Bash tool's `run_in_background: true` and keep working; you are notified when it exits.
+No `sleep` or `agy-job status` polling loops. The `antigravity-delegate` subagent is only for
+bounded tasks that fit its single 7-minute `agy-delegate` call. A timeout (exit 12) can leave an
+empty reply with files already changed: check `git status`, then follow up with `--continue`.
+The wrapper appends work rules to every task (never weaken tests or thresholds, report only
+observed results, no scratch files, run commands in the foreground, no config edits to work
+around the jail); still verify: agy's report is a claim. In the jail, package caches (uv, pip,
+npm, cargo, go, gradle, maven) are writable; if agy reports another read-only path, tell the
+user about the `isolation_writable` plugin option instead of working around it in the repo.
 
 With `model_lock=off`, the routing tiers within agy are: `flash` (default, bulk) · `flash-lo`
 (cheapest, trivial) · `pro` (harder reasoning / reviews / cross-checks).
@@ -164,7 +168,8 @@ force it with the `structured_output` option.
 **Two ways to delegate.** Call the wrapper directly (above), or — when you want file
 generation to happen entirely on Gemini with **zero Claude tokens spent writing** — hand
 the unit to the **`antigravity-delegate` subagent** (its only file-acting tool is the
-wrapper; it returns a digest for you to verify). Either way, *you* still own verification.
+wrapper; it returns a digest for you to verify), or, for anything longer than 7 minutes, start
+it as an `agy-job` and wait on it in the background. Either way, *you* still own verification.
 
 **Structured failures.** The wrapper exits `10` quota · `11` auth · `12` timeout (incl. an expired `--print-timeout`, which agy 1.1.28+ returns as a **partial** reply with rc 0 — the wrapper prints it and still exits 12) · `13`
 agy-missing · `14` model-unavailable (a `--model` / `tier_*` / `default_model` name not in
@@ -484,7 +489,7 @@ sandbox allowlist, and even the official docs' static agent-config paths don't m
 observed behavior (upstream #527) — so **re-verify after agy upgrades** (1.0.16 changed
 this area within a day of our first verification). Bound the fan-out width in the
 prompt (agy chooses parallelism otherwise). A wide fan-out takes longer wall-clock —
-raise `--timeout`, and in an interactive session run it through the `antigravity-delegate` subagent in the background.
+raise `--timeout`, and in an interactive session run it as an `agy-job` with `agy-job wait <id>` in the background.
 
 ## Deep-research recipe (multi-source)
 

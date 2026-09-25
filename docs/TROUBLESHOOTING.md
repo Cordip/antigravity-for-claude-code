@@ -146,9 +146,10 @@ whether the run admits it ([#10](https://github.com/yuting0624/antigravity-for-c
   the self-report. The wrapper maps BOTH denial shapes — the soft deny (1.1.3+, and again
   from 1.1.20; measured on 1.1.25) and the 1.1.13 hard error — to **exit 15**, so you get
   an actionable message instead of a bare "empty output" or "agy exited 1".
-- Long write tasks can exceed Claude Code's ~2-min synchronous Bash limit → run them as a
-  background job: `ID=$(agy-job start --tier pro --dir . "<task>")`, then
-  `/antigravity:status` / `/antigravity:result <id>` (interactive sessions only).
+- Long write tasks can exceed Claude Code's synchronous Bash limit → run them as a
+  background job: `ID=$(agy-job start --dir . "<task>")`, then `agy-job wait $ID` as a
+  background Bash command (you are notified when it exits), or `/antigravity:status` /
+  `/antigravity:result <id>` (interactive sessions only).
 
 ---
 
