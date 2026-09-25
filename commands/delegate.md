@@ -1,61 +1,44 @@
 ---
-description: Delegate a well-scoped subtask to Antigravity (agy/Gemini) under cost discipline, then verify.
-argument-hint: "[--tier flash|pro] <task>"
+description: Delegate a well-scoped subtask to Antigravity (agy / Gemini 3.8 Flash) through the antigravity-delegate subagent, then verify.
+argument-hint: "[--background|--wait] [--continue] [--readonly] <task>"
 ---
 
-Delegate the following task to Antigravity (`agy` / Gemini) via the plugin wrapper,
-following the `antigravity` skill's **Cost discipline** and **Verification gates**.
+Delegate the following task to Antigravity through the `antigravity:antigravity-delegate`
+subagent, following the `antigravity` skill's **Cost discipline** and **Verification gates**.
 
-Task: $ARGUMENTS
+Raw arguments: $ARGUMENTS
 
-Do this:
-1. Pick a tier (`flash` default; `pro` for hard reasoning). If the task needs the repo,
-   add `--dir <repo-root>` so agy reads the real files (don't paste them into context).
-   **Nothing more is needed**: agy always runs in the default jail (`--isolation workspace`, Linux + bwrap), which confines it
-   to the repository (plus `--dir` paths) and approves every tool inside the jail — edits,
-   tests, git, web search, URL reads — in the current checkout. Do not add `--yolo`. For a
-   read-only task (review, analysis, research) pass `--isolation readonly` so the repo stays
-   untouched. Exit `16` means the jail is unavailable (no bwrap): report it; never drop to
-   `--isolation off` on your own.
-   **Only if the user explicitly chose `--isolation off`: if the task WRITES files or uses tools** (web search / URL reads / Vertex AI Search / terminal), it needs
-   a grant. For a plain file write the narrower one is a `write_file(<dir>)` entry under
-   `permissions.allow` in `~/.gemini/antigravity-cli/settings.json` (recursive beneath
-   `<dir>`, no flag needed — substitute a real path for `<dir>`; if a rule is already
-   there and the write is still denied, `agy-doctor` checks whether agy can parse it). Otherwise pass **`--yolo`**, which auto-approves all tools and
-   is what web search / URL reads (agy 1.1.28+) / Vertex AI Search / terminal need. Without a grant,
-   headless agy leaves your workspace untouched, and since 1.1.3 the run says so on stderr (it
-   describes / scratch-diverts / soft-denies / fails outright depending on version; issue #10). `--mode
-   accept-edits` is not a grant either: measured on agy 1.1.13, where the flag is applied
-   at all, the write is denied exactly like one without it. Run
-   write tasks on a dedicated branch — `--sandbox` is not containment, it was measured
-   doing nothing under `--yolo` — and
-   **verify files actually changed** with `git status`. Claude Code may prompt for or block
-   `--dangerously-skip-permissions` — approve it or pre-allow it; non-interactive
-   (`claude -p`) without that permission can't write/use-tools via agy. (If the wrapper
-   returns exit `15`, that's exactly this: agy denied the write. Both shapes land here —
-   the soft deny on agy 1.1.3+ (back again from 1.1.20, measured on 1.1.25) and the hard
-   error on 1.1.13–1.1.19 — and both take the same
-   fix: a `permissions.allow` rule covering the target, or `--yolo`. Since agy 1.1.27 the
-   wrapper names the refused tool from the envelope's `denied_actions`.)
-2. Run **synchronously** (you may be headless — do not background-and-wait):
-   `agy-delegate --tier <tier> [--dir .] [--isolation readonly] [--digest] "<task>"`
-   (without the jail: `[--yolo]` in place of `--isolation`)
-   For read/analysis tasks, add `--digest` — it appends a digest-only output contract so
-   agy returns compact bullets instead of raw content.
-3. Ingest only the **result/digest** — do NOT re-read the files agy already handled
-   (keeps your context lean; that's where the cost savings come from). If the wrapper
-   prints a *"looks like a raw dump"* note on stderr, do NOT ingest the raw output —
-   re-run with `--digest` or ask agy to summarize it first.
-4. **Verify**: actually run/check the output; never trust a self-reported "done".
-   Report what you delegated and how you verified it.
+How to run it (the Codex `/codex:rescue` pattern):
 
-Remember the break-even: only delegate if the offloaded volume clearly exceeds the
-spec + round-trip + verification overhead. Tiny tasks are cheaper to just do yourself.
+1. Invoke the subagent with the `Agent` tool (`subagent_type: "antigravity:antigravity-delegate"`).
+   Its prompt is the task text, plus "read-only" if the task only reads (review, analysis,
+   research) and "continue the previous agy run" for a follow-up.
+   - `--background`, or no flag and the task is multi-step or long (implementing a spec,
+     generating a test suite, a migration): run the subagent in the background, tell the
+     user it started, and keep working. You are notified when it returns. Do not poll,
+     sleep or run `agy-job status` loops.
+   - `--wait`, or a small bounded task: run it in the foreground.
+   - `--continue` / "keep going" / "fix what you left": say so in the subagent prompt; it
+     passes `--continue`, which resumes the same agy conversation.
+   - `--readonly`: say "read-only" in the prompt.
+   Strip these flags from the task text. Do not add `--tier`, `--model` or `--yolo`: the
+   model is locked to Gemini 3.8 Flash (High), and agy always runs in the bubblewrap jail
+   (the repository is writable; the rest of the filesystem is not).
+2. When the subagent returns, read its `EXIT <code>` line first:
+   - `0`: verify (step 3).
+   - `12` timeout: the reply may be empty, but files may already be changed. Check
+     `git status`, then send a follow-up with `--continue` if the work is unfinished.
+   - `16`: the jail is unavailable (no bwrap). Report it; never switch to
+     `--isolation off` yourself.
+   - other codes: report agy's `AGY_SIGNAL` line to the user.
+3. **Verify** it yourself: `git status` / `git diff`, run the tests and the commands the
+   task names, and compare agy's reported numbers against your own rerun. agy's report is a
+   claim, not evidence. Watch for loosened thresholds, weakened or skipped tests, and stray
+   files. Then either fix small issues yourself or send one `--continue` follow-up that lists
+   the concrete defects.
 
-**Long task, interactive session?** A sync delegation can also hit Claude Code's ~2-min
-Bash-tool limit — start it in the background and keep working (this also keeps the prompt
-cache warm and frees you to do other turns):
-`ID=$(agy-job start --tier pro --dir . "<task>")`
-then check `/antigravity:status` and collect with `/antigravity:result <id>`.
-(Don't do this when YOU are headless `claude -p` — one-shot, no later turn to collect;
-delegate synchronously there.)
+Remember the break-even: delegate only if the offloaded volume clearly exceeds the spec,
+round-trip and verification overhead. Tiny tasks are cheaper to do yourself.
+
+If you are headless (`claude -p`), run the subagent in the foreground: there is no later
+turn to collect a background result.

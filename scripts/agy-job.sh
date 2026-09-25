@@ -10,9 +10,14 @@
 #   agy-job.sh list                                    # jobs started from this dir
 #   agy-job.sh status <id>                             # running | done(rc) | failed
 #   agy-job.sh result <id>                             # print stdout (+rc) when finished
+#   agy-job.sh wait   <id>                             # block until finished, then = result
+#                                                      # (run it as a background Bash command
+#                                                      #  and wait for its exit notification)
 #   agy-job.sh cancel <id>                             # terminate a running job
 #
 # Jobs live under ${ANTIGRAVITY_JOBS:-~/.antigravity-jobs}/<id>/ (out, err, rc, meta).
+# A job runs with --timeout 30m unless the args name one (plugin option job_timeout, or
+# env AGY_JOB_TIMEOUT). The 5m wrapper default killed the first real job mid-turn.
 #
 set -uo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
@@ -53,7 +58,7 @@ rc_label() {
     3)  echo 'empty output' ;;
     10) echo 'QUOTA — retry later with --continue' ;;
     11) echo 'AUTH required — run `agy` once interactively' ;;
-    12) echo 'TIMEOUT — raise --timeout or narrow scope (agy 1.1.28+: the PARTIAL reply is in the output; --continue resumes the conversation)' ;;
+    12) echo 'TIMEOUT — the reply may be empty and files may already be changed (check git status); --continue resumes the conversation, or raise --timeout' ;;
     13) echo 'agy MISSING — install the Antigravity CLI' ;;
     14) echo 'MODEL unavailable — check `agy models` / tier remap' ;;
     # Both denial shapes: the soft deny (agy 1.1.3+, and again from 1.1.20) and 1.1.13's hard error.
@@ -68,6 +73,11 @@ case "$cmd" in
   start)
     [ $# -ge 1 ] || die "start needs delegate args, e.g.  start --tier pro \"task\""
     [ -x "$DELEGATE" ] || die "delegate not executable: $DELEGATE"
+    has_timeout=0
+    for a in "$@"; do [ "$a" = "--timeout" ] && has_timeout=1; done
+    if [ "$has_timeout" -eq 0 ]; then
+      set -- --timeout "${AGY_JOB_TIMEOUT:-${CLAUDE_PLUGIN_OPTION_JOB_TIMEOUT:-30m}}" "$@"
+    fi
     id="$(date +%Y%m%d-%H%M%S)-$$-${RANDOM}"
     jd="$REG/$id"; mkdir -p "$jd"
     { echo "id=$id"; echo "cwd=$PWD"; echo "started=$(date -u +%FT%TZ 2>/dev/null || date)";
@@ -100,8 +110,11 @@ case "$cmd" in
     sig="$(grep -m1 '^AGY_SIGNAL ' "$jd/err" 2>/dev/null || true)"
     if [ -n "$sig" ]; then echo "  signal=${sig#AGY_SIGNAL }"; fi
     ;;
-  result)
+  result|wait)
     jd="$(jobdir "${1:-}")"; st="$(job_state "$jd")"
+    if [ "$cmd" = wait ]; then
+      while [ "$st" = "running" ]; do sleep "${AGY_JOB_POLL:-5}"; st="$(job_state "$jd")"; done
+    fi
     if [ "$st" = "running" ]; then echo "still running — try again later"; exit 2; fi
     rc="$(cat "$jd/rc" 2>/dev/null || true)"
     [ -s "$jd/err" ] && { echo "----- stderr -----" >&2; cat "$jd/err" >&2; }
@@ -121,5 +134,5 @@ case "$cmd" in
     ;;
   ""|-h|--help|help)
     sed -n '/^# Usage:/,/^# Jobs live/p' "$0" | sed 's/^# \{0,1\}//' ;;
-  *) die "unknown subcommand '$cmd' (start|list|status|result|cancel)" ;;
+  *) die "unknown subcommand '$cmd' (start|list|status|result|wait|cancel)" ;;
 esac

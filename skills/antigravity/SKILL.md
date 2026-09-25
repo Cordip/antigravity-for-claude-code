@@ -1,7 +1,7 @@
 ---
 name: antigravity
 description: Run the Antigravity CLI (Gemini) as a collaborating AI inside Claude Code, with intelligent model routing across the software development lifecycle. Claude is the conductor/orchestrator — requirements, architecture, the hard 20%, verification, and review — and routes deterministic, high-volume work (scaffolding, boilerplate, test generation, first-pass review, migrations, web/Vertex AI Search) to Antigravity (Gemini), the cheaper, faster model. Use when the user wants to "use Antigravity / agy", "vibe code / agentic engineering", "accelerate the SDLC", "delegate to Gemini", "scaffold / generate tests / migrate", "first-pass code review", "search web or internal/company data", "deep research / multi-source research report", "second-model cross-check", or "lower token cost on a big job". Claude always verifies Antigravity's output and re-checks itself if unsatisfied.
-version: 0.29.0
+version: 0.30.0
 ---
 
 # Antigravity for Claude Code — hybrid SDLC
@@ -47,8 +47,21 @@ Route each phase to the right model. This is the core policy.
 | Audio / video understanding | **agy** transcribes + digests · **Claude** verifies | Gemini is natively multimodal; no local ffmpeg/speech stack |
 | Deep research (multi-source) | **agy** fans out search/fetch · **Claude** plans, verifies ≥2 sources, synthesizes | offload bulky pages to cheap Gemini; frontier model judges |
 
-Routing tier within agy: `flash` (default, bulk) · `flash-lo` (cheapest, trivial) ·
-`pro` (harder reasoning / reviews / cross-checks).
+**Model: locked to Gemini 3.8 Flash (High).** In this fork every delegation runs on one
+model (plugin option `model_lock`, on by default): the other agy models do not work well as
+agents. `--tier` / `--model` are ignored with a note on stderr, so do not pass them.
+`default_model` changes the locked model; `model_lock=off` restores the upstream tiers below.
+
+**Long work goes through the `antigravity-delegate` subagent, in the background** (the Codex
+`/codex:rescue` pattern): the subagent makes one `agy-delegate --timeout 30m` call and returns
+agy's reply verbatim, you keep working and are notified when it finishes. No `sleep` or
+`agy-job status` polling loops. A timeout (exit 12) can leave an empty reply with files already
+changed: check `git status`, then follow up with `--continue`. The wrapper appends work rules to
+every task (never weaken tests or thresholds, report only observed results, no scratch files);
+still verify: agy's report is a claim.
+
+With `model_lock=off`, the routing tiers within agy are: `flash` (default, bulk) · `flash-lo`
+(cheapest, trivial) · `pro` (harder reasoning / reviews / cross-checks).
 
 **agy is multi-model.** Tiers map to Gemini by default, but you can point delegation at any
 model `agy models` lists (Claude / GPT on plans that expose them) — via `--model <exact name>`,
@@ -220,7 +233,7 @@ Claude owns correctness. For anything that ships:
    report success. Before believing a passing test/eval: diff any touched tooling against a
    pristine reference, restore it, and re-run the gate under Claude's own control. agy's
    self-reported pass is a claim, not evidence.
-If wrong: retry on `--tier pro`, sharpen the spec, or do that piece yourself.
+If wrong: sharpen the spec and follow up with `--continue`, or do that piece yourself.
 
 ## Safety for write tasks
 
@@ -375,26 +388,26 @@ repository stays untouched.
 ROOT=agy-delegate
 
 # Scaffold from a spec (Claude wrote the spec/architecture)
-"$ROOT" --tier pro --dir ./app \
+"$ROOT" --dir ./app \
   "Scaffold per ARCHITECTURE.md: dirs, configs, stub modules. Follow AGENTS.md."
 
 # Generate tests for a contract Claude defined
-"$ROOT" --tier flash --dir ./app \
+"$ROOT" --dir ./app \
   "Write unit + edge-case tests for src/payments.py covering the cases in SPEC.md."
 
 # First-pass review (Claude does the final pass)
-"$ROOT" --tier pro "Review for bugs/security/perf, be skeptical. List file:line: <diff>"
+"$ROOT" "Review for bugs/security/perf, be skeptical. List file:line: <diff>"
 
 # Implement-until-tests-pass (feedback loop; isolate on a branch)
-"$ROOT" --tier pro --dir ./app \
+"$ROOT" --dir ./app \
   "Implement feature X to satisfy AGENTS.md and make 'pytest -q' pass. Iterate until green."
 
 # Migration / modernization
-"$ROOT" --tier pro --dir ./svc \
+"$ROOT" --dir ./svc \
   "Migrate all callers from APIv1 to APIv2 per MIGRATION.md. List every file changed."
 
 # Web search → Claude re-checks
-"$ROOT" --tier pro --isolation readonly "Use web search for <X>. Give URLs + dates."
+"$ROOT" --isolation readonly "Use web search for <X>. Give URLs + dates."
 
 # Audio / video / image understanding (Claude can't hear or watch; Gemini can)
 # agy-media writes the full transcript to a FILE and returns a timestamped digest —
@@ -406,8 +419,8 @@ agy-media ./memo.m4a --convert                     # agy mishandles m4a/aiff; co
 # grep that timestamp out of the transcript file rather than trusting the summary.
 
 # Vertex AI Search over internal data (discover engines, then query)
-"$ROOT" --tier pro --isolation readonly "List Vertex AI Search engines (list_engines)."
-"$ROOT" --tier pro --isolation readonly "Search engine <ENGINE_ID> for: <question>. Cite the hits."
+"$ROOT" --isolation readonly "List Vertex AI Search engines (list_engines)."
+"$ROOT" --isolation readonly "Search engine <ENGINE_ID> for: <question>. Cite the hits."
 ```
 
 ## Internal fan-out recipe (agy spawns its own subagents)
@@ -471,7 +484,7 @@ sandbox allowlist, and even the official docs' static agent-config paths don't m
 observed behavior (upstream #527) — so **re-verify after agy upgrades** (1.0.16 changed
 this area within a day of our first verification). Bound the fan-out width in the
 prompt (agy chooses parallelism otherwise). A wide fan-out takes longer wall-clock —
-raise `--timeout`, and in an interactive session prefer a background job (`agy-job`).
+raise `--timeout`, and in an interactive session run it through the `antigravity-delegate` subagent in the background.
 
 ## Deep-research recipe (multi-source)
 
@@ -492,14 +505,14 @@ unverified.**
 2. **Fan-out fetch (agy, cheap, parallel).** One call per sub-question; force compact
    stdout so bulky pages stay in Gemini's context, not Claude's:
    ```bash
-   "$ROOT" --tier flash --isolation readonly \
+   "$ROOT" --isolation readonly \
      "Use web search for <sub-question>. Return 5-8 bullet findings, each with the
       exact source URL and publication date. Output ONLY findings+URLs+dates."
    ```
 3. **Deepen on key sources (agy).** For each load-bearing claim, name the URL and make
    agy quote the supporting text (turns domain-level citations into verifiable quotes):
    ```bash
-   "$ROOT" --tier pro --isolation readonly \
+   "$ROOT" --isolation readonly \
      "Open <URL> and quote the exact sentence(s) supporting: '<claim>'.
       If the page does not support it, reply NOT SUPPORTED."
    ```

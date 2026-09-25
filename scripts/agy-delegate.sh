@@ -87,6 +87,12 @@
 # _USAGE_LOG, and per-tier remaps _TIER_FLASH / _TIER_FLASH_LO / _TIER_PRO.
 # Explicit --model/--tier win; AGY_USAGE_LOG wins over _USAGE_LOG.
 #
+# MODEL LOCK (this fork, on by default): every call runs on ONE model —
+# CLAUDE_PLUGIN_OPTION_DEFAULT_MODEL if set, else Gemini 3.8 Flash (High), the only agy
+# model that works well as an agent. --tier / --model / default_tier are then ignored with
+# a note on stderr, so a caller cannot quietly pick a weaker model. Set the plugin option
+# model_lock=off to get the tier routing above back.
+#
 set -euo pipefail
 
 TIER="${CLAUDE_PLUGIN_OPTION_DEFAULT_TIER:-flash}"
@@ -377,11 +383,24 @@ if [ "$PRINT_CMD" -ne 1 ] && ! command -v agy >/dev/null 2>&1; then
   exit 13
 fi
 
-# Resolve the executor model. Precedence:
+# Resolve the executor model. With the model lock on (the default) it is fixed:
+#   userConfig default_model > Gemini 3.8 Flash (High); --tier / --model are ignored.
+# With model_lock=off the upstream precedence applies:
 #   --model > explicit --tier > userConfig default_model > default tier (mapped).
 # agy is multi-model; tiers default to Gemini but are remappable (see model_for_tier).
 USAGE_TIER=""   # the tier the model was derived from; empty when --model/default_model chose it
-if [ -z "$MODEL" ]; then
+MODEL_LOCK=1
+case "$(printf '%s' "${CLAUDE_PLUGIN_OPTION_MODEL_LOCK:-on}" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')" in
+  off|false|0|no|disabled) MODEL_LOCK=0 ;;
+esac
+if [ "$MODEL_LOCK" -eq 1 ]; then
+  LOCKED_MODEL="${CLAUDE_PLUGIN_OPTION_DEFAULT_MODEL:-Gemini 3.8 Flash (High)}"
+  asked=""
+  [ "$TIER_EXPLICIT" -eq 1 ] && asked="--tier $TIER"
+  [ -n "$MODEL" ] && [ "$MODEL" != "$LOCKED_MODEL" ] && asked="${asked:+$asked, }--model '$MODEL'"
+  [ -n "$asked" ] && echo "agy-delegate: note: $asked ignored — the model is locked to '$LOCKED_MODEL' (plugin option model_lock; default_model changes the locked model)." >&2
+  MODEL="$LOCKED_MODEL"
+elif [ -z "$MODEL" ]; then
   if [ "$TIER_EXPLICIT" -eq 1 ]; then
     MODEL="$(model_for_tier "$TIER")"
     USAGE_TIER="$TIER"
@@ -463,6 +482,22 @@ if [ "$DIGEST" -eq 1 ]; then
 
 OUTPUT CONTRACT (digest): reply with ONLY a compact digest — short bullets (findings / decisions / errors, with file:line references where useful). NO full file contents, NO raw logs, NO long code blocks. End with exactly one line: DIGEST: <one-sentence summary>."
 fi
+
+# Work rules: appended to every task unless the plugin option work_rules is off. The
+# first live trial (0.29.0) had agy loosen a test threshold 10x, weaken the oracle test,
+# report a median error for an estimator that failed on every trial, and leave a debug
+# script in the repo root. The caller catches that in review, but it is cheaper to ask
+# up front. (Appended after the write-task heuristic, which scans the user's prompt only.)
+case "$(printf '%s' "${CLAUDE_PLUGIN_OPTION_WORK_RULES:-on}" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')" in
+  off|false|0|no|disabled) ;;
+  *) PROMPT="$PROMPT
+
+WORK RULES (from the orchestrator, who will review your diff and rerun everything):
+- Never weaken, skip or delete tests, and never loosen thresholds or tolerances to make a check pass. If something fails, leave it failing and say so.
+- Report only results you actually observed in this run (exact commands and their real output). Say \"not run\" rather than estimating.
+- Do not leave scratch or debug files in the repository.
+- End with a short report: files changed, commands run with their results, and what is unfinished or failing." ;;
+esac
 
 # --- assemble agy args ---
 # NOTE: in agy, -p/--print/--prompt TAKES THE PROMPT AS ITS VALUE, so it must come
@@ -577,6 +612,11 @@ if on_windows_native && [ -z "$TO_CMD" ]; then
   echo "agy-delegate:   call never returns, run from WSL/macOS/Linux, or install coreutils \`timeout\`." >&2
 fi
 
+# One line naming what actually runs, before the run: a timeout or crash leaves no
+# AGY_USAGE line, and the first live trial could not tell afterwards which model or
+# jail a job had used.
+printf 'AGY_RUN {"model":"%s","isolation":"%s","timeout":"%s"}\n' "$MODEL" "$ISOLATION" "$TIMEOUT" >&2
+
 set +e
 if [ -n "$TO_CMD" ]; then
   # --kill-after sends SIGKILL if agy ignores the initial SIGTERM (defensive).
@@ -612,7 +652,7 @@ if [ "$JSON_MODE" -eq 1 ] && [[ "$OUT" = *[!$' \t\n\r']* ]]; then
   # come out as one space-separated line, same file discipline as the error text.
   JDEN="$(mktemp "${TMPDIR:-/tmp}/agy-den.XXXXXX")"
   meta="$(AGY_JSON="$OUT" AGY_RESP_FILE="$RESP" AGY_ERR_FILE="$JERR" AGY_DEN_FILE="$JDEN" \
-        AGY_MODEL="$MODEL" AGY_TIER="$USAGE_TIER" python3 - <<'PY' 2>/dev/null || true
+        AGY_MODEL="$MODEL" AGY_TIER="$USAGE_TIER" AGY_ISOLATION="$ISOLATION" python3 - <<'PY' 2>/dev/null || true
 import json, os, sys
 raw = os.environ.get("AGY_JSON", "")
 try:
@@ -649,6 +689,7 @@ print(json.dumps({
     "conversation_id": str(d.get("conversation_id", "") or ""),
     "model": os.environ.get("AGY_MODEL", ""),
     "tier": os.environ.get("AGY_TIER", ""),
+    "isolation": os.environ.get("AGY_ISOLATION", ""),
     "duration_seconds": top("duration_seconds"),
     "num_turns": top("num_turns"),
 }))
@@ -707,8 +748,12 @@ if [ "$RC" -eq 0 ] && grep -qE 'print timeout after .*returning partial output' 
   # The AGY_USAGE line exists only in JSON mode; do not point plain-text callers at a line
   # that was never printed (review caught the unconditional wording).
   usage_note=""; [ "$JSON_MODE" -eq 1 ] && usage_note=", so the AGY_USAGE line above undercounts"
-  echo "agy-delegate: agy's --print-timeout ($TIMEOUT) expired mid-turn — the output above is PARTIAL (agy 1.1.28+ returns it with rc 0 and reports no usage for the turn${usage_note}). Raise --timeout or narrow the task; --continue resumes the same conversation." >&2
-  signal TIMEOUT "agy print-timeout ($TIMEOUT) expired mid-turn — partial output printed to stdout"
+  # The reply is often EMPTY: agy returns only the final text, and a turn cut off while
+  # the agent is still editing files has none yet (first live trial: 0 bytes after 5m of
+  # work). The work itself is on disk, so point at git status, not at the reply.
+  if [[ "$OUT" = *[!$' \t\n\r']* ]]; then partial_note="the reply above is PARTIAL"; else partial_note="agy returned NO reply text (the turn ended before its final message)"; fi
+  echo "agy-delegate: agy's --print-timeout ($TIMEOUT) expired mid-turn — $partial_note. Files may already be changed: check git status. --continue resumes the same conversation (agy 1.1.28+ reports no usage for the cut-off turn${usage_note}). Raise --timeout or narrow the task." >&2
+  signal TIMEOUT "agy print-timeout ($TIMEOUT) expired mid-turn — reply may be empty, files may be changed; --continue resumes"
   exit 12
 fi
 

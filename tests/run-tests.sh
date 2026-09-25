@@ -148,6 +148,9 @@ case "${STUB_MODE:-text}" in
   # one stderr line, and an envelope with every usage counter at zero. Verbatim from 1.2.0
   # (the reply shortened).
   json_partial_timeout_120) echo '[agy] print timeout after 5s with turn in progress; returning partial output' >&2; printf '{"conversation_id":"5f164e4e-1d46-457b-8eac-40a36004bd1c","status":"SUCCESS","response":"# The Cosmos in Bronze: The History of the Antikythera Mechanism\n\n## 1. Introduction\n\nIn the spring of 1900, a violent storm compelled a crew of Greek sponge divers","duration_seconds":0,"num_turns":1,"usage":{"input_tokens":0,"output_tokens":0,"thinking_tokens":0,"cache_read_tokens":0,"total_tokens":0}}'; exit 0 ;;
+  # First live trial (0.29.0): the turn was cut off while agy was still editing files, so
+  # there was no final text at all — rc 0, the timeout line, an EMPTY response.
+  json_empty_timeout) echo '[agy] print timeout after 5m0s with turn in progress; returning partial output' >&2; printf '{"conversation_id":"f2685427","status":"SUCCESS","response":"","duration_seconds":298.6,"num_turns":1,"usage":{"input_tokens":0,"output_tokens":0,"thinking_tokens":0,"cache_read_tokens":0,"total_tokens":0}}'; exit 0 ;;
   partial_timeout_120) echo '[agy] print timeout after 5s with turn in progress; returning partial output' >&2; printf '# The Cogwheels of Antiquity\n\nIn the spring of 1900, a crew of Greek sponge divers'; exit 0 ;;
   # Negative control: the timeout WORDING inside the reply, with clean stderr, is a success.
   json_reply_mentions_timeout) printf '{"conversation_id":"c1","status":"SUCCESS","response":"JSONBODY: agy logs print timeout after 5s with turn in progress; returning partial output when it gives up\n","usage":{"input_tokens":10,"output_tokens":2,"thinking_tokens":0,"cache_read_tokens":0,"total_tokens":12}}'; exit 0 ;;
@@ -193,6 +196,10 @@ export PATH="$TMP/bin:$PATH"
 # and implies --dangerously-skip-permissions, which every argument assertion below would
 # then see. Pin it off for the suite; the isolation block turns it on per call.
 export CLAUDE_PLUGIN_OPTION_ISOLATION=off
+# The fork's model lock and work rules also default on; the upstream suite exercises tier
+# routing and exact prompts, so it runs with both off. Their own tests set them explicitly.
+export CLAUDE_PLUGIN_OPTION_MODEL_LOCK=off
+export CLAUDE_PLUGIN_OPTION_WORK_RULES=off
 
 # A minimal PATH dir with common utils but deliberately NO gcloud/agy, so
 # "missing on PATH" tests stay deterministic on runners that ship gcloud in
@@ -1017,7 +1024,7 @@ leak_free "plain wrong command"                  '"SECRETPROMPTMARKER --flag x"'
 
 AGENT="$ROOT/agents/antigravity-delegate.md"
 tl=$(grep -m1 '^tools:' "$AGENT")
-if [ "$tl" = "tools: Bash, Read, Glob" ]; then echo "ok: delegate agent tools allowlist exact (no Write/Edit)"; PASS=$((PASS+1));
+if [ "$tl" = "tools: Bash, Read" ]; then echo "ok: delegate agent tools allowlist exact (gated Bash + Read, no Write/Edit)"; PASS=$((PASS+1));
 else echo "FAIL: delegate agent tools line unexpected: '$tl'"; FAIL=$((FAIL+1)); fi
 if grep -q "PreToolUse" "$AGENT" && grep -q "validate-delegate-bash.sh" "$AGENT"; then
   echo "ok: delegate agent wires the PreToolUse Bash gate"; PASS=$((PASS+1));
@@ -1938,6 +1945,43 @@ if grep -q "rc=10: QUOTA" <<<"$out"; then echo "ok: job renders rc=10 label"; PA
 else echo "FAIL: job did not render 'rc=10: QUOTA' label (got: $out)"; FAIL=$((FAIL+1)); fi
 if grep -q "QUOTA_EXHAUSTED" <<<"$out"; then echo "ok: job shows AGY_SIGNAL"; PASS=$((PASS+1));
 else echo "FAIL: job did not surface AGY_SIGNAL"; FAIL=$((FAIL+1)); fi
+
+echo "== fork 0.30.0: model lock, work rules, job timeout, wait =="
+# Model lock (default on): --tier / --model are ignored with a note; default_model moves it.
+out=$(CLAUDE_PLUGIN_OPTION_MODEL_LOCK= "$DELEGATE" --tier pro --print-command "x" 2>"$TMP/ml.err"); rc=$?
+check "model lock: --tier pro still runs Gemini 3.8 Flash (High)" 0 "$rc" 'Gemini\ 3.8\ Flash\ \(High\)' "$out"
+check "model lock: the ignored --tier is named on stderr" 0 "$rc" "--tier pro ignored" "$(cat "$TMP/ml.err")"
+out=$(CLAUDE_PLUGIN_OPTION_MODEL_LOCK=on "$DELEGATE" --model "Gemini 3.1 Pro (High)" --print-command "x" 2>/dev/null); rc=$?
+check "model lock: --model is ignored too" 0 "$rc" 'Gemini\ 3.8\ Flash\ \(High\)' "$out"
+out=$(CLAUDE_PLUGIN_OPTION_MODEL_LOCK=on CLAUDE_PLUGIN_OPTION_DEFAULT_MODEL="Custom M" "$DELEGATE" --tier pro --print-command "x" 2>/dev/null); rc=$?
+check "model lock: default_model sets the locked model" 0 "$rc" 'Custom\ M' "$out"
+out=$(CLAUDE_PLUGIN_OPTION_MODEL_LOCK=off "$DELEGATE" --tier pro --print-command "x" 2>/dev/null); rc=$?
+check "model_lock=off restores tier routing" 0 "$rc" 'Gemini\ 3.1\ Pro\ \(High\)' "$out"
+# Work rules (default on) are appended; off sends the task unchanged.
+out=$(CLAUDE_PLUGIN_OPTION_WORK_RULES= "$DELEGATE" --print-command "the task" 2>/dev/null); rc=$?
+check "work rules appended by default" 0 "$rc" "never loosen thresholds" "$out"
+out=$("$DELEGATE" --print-command "the task" 2>/dev/null)
+if has "WORK RULES" "$out"; then echo "FAIL: work_rules=off still appends the rules"; FAIL=$((FAIL+1));
+else echo "ok: work_rules=off sends the task unchanged"; PASS=$((PASS+1)); fi
+# AGY_RUN names the model and the jail before the run, so a timed-out job still says them.
+STUB_MODE=text "$DELEGATE" "x" >/dev/null 2>"$TMP/run.err"; rc=$?
+check "AGY_RUN line names model and isolation" 0 "$rc" '"isolation":"off"' "$(cat "$TMP/run.err")"
+# A timeout with NO reply text says so and points at git status and --continue.
+STUB_JSON_CAPABLE=1 STUB_MODE=json_empty_timeout "$DELEGATE" --timeout 5m "implement it" >"$TMP/et.out" 2>"$TMP/et.err"; rc=$?
+check "empty-reply timeout -> exit 12" 12 "$rc" "NO reply text" "$(cat "$TMP/et.err")"
+check "empty-reply timeout points at git status" 12 "$rc" "check git status" "$(cat "$TMP/et.err")"
+if has "PARTIAL" "$(cat "$TMP/et.err")"; then echo "FAIL: empty-reply timeout still claims a PARTIAL reply"; FAIL=$((FAIL+1));
+else echo "ok: empty-reply timeout does not claim a partial reply"; PASS=$((PASS+1)); fi
+# agy-job: 30m unless the args name a timeout; wait blocks until the job ends.
+jid=$("$JOB" start --print-command "job task" 2>/dev/null)
+out=$(AGY_JOB_POLL=0.2 "$JOB" wait "$jid" 2>/dev/null); rc=$?
+check "job wait returns the result" 0 "$rc" "--print-timeout 30m" "$out"
+jid=$("$JOB" start --timeout 7m --print-command "job task" 2>/dev/null)
+out=$(AGY_JOB_POLL=0.2 "$JOB" wait "$jid" 2>/dev/null)
+check "job keeps an explicit --timeout" 0 0 "--print-timeout 7m" "$out"
+jid=$(STUB_MODE=text STUB_SLEEP=1 "$JOB" start "slow task" 2>/dev/null)
+out=$(AGY_JOB_POLL=0.2 "$JOB" wait "$jid" 2>/dev/null); rc=$?
+check "job wait blocks until a running job is done" 0 "$rc" "STUB_OK" "$out"
 
 echo "== CI workflow invariants =="
 # These cannot be executed here — they need a GitHub runner — so assert the SHAPE of the

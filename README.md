@@ -89,7 +89,7 @@ In Claude Code:
 | command | what it does |
 |---|---|
 | `/antigravity:setup` | health check — `agy` installed + authenticated, scripts ready |
-| `/antigravity:delegate [--tier flash\|pro] <task>` | delegate a subtask to agy under cost discipline, then verify |
+| `/antigravity:delegate [--background\|--wait] [--continue] [--readonly] <task>` | hand a subtask to agy through the `antigravity-delegate` subagent (background by default for long work), then verify |
 | `/antigravity:review [--adversarial]` | independent cross-model review of the current diff; Claude reconciles |
 | `/antigravity:research <topic>` | Claude-orchestrated deep research — agy does grounded web legwork, Claude verifies citations across ≥2 sources |
 | `/antigravity:media <file> [focus] [--convert]` | understand audio / video / images — agy transcribes + analyzes, returns a **timestamped digest**; full transcript goes to a file, not your context |
@@ -164,10 +164,10 @@ That last one is the useful lesson, and it cuts against the obvious pitch: two i
 
 ```bash
 # one-shot delegation (plain text on stdout)
-scripts/agy-delegate.sh --tier flash "Summarize this changelog in 3 bullets: ..."
+scripts/agy-delegate.sh "Summarize this changelog in 3 bullets: ..."
 
 # give Antigravity a workspace for multi-file agentic work
-scripts/agy-delegate.sh --tier pro --dir ./src "List every TODO with file:line"
+scripts/agy-delegate.sh --dir ./src "List every TODO with file:line"
 
 # bulk read -> digest-only reply (the biggest cost lever; wrapper warns on dump-sized replies)
 scripts/agy-delegate.sh --digest --dir . "Map the auth flow end to end"
@@ -176,16 +176,20 @@ scripts/agy-delegate.sh --digest --dir . "Map the auth flow end to end"
 scripts/agy-delegate.sh --dir ./app "Implement X per SPEC.md"
 
 # live web / Google search and URL reads — read-only jail, nothing written
-scripts/agy-delegate.sh --tier pro --isolation readonly "Web-search <X>. Give URLs + dates."
+scripts/agy-delegate.sh --isolation readonly "Web-search <X>. Give URLs + dates."
 
 # Vertex AI Search over internal data
-scripts/agy-delegate.sh --tier pro --isolation readonly "List Vertex AI Search engines (list_engines)."
+scripts/agy-delegate.sh --isolation readonly "List Vertex AI Search engines (list_engines)."
 
 # cross-model review / stdin / background job
-scripts/agy-delegate.sh --tier pro "Review for bugs, be skeptical: <paste>"
+scripts/agy-delegate.sh "Review for bugs, be skeptical: <paste>"
 cat big-prompt.txt | scripts/agy-delegate.sh -
-ID=$(scripts/agy-job.sh start --tier pro --dir . "big task"); scripts/agy-job.sh result "$ID"
+ID=$(scripts/agy-job.sh start --dir . "big task"); scripts/agy-job.sh wait "$ID"   # 30m default timeout
 ```
+
+**The model is locked to Gemini 3.8 Flash (High)** (plugin option `model_lock`, on by default):
+`--tier` / `--model` are ignored with a note, and `default_model` changes the locked model.
+The tiers below apply only with `model_lock=off`.
 
 | tier | model | use for |
 |------|-------|---------|
@@ -225,6 +229,14 @@ Delegation doesn't save money by itself — these do (also in the skill):
 > **Something broken?** See **[docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)** — symptom-first fixes for Windows/WSL, writes that silently don't happen, quota/auth/timeout codes, and updating.
 
 **Guardrails**
+- **Delegation works like Codex's `/codex:rescue`.** `/antigravity:delegate` spawns the
+  `antigravity-delegate` subagent (Sonnet; Bash gated to the wrapper, plus Read for the output of a run longer than 10 minutes), in the
+  background for long work. It makes one `agy-delegate --timeout 30m` call and returns agy's
+  reply verbatim; Claude is notified when it finishes, then reviews the diff and reruns the
+  checks. No polling loops. A timeout (exit 12) may leave an empty reply with files already
+  changed; `--continue` resumes the same agy conversation. The wrapper appends work rules
+  to every task (plugin option `work_rules`) and logs an `AGY_RUN` line naming the model,
+  jail and timeout before each run.
 - **agy always runs jailed (Linux).** Requires `bwrap` (`apt install bubblewrap`); without it
   the wrapper refuses (exit 16) rather than run agy unjailed. The default `--isolation
   workspace` runs agy in a bubblewrap jail: read-only filesystem except the current
@@ -288,7 +300,7 @@ Delegation doesn't save money by itself — these do (also in the skill):
 <summary><b>📦 What's inside · local dev · tests</b></summary>
 
 ```
-.claude-plugin/   plugin (+ userConfig: default_tier, timeout, coding_policy) + marketplace manifests
+.claude-plugin/   plugin (+ userConfig: model_lock, timeout, job_timeout, isolation, work_rules, …) + marketplace manifests
 skills/antigravity/SKILL.md   WHEN + HOW Claude collaborates with agy
 agents/           antigravity-delegate subagent (file work runs on Gemini, not Claude)
 commands/         slash commands (delegate, review, research, media, cloud-run-debug, setup, status, result, cancel)

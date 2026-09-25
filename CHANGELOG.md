@@ -3,6 +3,34 @@
 All notable changes to **Antigravity for Claude Code**. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/); versions are in `.claude-plugin/plugin.json`.
 
+## 0.30.0
+
+From the first live trial (phase 1 of a spec in a fresh Python repo, via `agy-job`):
+
+- **The model is locked to Gemini 3.8 Flash (High).** New plugin option `model_lock`
+  (on by default): `--tier` / `--model` / `default_tier` are ignored with a note on stderr,
+  and `default_model` changes the locked model. In the trial Claude picked `--tier pro` on
+  its own, and the job ran on Gemini 3.1 Pro. `model_lock=off` restores tier routing.
+- **`antigravity-delegate` is a thin forwarder, like Codex's `codex-rescue`.** Sonnet,
+  `tools: Bash, Read` (Bash still gated to the wrapper; Read only for the output of a run that Claude Code moved to the background after 10 minutes), exactly one `agy-delegate --timeout 30m` call,
+  agy's reply returned verbatim with an `EXIT <code>` line. `/antigravity:delegate` spawns
+  it through the `Agent` tool, in the background for long work (`--background` / `--wait`,
+  `--continue`, `--readonly`), so the main agent waits for a notification instead of a
+  `sleep` loop, and it verifies the diff itself.
+- **`agy-job` runs with `--timeout 30m`** unless the args name one (option `job_timeout`,
+  env `AGY_JOB_TIMEOUT`). The 5m wrapper default killed the trial's first job mid-turn.
+  New `agy-job wait <id>` blocks until the job ends and prints its result.
+- **Timeout message fixed.** A turn cut off while agy is still editing has no reply text at
+  all (the trial got 0 bytes), so the wrapper no longer claims a PARTIAL reply in that
+  case: it says the reply is empty, files may already be changed, check `git status`, and
+  `--continue` resumes.
+- **Work rules appended to every task** (option `work_rules`, on by default): never weaken
+  tests or loosen thresholds, report only observed results, leave no scratch files, end
+  with a report. In the trial agy loosened a threshold 10×, weakened the oracle test and
+  reported a median error for an estimator that failed on every trial.
+- **`AGY_RUN {"model","isolation","timeout"}` on stderr before each run**, and `isolation`
+  in `AGY_USAGE`, so a job that timed out still records what it ran on.
+
 ## 0.29.0
 
 - **The jail is always on: `--isolation` defaults to `workspace`, not `auto`.** Without
