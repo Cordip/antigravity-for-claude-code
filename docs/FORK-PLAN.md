@@ -99,13 +99,20 @@ worktree, no permission rules, no approval prompts.
 - [x] **Fix from trial 5** (0.34.1): the exact `Bash({run_in_background: true})` call in
   `/delegate` and in `agy-job start` output, a second live wait on a job exits 3.
 
+- [x] **Live trial 6** (0.34.1, two small README jobs). The wait went to the background on
+  its own, one notification per job, no polling. The follow-up ran as `--resume`
+  (`resumed_from` set, same agy conversation), exit 0. Claude skipped one requested
+  follow-up itself because the README already had the numbers. Measured: the resumed job ran
+  120 s, but agy's `result` said 1118 s (time since the conversation began, idle gap
+  included) and 327k tokens (whole conversation; this run's steps sum to 158k).
+- [x] **Per-run usage on resume** (0.34.2): `AGY_USAGE` of a resumed run reports that run's
+  step sums and wall time; the conversation totals move to `conversation_usage` /
+  `conversation_num_turns`.
+
 ## Next
 
-3. **Live trial 6**: check that the wait now starts in the background on its own, and try a
-   `--resume` follow-up (not exercised in trial 5).
-4. Open: agy's `result` usage, `duration_seconds` and `num_turns` are cumulative over a
-   resumed conversation (measured); per-run numbers would need the difference to the
-   previous job's result.
+Nothing open from the trials. Candidates: a larger real task to see agy's quality on
+multi-file work, and the Claude Code mod from the backlog.
 
 ## Backlog
 

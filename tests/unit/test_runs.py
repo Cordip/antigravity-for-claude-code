@@ -172,6 +172,28 @@ def test_replayed_print_timeout_is_exit_12_with_git_status_hint(env: dict[str, s
     assert '"total": 13275' in r.stderr  # AGY_USAGE still printed
 
 
+def test_resumed_run_reports_its_own_usage(env: dict[str, str]) -> None:
+    from agy_runner.stream import Progress, parse_line
+    from conftest import FIXTURES
+
+    rec = FIXTURES / "agy-1.2.11-resume.ndjson"
+    p = Progress()
+    for line in rec.read_text().splitlines():
+        ev = parse_line(line)
+        if ev:
+            p.update(*ev)
+    e = {**env, "FAKE_AGY_MODE": "replay", "FAKE_AGY_REPLAY": str(rec)}
+    fresh = run(e, "delegate", "x")
+    resumed = run(e, "delegate", "--conversation", "c1", "x")
+    usage = [json.loads(ln[len("AGY_USAGE "):]) for r in (fresh, resumed)
+             for ln in r.stderr.splitlines() if ln.startswith("AGY_USAGE ")]
+    # Fresh: agy's result as is. Resumed: this run's step sums, the whole conversation aside.
+    assert usage[0]["usage"] == usage[1]["conversation_usage"]
+    assert usage[1]["usage"] == p.usage and usage[1]["num_turns"] == 1
+    assert usage[1]["usage"]["total"] < usage[1]["conversation_usage"]["total"]
+    assert usage[1]["conversation_num_turns"] == 2
+
+
 def test_replayed_tool_error_feeds_the_readonly_hint(env: dict[str, str], tmp_path: Path) -> None:
     """A write refused by the jail shows up as a tool error; the wrapper names the path."""
     from conftest import FIXTURES

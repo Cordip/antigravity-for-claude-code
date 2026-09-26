@@ -104,3 +104,5 @@ def test_real_stream_resume_keeps_the_conversation_and_counts_cumulatively() -> 
     # result.duration / num_turns / usage cover the whole conversation.
     assert r3.num_turns == 2 and r3.duration_seconds > r1.duration_seconds
     assert r3.usage["total"] > r1.usage["total"]
+    # ... and the resumed run's own step sums are exactly the difference, per key.
+    assert {k: r1.usage[k] + p3.usage[k] for k in r1.usage} == r3.usage

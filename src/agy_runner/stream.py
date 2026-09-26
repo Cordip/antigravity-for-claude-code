@@ -83,15 +83,20 @@ class Result:
             conversation_id=str(p.get("conversation_id") or ""),
             duration_seconds=_num(p.get("duration_seconds")),
             num_turns=_int(p.get("num_turns")),
-            usage={
-                "input": _int(u.get("input_tokens")),
-                "output": _int(u.get("output_tokens")),
-                "thinking": _int(u.get("thinking_tokens")),
-                "cache_read": _int(u.get("cache_read_tokens")),
-                "total": _int(u.get("total_tokens")),
-            },
+            usage=usage_of(u),
             denied_actions=denied,
         )
+
+
+def usage_of(u: dict[str, Any]) -> dict[str, int]:
+    """agy's usage object in the AGY_USAGE key names."""
+    return {
+        "input": _int(u.get("input_tokens")),
+        "output": _int(u.get("output_tokens")),
+        "thinking": _int(u.get("thinking_tokens")),
+        "cache_read": _int(u.get("cache_read_tokens")),
+        "total": _int(u.get("total_tokens")),
+    }
 
 
 def _short(text: str, limit: int = 120) -> str:
@@ -122,6 +127,10 @@ class Progress:
     denied: list[str] = field(default_factory=list)
     current: str = ""
     tokens: int = 0
+    # Summed usage of this run's finished steps. agy's `result` usage is cumulative over a
+    # resumed conversation; these sums are what this run alone spent (measured on 1.2.11:
+    # previous result + this run's step sums == this result, per key).
+    usage: dict[str, int] = field(default_factory=dict)
     text: str = ""
     _seen_steps: set[int] = field(default_factory=set)
 
@@ -166,6 +175,8 @@ class Progress:
         usage = payload.get("usage")
         if isinstance(usage, dict) and state == "DONE":
             self.tokens += _int(usage.get("total_tokens"))
+            for k, v in usage_of(usage).items():
+                self.usage[k] = self.usage.get(k, 0) + v
         delta = payload.get("text_delta")
         if isinstance(delta, str):
             self.text += delta

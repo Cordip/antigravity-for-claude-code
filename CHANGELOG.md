@@ -3,6 +3,15 @@
 All notable changes to **Antigravity for Claude Code**. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/); versions are in `.claude-plugin/plugin.json`.
 
+## 0.34.2
+
+- **`AGY_USAGE` of a resumed run counts that run.** agy's `result` covers the whole
+  conversation: in live trial 6 a 120 s follow-up reported 1118 s (idle time since the first
+  turn included) and 327k tokens, of which it spent 158k. On `--continue` / `--conversation`
+  (so also `agy-job start --resume`) the line now carries the run's own step sums and wall
+  time, with the conversation totals in `conversation_usage` / `conversation_num_turns`.
+  Fresh runs are unchanged. The usage log no longer double counts follow-ups.
+
 ## 0.34.1
 
 - **The background wait is spelled out, Codex-style.** In live trial 5 Claude ran

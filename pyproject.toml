@@ -1,6 +1,6 @@
 [project]
 name = "agy-runner"
-version = "0.34.1"
+version = "0.34.2"
 description = "Runs the Antigravity CLI (agy) in a bubblewrap jail and as background jobs, for the Antigravity plugin for Claude Code."
 requires-python = ">=3.9"
 license = "MIT"

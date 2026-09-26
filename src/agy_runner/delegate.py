@@ -442,6 +442,14 @@ class Delegate:
                 "model": self.model, "tier": self.usage_tier(a), "isolation": isolation,
                 "duration_seconds": res.duration_seconds, "num_turns": res.num_turns,
             }
+            if (a.cont or a.conversation) and progress.usage.get("total"):
+                # A resumed conversation: agy's result counts the whole conversation, and its
+                # duration runs from the first turn, idle gaps included. Report this run.
+                meta["usage"] = progress.usage
+                meta["duration_seconds"] = round(time.time() - progress.started, 1)
+                meta["num_turns"] = 1
+                meta["conversation_usage"] = res.usage
+                meta["conversation_num_turns"] = res.num_turns
             line = "AGY_USAGE " + json.dumps(meta, ensure_ascii=False)
             print(line, file=self.err)
             tee_usage(line)
