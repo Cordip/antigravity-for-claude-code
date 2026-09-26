@@ -70,12 +70,22 @@ On a **large** ADK multi-agent build (+ `adk eval`), same task / same model, 3 w
 
 ## 🚀 Install
 
-In Claude Code:
+In Claude Code (this fork, pinned to its working branch):
 ```
-/plugin marketplace add yuting0624/antigravity-for-claude-code
-/plugin install antigravity@antigravity-for-claude-code
+/plugin marketplace add Cordip/antigravity-for-claude-code#feat/bwrap-isolation
+/plugin install antigravity@antigravity-cordip
 /antigravity:setup        # verifies agy is installed + authenticated
 ```
+
+Or from a shell:
+```bash
+claude plugin marketplace add Cordip/antigravity-for-claude-code#feat/bwrap-isolation
+claude plugin install antigravity@antigravity-cordip
+```
+Update later with `claude plugin update antigravity@antigravity-cordip` (or `/plugin` →
+Installed → Update now). The marketplace is named `antigravity-cordip`, not the upstream
+`antigravity-for-claude-code`, so both can be added side by side; install only one of their
+`antigravity` plugins at a time.
 
 **Prerequisites:** the [Antigravity CLI](https://antigravity.google/docs/cli-using) (`agy`) installed & authenticated (`agy models` lists Gemini models), and Claude Code. For the same-bill cost benefit, run Claude Code on Vertex too.
 

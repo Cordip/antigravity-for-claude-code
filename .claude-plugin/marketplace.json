@@ -1,14 +1,14 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-  "name": "antigravity-for-claude-code",
-  "description": "Run the Antigravity CLI (Gemini) as a collaborating AI inside Claude Code, with intelligent model routing across the SDLC.",
+  "name": "antigravity-cordip",
+  "description": "Fork of antigravity-for-claude-code: delegate work to the Antigravity CLI (Gemini 3.8 Flash) as background jobs in a bubblewrap jail, Codex-style.",
   "owner": {
-    "name": "linyuting"
+    "name": "Cordip"
   },
   "plugins": [
     {
       "name": "antigravity",
-      "description": "Hybrid Claude Code + Antigravity (Gemini) workflow: Claude conducts requirements/architecture/the hard 20%/verification, and routes deterministic, high-volume work (scaffolding, tests, first-pass review, migrations, web/Vertex AI Search) to Antigravity. Lower token cost as a financial lever.",
+      "description": "Delegate tasks to agy (Gemini 3.8 Flash) as background jobs: no worktree, no permission rules, no approval prompts. agy runs in a bubblewrap jail where only the repository is writable; Claude verifies the diff.",
       "source": "./",
       "category": "ai",
       "keywords": ["antigravity", "gemini", "multi-agent", "sdlc", "model-routing"]
