@@ -88,10 +88,21 @@ worktree, no permission rules, no approval prompts.
   stdlib only, uv for development. agy >= 1.2 with stream-json: live progress per job,
   idle timeout, the whole process tree stopped on timeout / cancel.
 
+- [x] **Live trial 5** (0.34.0, Python runner, `--background`, "increase E1 trials to what
+  SPEC.md requires"). Exit 0 after 445 s, 233k tokens, workspace jail, no errors. agy set
+  the E1 default to 200 and ran all 200 trials (329 s); Claude's rerun matched every metric.
+  `agy-job status` showed live progress mid-run. agy moves long `run_command`s into its own
+  background tasks and waits on them with `schedule` timers that end early when the task
+  finishes, so the trial-2 idle wait did not recur. Defect: Claude ran `agy-job wait` in
+  the foreground (the harness backgrounded it), then started a second wait on the same job,
+  which gave two notifications.
+- [x] **Fix from trial 5** (0.34.1): the exact `Bash({run_in_background: true})` call in
+  `/delegate` and in `agy-job start` output, a second live wait on a job exits 3.
+
 ## Next
 
-3. **Live trial 5** on the Python runner: a real job in `field-length`, checking
-   `agy-job status` progress mid-run, the notification, and `--resume`.
+3. **Live trial 6**: check that the wait now starts in the background on its own, and try a
+   `--resume` follow-up (not exercised in trial 5).
 4. Open: agy's `result` usage, `duration_seconds` and `num_turns` are cumulative over a
    resumed conversation (measured); per-run numbers would need the difference to the
    previous job's result.
