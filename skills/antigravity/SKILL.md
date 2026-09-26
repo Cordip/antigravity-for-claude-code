@@ -1,7 +1,7 @@
 ---
 name: antigravity
 description: Run the Antigravity CLI (Gemini) as a collaborating AI inside Claude Code, with intelligent model routing across the software development lifecycle. Claude is the conductor/orchestrator — requirements, architecture, the hard 20%, verification, and review — and routes deterministic, high-volume work (scaffolding, boilerplate, test generation, first-pass review, migrations, web/Vertex AI Search) to Antigravity (Gemini), the cheaper, faster model. Use when the user wants to "use Antigravity / agy", "vibe code / agentic engineering", "accelerate the SDLC", "delegate to Gemini", "scaffold / generate tests / migrate", "first-pass code review", "search web or internal/company data", "deep research / multi-source research report", "second-model cross-check", or "lower token cost on a big job". Claude always verifies Antigravity's output and re-checks itself if unsatisfied.
-version: 0.34.0
+version: 0.34.1
 ---
 
 # Antigravity for Claude Code — hybrid SDLC
@@ -55,7 +55,8 @@ agents. `--tier` / `--model` are ignored with a note on stderr, so do not pass t
 **Long work runs as a job** (the Codex `--background` pattern): `agy-job start "<task>"` from
 the repository root returns a job id at once (30-minute agy limit), then run `agy-job wait <id>`
 with the Bash tool's `run_in_background: true` and keep working; you are notified when it exits.
-No `sleep` or `agy-job status` polling loops. Delegate proactively this way when the work
+Never run that wait in the foreground, and never start a second wait on the same job (it
+refuses with exit 3). No `sleep` or `agy-job status` polling loops. Delegate proactively this way when the work
 is above the break-even; there is no delegate subagent. A timeout (exit 12) can leave an
 empty reply with files already changed: check `git status`, then follow up with
 `agy-job start --resume <job-id> "<task>"`, which continues that job's own agy conversation

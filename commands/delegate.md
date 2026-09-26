@@ -27,9 +27,22 @@ Every delegation runs as a job, the Codex `--background` pattern: nothing sits w
 1. From the repository root, start it with one Bash call:
    `agy-job start [--isolation readonly] [--resume <job-id>] "<task>"`. It prints the job id and
    returns at once. The job runs with a 30-minute agy limit (plugin option `job_timeout`).
-2. Run `agy-job wait <id>` with the Bash tool's `run_in_background: true`. Tell the user
-   the job started, then carry on with other work or end your turn. Claude Code notifies you
-   when the wait exits. Do not poll, sleep, or loop on `agy-job status`.
+2. Launch the wait as a Claude Code background task, exactly like this:
+   ```typescript
+   Bash({
+     command: "agy-job wait <id>",
+     description: "Wait for agy job <id>",
+     run_in_background: true
+   })
+   ```
+   Never run `agy-job wait <id>` without `run_in_background: true` (unless headless or
+   `--wait`, below): a foreground wait blocks the session for up to 30 minutes. Do not wait
+   for completion in this turn: tell the user the job started, then carry on with other
+   work or end your turn. Claude Code notifies you when the wait exits. Do not poll, sleep,
+   or loop on `agy-job status`.
+   One wait per job. If a wait for that job is already running (you started it, or the
+   harness moved a foreground one to the background), do not start another: its exit
+   brings the notification. A second wait refuses with exit 3.
 3. On the notification, read that background command's output: agy's reply, its stderr,
    and a final `[exit rc=<code>: ...]` line. (`agy-job result <id>` prints the same again.)
 

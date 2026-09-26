@@ -105,6 +105,25 @@ def test_job_status_shows_live_progress(env: dict[str, str], tmp_path: Path) -> 
     assert "conversation=conv-123" in run(e, "job", "status", job).stdout
 
 
+def test_second_wait_on_a_job_refuses(env: dict[str, str], tmp_path: Path) -> None:
+    e = {**env, "FAKE_AGY_MODE": "slow", "FAKE_AGY_STEPS": "8"}
+    job = run(e, "job", "start", "slow task", cwd=str(tmp_path)).stdout.strip()
+    first = subprocess.Popen([sys.executable, "-m", "agy_runner", "job", "wait", job], env=e,
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    waiter = Path(e["ANTIGRAVITY_JOBS"]) / job / "waiter"
+    deadline = time.monotonic() + 10
+    while not waiter.exists() and time.monotonic() < deadline:
+        time.sleep(0.1)
+    second = run(e, "job", "wait", job)
+    assert second.returncode == 3
+    assert "already running" in second.stdout
+    out, err = first.communicate(timeout=60)
+    assert first.returncode == 0 and "SLOW DONE" in out and "[exit rc=0: ok]" in err
+    assert not waiter.exists()
+    # Once the first wait is gone, waiting (or fetching the result) works again.
+    assert "SLOW DONE" in run(e, "job", "wait", job).stdout
+
+
 def test_job_cancel_stops_agy_and_its_children(env: dict[str, str], tmp_path: Path) -> None:
     e = {**env, "FAKE_AGY_MODE": "hang"}
     job = run(e, "job", "start", "hang", cwd=str(tmp_path)).stdout.strip()

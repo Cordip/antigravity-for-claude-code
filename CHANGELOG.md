@@ -3,6 +3,16 @@
 All notable changes to **Antigravity for Claude Code**. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/); versions are in `.claude-plugin/plugin.json`.
 
+## 0.34.1
+
+- **The background wait is spelled out, Codex-style.** In live trial 5 Claude ran
+  `agy-job wait` in the foreground despite `--background` (the harness moved it to the
+  background after a while), and when asked why it started a second foreground wait on the
+  same job. `/delegate` now shows the exact `Bash({ ..., run_in_background: true })` call
+  and says not to wait in this turn, and `agy-job start` names that call in its output.
+- **One wait per job.** `agy-job wait` records its pid in the job directory; a second wait
+  while the first is alive exits 3 with a note that the notification is already coming.
+
 ## 0.34.0
 
 - **`agy-delegate` and `agy-job` are Python** (`src/agy_runner`, standard library only,

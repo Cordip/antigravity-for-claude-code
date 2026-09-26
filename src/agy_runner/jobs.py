@@ -261,8 +261,10 @@ def cmd_start(args: list[str]) -> int:
     with open(os.path.join(jd, "pid"), "w", encoding="utf-8") as fh:
         fh.write(f"{proc.pid}\n")
     print(job_id)
-    print(f"agy-job: started {job_id}. Collect it with: agy-job wait {job_id} (as a background "
-          "Bash command; you are notified when it exits)", file=sys.stderr)
+    print(f"agy-job: started {job_id}. Next: one Bash call `agy-job wait {job_id}` with "
+          "run_in_background: true, then end your turn; you are notified when it exits. "
+          "Never run that wait in the foreground (headless: add --timeout 9m).",
+          file=sys.stderr)
     if others:
         print(f"agy-job: note: {others} other job(s) still running in {cwd}. They share this "
               "checkout: parallel write jobs must touch separate files. agy-job list shows "
@@ -331,6 +333,29 @@ def cmd_status(ref: str) -> int:
     return 0
 
 
+def _live_waiter(jd: str) -> int | None:
+    """The pid of another `agy-job wait` on this job that is still alive, if any."""
+    try:
+        pid = int(_read(os.path.join(jd, "waiter")).strip())
+    except ValueError:
+        return None
+    if pid == os.getpid():
+        return None
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return None
+    except PermissionError:
+        pass
+    try:  # guard against a recycled pid
+        with open(f"/proc/{pid}/cmdline", "rb") as fh:
+            if os.path.basename(jd).encode() not in fh.read():
+                return None
+    except OSError:
+        pass
+    return pid
+
+
 def cmd_result(ref: str, wait: bool, opts: list[str]) -> int:
     jd = jobdir(ref)
     st = state(jd)
@@ -344,13 +369,26 @@ def cmd_result(ref: str, wait: bool, opts: list[str]) -> int:
             if not valid_duration(opts[1]):
                 die(f"bad --timeout '{opts[1]}' (use e.g. 540, 540s, 9m, 1h)")
             limit = duration_seconds(opts[1])
-        poll = float(os.environ.get("AGY_JOB_POLL", "5"))
-        start = time.monotonic()
-        while st == "running":
-            if limit and time.monotonic() - start >= limit:
-                break
-            time.sleep(poll)
-            st = state(jd)
+        other = _live_waiter(jd) if st == "running" else None
+        if other:
+            # A second wait adds nothing: the first one's exit already brings the notification.
+            print(f"agy-job: a wait for {os.path.basename(jd)} is already running (pid {other}); "
+                  "you are notified when it exits. Do not start another wait, do not poll.")
+            return 3
+        waiter = os.path.join(jd, "waiter")
+        with open(waiter, "w", encoding="utf-8") as fh:
+            fh.write(f"{os.getpid()}\n")
+        try:
+            poll = float(os.environ.get("AGY_JOB_POLL", "5"))
+            start = time.monotonic()
+            while st == "running":
+                if limit and time.monotonic() - start >= limit:
+                    break
+                time.sleep(poll)
+                st = state(jd)
+        finally:
+            with contextlib.suppress(OSError):
+                os.unlink(waiter)
     if st == "running":
         print("still running — try again later")
         prog = progress_line(jd)
